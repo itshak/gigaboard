@@ -2,28 +2,37 @@
   "name": "@ultrachess/benchmarks",
   "version": "0.0.0",
   "private": true,
-  "description": "Performance regression harness for Ultra Chess React. React Profiler + PerformanceObserver + microbenchmarks.",
+  "description": "Performance regression harness for Ultra Chess React. Node microbenchmarks + React Profiler + head-to-head vs react-chessboard.",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "bench": "vite build && node ./scripts/run-bench.mjs",
-    "lint": "biome check src",
+    "bench": "bun run bench:core && bun run bench:render",
+    "bench:core": "node ./scripts/bench-core.mjs",
+    "bench:render": "vitest run --config ./vitest.bench.config.ts",
+    "lint": "biome check src scripts",
     "typecheck": "tsc --noEmit",
     "test": "echo \"(benchmarks don't run under test; see 'bun run bench')\" && exit 0",
     "clean": "rm -rf dist .turbo bench-results"
   },
   "dependencies": {
     "@ultrachess/core": "workspace:*",
+    "@ultrachess/pieces": "workspace:*",
     "@ultrachess/react": "workspace:*",
+    "@ultrachess/themes": "workspace:*",
+    "chess.js": "^1.4.0",
     "react": "^19.0.0",
+    "react-chessboard": "^5.10.0",
     "react-dom": "^19.0.0",
     "ultrachess": "^1.1.4"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.1.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0"
+    "happy-dom": "^20.0.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
   }
 }
