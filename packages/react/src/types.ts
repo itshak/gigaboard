@@ -67,6 +67,22 @@ export interface AnimationOptions {
   readonly easing?: string;
 }
 
+/**
+ * CSS colour strings for the four stock right-click-arrow channels.
+ * Modifier keys map to channels at draw time:
+ *
+ *   (no modifier) → `default`
+ *   Shift         → `shift`
+ *   Alt           → `alt`
+ *   Ctrl / Meta   → `ctrl`
+ */
+export interface ArrowColors {
+  readonly default?: string;
+  readonly shift?: string;
+  readonly alt?: string;
+  readonly ctrl?: string;
+}
+
 /** Props accepted by the top-level `<Chessboard/>` component. */
 export interface ChessboardProps {
   /**
@@ -121,6 +137,48 @@ export interface ChessboardProps {
    * works but the board ignores pointer-down initiated drags. Default `true`.
    */
   readonly allowDrag?: boolean;
+
+  /**
+   * Enable drawing arrows via right-click drag. Default `true`.
+   * Modifier keys select colour channels (see {@link ArrowColors}).
+   */
+  readonly allowDrawingArrows?: boolean;
+
+  /**
+   * Clear every drawn arrow when the engine accepts a new move. Default
+   * `true` — matches the lichess / chess.com convention.
+   */
+  readonly clearArrowsOnMove?: boolean;
+
+  /**
+   * Clear every drawn arrow when the user makes any left-pointer
+   * interaction with the board (click or drag start) or presses Escape.
+   * Default `true`. This is how lichess and react-chessboard behave: the
+   * user's next action is treated as "moving on" from any annotations.
+   */
+  readonly clearArrowsOnClick?: boolean;
+
+  /** Per-channel arrow colour overrides. */
+  readonly arrowColors?: ArrowColors;
+
+  /**
+   * Queue moves attempted when it's not your turn as premoves instead of
+   * rejecting them. Default `true`. When the opponent replies, the queued
+   * premoves are attempted in order; the first illegal one voids the queue.
+   */
+  readonly allowPremove?: boolean;
+
+  /**
+   * Paint a red glow under the king when the side-to-move is in check.
+   * Default `true`.
+   */
+  readonly showCheckHighlight?: boolean;
+
+  /**
+   * Briefly flash the origin square red when the engine rejects a user
+   * move. Default `true`. Respects `prefers-reduced-motion`.
+   */
+  readonly showIllegalFlash?: boolean;
 
   /**
    * Escape hatch for custom per-square overlays. The callback receives the

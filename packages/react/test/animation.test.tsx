@@ -9,8 +9,8 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { BoardModel } from "@ultrachess/core";
 import { type SquareIndex } from "@ultrachess/core";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeBoardModel, renderBoard } from "./helpers.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { installBoardGeometry, makeBoardModel, renderBoard } from "./helpers.js";
 
 /**
  * Install a minimal WAAPI stub on `HTMLElement.prototype` and return the
@@ -40,33 +40,6 @@ function installAnimateStub(): Array<{
     return [];
   };
   return calls;
-}
-
-/** Install a deterministic `getBoundingClientRect` returning a 400×400 board.
- *  Stays installed across the whole describe (re-installing per-test would
- *  leave later tests with happy-dom's zero-valued default). */
-function installBoardGeometry(): void {
-  let original: typeof Element.prototype.getBoundingClientRect;
-  beforeAll(() => {
-    original = Element.prototype.getBoundingClientRect;
-    // biome-ignore lint/suspicious/noExplicitAny: stub
-    (Element.prototype.getBoundingClientRect as any) = function () {
-      return {
-        x: 0,
-        y: 0,
-        top: 0,
-        left: 0,
-        right: 400,
-        bottom: 400,
-        width: 400,
-        height: 400,
-        toJSON: () => ({}),
-      };
-    };
-  });
-  afterAll(() => {
-    Element.prototype.getBoundingClientRect = original;
-  });
 }
 
 describe("useAnimation", () => {
@@ -144,6 +117,69 @@ describe("useAnimation", () => {
     // WAAPI animate calls are expected.
     expect(calls).toHaveLength(0);
   });
+
+  it("drag-initiated moves skip the FLIP animation (the user already placed the piece)", async () => {
+    renderBoard(model);
+    const root = screen.getByRole("grid").parentElement as HTMLElement;
+    calls.length = 0;
+    const pd = (t: string, x: number, y: number) => {
+      const e = new Event(t, { bubbles: true, cancelable: true });
+      Object.defineProperty(e, "clientX", { value: x, configurable: true });
+      Object.defineProperty(e, "clientY", { value: y, configurable: true });
+      Object.defineProperty(e, "pointerId", { value: 1, configurable: true });
+      Object.defineProperty(e, "button", { value: 0, configurable: true });
+      return e;
+    };
+    // Drag e2 → e4. Viewport centres on a 400-px board: e2=(225,325), e4=(225,225).
+    fireEvent(root, pd("pointerdown", 225, 325));
+    fireEvent(root, pd("pointermove", 225, 225));
+    fireEvent(root, pd("pointerup", 225, 225));
+    await waitFor(() => {
+      expect(model.getSnapshot().historyPly).toBe(1);
+    });
+    // No WAAPI animation was scheduled.
+    expect(calls).toHaveLength(0);
+  });
+
+  it("click-to-move still animates (not a drag)", async () => {
+    renderBoard(model);
+    calls.length = 0;
+    fireEvent.click(screen.getByRole("gridcell", { name: "e2" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "e4" }));
+    await waitFor(() => {
+      expect(model.getSnapshot().historyPly).toBe(1);
+    });
+    // FLIP animation fires on the destination piece slot.
+    const dst = document.querySelector<HTMLElement>('[data-piece-square="e4"]');
+    expect(calls.find((c) => c.element === dst)).toBeDefined();
+  });
+
+  it("illegal drag does not leak the skip flag into the next move", async () => {
+    renderBoard(model);
+    const root = screen.getByRole("grid").parentElement as HTMLElement;
+    calls.length = 0;
+    const pd = (t: string, x: number, y: number) => {
+      const e = new Event(t, { bubbles: true, cancelable: true });
+      Object.defineProperty(e, "clientX", { value: x, configurable: true });
+      Object.defineProperty(e, "clientY", { value: y, configurable: true });
+      Object.defineProperty(e, "pointerId", { value: 1, configurable: true });
+      Object.defineProperty(e, "button", { value: 0, configurable: true });
+      return e;
+    };
+    // e2 → e6 is illegal for the starting pawn.
+    fireEvent(root, pd("pointerdown", 225, 325));
+    fireEvent(root, pd("pointermove", 225, 125));
+    fireEvent(root, pd("pointerup", 225, 125));
+    // Now click-to-move e2 → e4 — should animate.
+    calls.length = 0;
+    fireEvent.click(screen.getByRole("gridcell", { name: "e2" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "e4" }));
+    await waitFor(() => {
+      expect(model.getSnapshot().historyPly).toBe(1);
+    });
+    const dst = document.querySelector<HTMLElement>('[data-piece-square="e4"]');
+    expect(calls.find((c) => c.element === dst)).toBeDefined();
+  });
 });
 
 describe("render budget during drag", () => {
@@ -161,8 +197,6 @@ describe("render budget during drag", () => {
 
   it("pointermove events during a drag produce zero extra model commits", () => {
     renderBoard(model);
-    const spy = vi.fn();
-    model.subscribe(spy);
     const grid = screen.getByRole("grid").parentElement as HTMLElement;
 
     const makeEvent = (type: string, x: number, y: number): Event => {
@@ -173,11 +207,18 @@ describe("render budget during drag", () => {
       Object.defineProperty(e, "button", { value: 0, configurable: true });
       return e;
     };
+
+    // Cross the activation threshold first. Drag-start legitimately commits
+    // once (to populate legal targets) — we measure what happens *after*.
     fireEvent(grid, makeEvent("pointerdown", 250, 300));
+    fireEvent(grid, makeEvent("pointermove", 270, 300));
+
+    const spy = vi.fn();
+    model.subscribe(spy);
     for (let i = 0; i < 10; i++) {
-      fireEvent(grid, makeEvent("pointermove", 250 + i * 5, 300));
+      fireEvent(grid, makeEvent("pointermove", 270 + i * 5, 300));
     }
-    // No model commits from pointermoves — drags are pure imperative.
+    // No further model commits from pointermoves — drags are pure imperative.
     expect(spy).not.toHaveBeenCalled();
   });
 });

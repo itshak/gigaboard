@@ -110,6 +110,18 @@ function animateGlide(
   );
 }
 
+/** Runtime hooks exposed to {@link useAnimation}'s caller. */
+export interface UseAnimationRuntime {
+  /**
+   * Ref to a boolean flag. If `true` at commit time the next animation is
+   * skipped and the flag is reset to `false` automatically. Used by the
+   * drag handler to suppress the FLIP glide — for a drag-initiated move,
+   * the user has already placed the piece at the target, so animating
+   * from source → target reverses their action and looks jarring.
+   */
+  readonly skipNextRef?: RefObject<boolean>;
+}
+
 /**
  * Subscribe to the model's commit stream and play a WAAPI animation for
  * every descriptor in `model.lastAnimations`.
@@ -119,15 +131,19 @@ function animateGlide(
  *   geometry.
  * @param orientation Current board orientation.
  * @param options Duration / easing overrides.
+ * @param runtime Optional runtime hooks (e.g. a `skipNextRef` to bypass
+ *   the animation on the next commit).
  */
 export function useAnimation(
   model: BoardModel | null,
   containerRef: RefObject<HTMLElement | null>,
   orientation: Orientation,
   options: AnimationOptions = {},
+  runtime: UseAnimationRuntime = {},
 ): void {
   const duration = options.durationMs ?? DEFAULT_DURATION_MS;
   const easing = options.easing ?? DEFAULT_EASING;
+  const skipNextRef = runtime.skipNextRef;
 
   // We want to animate *after* React has committed the new DOM but *before*
   // the browser paints — that's what `useLayoutEffect` gives us. But the
@@ -157,6 +173,14 @@ export function useAnimation(
     const descriptors = pendingRef.current.descriptors;
     if (descriptors.length === 0) return;
     pendingRef.current.descriptors = [];
+
+    // Drag-initiated commits: consume the skip flag and bail out. The user
+    // has already placed the piece at the target; replaying a glide from
+    // the source looks like the move is being undone and redone.
+    if (skipNextRef !== undefined && skipNextRef.current) {
+      skipNextRef.current = false;
+      return;
+    }
 
     const effectiveDuration = prefersReducedMotion() ? 0 : duration;
     if (effectiveDuration <= 0) return;

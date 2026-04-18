@@ -9,61 +9,17 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { BoardModel } from "@ultrachess/core";
 import { Color, type SquareIndex } from "@ultrachess/core";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { makeBoardModel, renderBoard } from "./helpers.js";
-
-/** Stub `getBoundingClientRect` on every element to a 400×400 board. Stays
- *  installed across the whole describe so every test sees the same geometry. */
-function installBoardGeometry(size = 400): void {
-  let original: typeof Element.prototype.getBoundingClientRect;
-  beforeAll(() => {
-    original = Element.prototype.getBoundingClientRect;
-    // biome-ignore lint/suspicious/noExplicitAny: type-cast the stub
-    (Element.prototype.getBoundingClientRect as any) = function () {
-      return {
-        x: 0,
-        y: 0,
-        top: 0,
-        left: 0,
-        right: size,
-        bottom: size,
-        width: size,
-        height: size,
-        toJSON: () => ({}),
-      };
-    };
-  });
-  afterAll(() => {
-    Element.prototype.getBoundingClientRect = original;
-  });
-}
-
-/** Viewport coordinates (px) for a square in white-orientation on a 400px board. */
-function centreOf(label: string, boardSize = 400): { x: number; y: number } {
-  const file = label.charCodeAt(0) - 0x61;
-  const rank = Number(label[1]) - 1;
-  const sq = boardSize / 8;
-  return {
-    x: sq * file + sq / 2,
-    y: sq * (7 - rank) + sq / 2,
-  };
-}
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  installBoardGeometry,
+  makeBoardModel,
+  pointerEvent,
+  renderBoard,
+  squareCentre as centreOf,
+} from "./helpers.js";
 
 function container(): HTMLElement {
   return screen.getByRole("grid").parentElement as HTMLElement;
-}
-
-function pointerEvent(type: string, { x, y, id = 1 }: { x: number; y: number; id?: number }) {
-  // happy-dom doesn't reliably carry PointerEvent init-dict values through to
-  // the constructed event. We build a plain `Event` and attach the props we
-  // read in production (clientX/Y, pointerId, button) via `defineProperty`.
-  const event = new Event(type, { bubbles: true, cancelable: true });
-  Object.defineProperty(event, "clientX", { value: x, configurable: true });
-  Object.defineProperty(event, "clientY", { value: y, configurable: true });
-  Object.defineProperty(event, "pointerId", { value: id, configurable: true });
-  Object.defineProperty(event, "button", { value: 0, configurable: true });
-  Object.defineProperty(event, "isPrimary", { value: true, configurable: true });
-  return event;
 }
 
 describe("drag + drop", () => {
@@ -172,6 +128,30 @@ describe("drag + drop", () => {
     fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
 
     await waitFor(() => expect(onMove).toHaveBeenCalledTimes(1));
+  });
+
+  it("drag-start populates the model selection so SelectionLayer shows legal targets", () => {
+    renderBoard(model);
+    const root = container();
+    const e2 = centreOf("e2");
+    const e4 = centreOf("e4");
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: e4.x, y: e4.y }));
+    // Selected square is populated during the drag so the overlay renders.
+    expect(model.getSnapshot().selected).toBe(12);
+    expect(model.getSnapshot().legalTargets.size).toBeGreaterThan(0);
+  });
+
+  it("drag-end clears the selection regardless of drop outcome", () => {
+    renderBoard(model);
+    const root = container();
+    const e2 = centreOf("e2");
+    const a6 = centreOf("a6"); // illegal target
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: a6.x, y: a6.y }));
+    fireEvent(root, pointerEvent("pointerup", { x: a6.x, y: a6.y }));
+    // Illegal drop — but selection is cleared so legal-target rings disappear.
+    expect(model.getSnapshot().selected).toBeNull();
   });
 
   it("DragLayer renders a floating piece during dragging and unmounts after drop", async () => {

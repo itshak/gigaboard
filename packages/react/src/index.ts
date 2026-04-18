@@ -20,14 +20,22 @@ export {
 export { useClickToMove } from "./hooks/use-click-to-move.js";
 export { useDrag } from "./hooks/use-drag.js";
 export { useAnimation } from "./hooks/use-animation.js";
+export { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";
-export { CSS_VARS, defaultTheme } from "./default-theme.js";
+export {
+  CSS_VARS,
+  DEFAULT_ILLEGAL_FLASH_TINT,
+  DEFAULT_PREMOVE_TINT,
+  defaultArrowColors,
+  defaultTheme,
+} from "./default-theme.js";
 
 // ---- Types ----
 export type {
   AnimationOptions,
+  ArrowColors,
   ChessboardProps,
   LegalTargetStyle,
   Orientation,
