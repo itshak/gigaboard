@@ -30,6 +30,7 @@ import { Coordinates } from "./components/coordinates.js";
 import { DragLayer } from "./components/drag-layer.js";
 import { LastMoveLayer, SelectionLayer } from "./components/highlight-layer.js";
 import { IllegalFlashLayer } from "./components/illegal-flash-layer.js";
+import { LiveRegion } from "./components/live-region.js";
 import { PieceLayer } from "./components/piece-layer.js";
 import { PremoveLayer } from "./components/premove-layer.js";
 import { PromotionOverlay } from "./components/promotion-overlay.js";
@@ -38,6 +39,7 @@ import { useAnimation } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
 import { useDrag } from "./hooks/use-drag.js";
+import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type { ArrowColors, ChessboardProps } from "./types.js";
 
@@ -149,6 +151,19 @@ export function Chessboard(props: ChessboardProps) {
   // Promotion dialog state — null when no promotion is pending.
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(
     null,
+  );
+
+  // Keyboard-focus state for the roving tabindex. `null` means the board
+  // hasn't been focused yet — Tabbing into it takes the user to the
+  // square picked by `initialKeyboardFocusSquare` (below), or e2 for
+  // a white-oriented board.
+  const [focusedSquare, setFocusedSquare] = useState<SquareIndex | null>(null);
+  // Visual bottom-left square given the current orientation: e2-ish for
+  // white (a good default landing spot near the kingside piece the user
+  // most often moves first), a7-ish for black.
+  const defaultKeyboardFocus = useCallback(
+    (): SquareIndex => (orientation === "white" ? 12 : 52) as SquareIndex,
+    [orientation],
   );
 
   // Illegal-flash state: the square to pulse red, cleared after a short hold.
@@ -369,6 +384,35 @@ export function Chessboard(props: ChessboardProps) {
     onDrop,
   });
 
+  // Initialise keyboard focus once per orientation so Tab lands on a
+  // sensible square. We deliberately do NOT auto-focus on mount — the
+  // board stays dormant until the user Tabs into it.
+  useEffect(() => {
+    setFocusedSquare((current) => current ?? defaultKeyboardFocus());
+  }, [defaultKeyboardFocus]);
+
+  const onKeyboardActivate = useCallback(
+    (index: SquareIndex): void => {
+      maybeClearArrows();
+      clickToMove(index);
+    },
+    [maybeClearArrows, clickToMove],
+  );
+  const onKeyboardEscape = useCallback((): void => {
+    maybeClearArrows();
+    game?.selectSquare(null);
+  }, [maybeClearArrows, game]);
+
+  useKeyboardNav({
+    containerRef,
+    orientation,
+    focusedSquare,
+    setFocusedSquare,
+    onActivate: onKeyboardActivate,
+    onEscape: onKeyboardEscape,
+    enabled: game !== null,
+  });
+
   useArrowGesture({
     game,
     orientation,
@@ -402,6 +446,7 @@ export function Chessboard(props: ChessboardProps) {
       <BoardGrid
         orientation={orientation}
         onSquareClick={handleSquareClick}
+        focusedSquare={focusedSquare}
         {...(renderSquare !== undefined ? { renderSquare } : {})}
         {...(ariaLabel !== undefined ? { ariaLabel } : {})}
       />
@@ -426,6 +471,7 @@ export function Chessboard(props: ChessboardProps) {
       ) : null}
       {showCoordinates ? <Coordinates orientation={orientation} /> : null}
       <IllegalFlashLayer at={flashSquare} orientation={orientation} />
+      {game !== null ? <LiveRegion model={game} /> : null}
       {pendingPromotion !== null ? (
         <PromotionOverlay
           from={pendingPromotion.from}

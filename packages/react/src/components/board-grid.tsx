@@ -42,16 +42,25 @@ export interface BoardGridProps {
   readonly onSquareClick: (index: SquareIndex) => void;
   readonly renderSquare?: (ctx: SquareContext) => ReactNode;
   readonly ariaLabel?: string;
+  /**
+   * Index of the square that currently owns the roving `tabindex=0`.
+   * `null` means no cell in the grid is focused — the user hasn't Tabbed
+   * into the board yet.
+   */
+  readonly focusedSquare: SquareIndex | null;
 }
 
 /**
- * The static 8×8 grid. One DOM pass, 64 squares, then never re-rendered.
+ * The static 8×8 grid. Re-renders only on orientation / focus changes.
+ * When `focusedSquare` flips, only the two affected `Square` children
+ * re-render (old + new) thanks to `React.memo` on `Square`.
  */
 export function BoardGrid({
   orientation,
   onSquareClick,
   renderSquare,
   ariaLabel,
+  focusedSquare,
 }: BoardGridProps) {
   const squares = useMemo(() => buildSquareOrder(orientation), [orientation]);
 
@@ -74,6 +83,7 @@ export function BoardGrid({
           key={index}
           index={index}
           onClick={onSquareClick}
+          isFocused={focusedSquare === index}
           {...(renderSquare !== undefined ? { renderSquare } : {})}
         />
       ))}

@@ -107,6 +107,7 @@ export function createUltrachessAdapterSync(chess: Chess): EngineAdapter {
     turn: () => chess.turn() as unknown as Color,
     hash: () => chess.hash(),
     inCheck: () => chess.inCheck(),
+    san: (move) => chess.san(move as unknown as UltraMove),
     isGameOver: () => chess.isGameOver(),
     load: (fen: string): void => chess.load(fen),
     reset: (): void => chess.reset(),

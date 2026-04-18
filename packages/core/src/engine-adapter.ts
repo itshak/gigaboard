@@ -53,6 +53,15 @@ export interface EngineAdapter {
   /** `true` if the side to move is in check. */
   inCheck(): boolean;
 
+  /**
+   * Render a packed move as SAN (e.g. `"Nf3"`, `"O-O"`, `"exd5"`, `"e8=Q+"`).
+   * Used by the React layer's screen-reader announcer.
+   *
+   * Must be called BEFORE the move is played — SAN depends on the
+   * pre-move position for disambiguation and check markers.
+   */
+  san(move: PackedMove): string;
+
   /** `true` if the position ends the game (mate, stalemate, draw). */
   isGameOver(): boolean;
 

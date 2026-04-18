@@ -21,6 +21,7 @@ export { useClickToMove } from "./hooks/use-click-to-move.js";
 export { useDrag } from "./hooks/use-drag.js";
 export { useAnimation } from "./hooks/use-animation.js";
 export { useArrowGesture } from "./hooks/use-arrow-gesture.js";
+export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";
