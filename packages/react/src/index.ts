@@ -9,31 +9,6 @@
 
 // ---- Components ----
 export { Chessboard } from "./chessboard.js";
-
-// ---- Hooks ----
-export { useChessGame } from "./hooks/use-chess-game.js";
-export {
-  useBoardSlice,
-  useBoardSnapshot,
-  useSquareCell,
-} from "./hooks/use-board-subscription.js";
-export { useClickToMove } from "./hooks/use-click-to-move.js";
-export { useDrag } from "./hooks/use-drag.js";
-export { useAnimation } from "./hooks/use-animation.js";
-export { useArrowGesture } from "./hooks/use-arrow-gesture.js";
-export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
-export {
-  DEFAULT_MOVE_SOUND_SOURCES,
-  useMoveSound,
-} from "./hooks/use-move-sound.js";
-export type {
-  MoveSoundKey,
-  MoveSoundOptions,
-  MoveSoundSources,
-} from "./hooks/use-move-sound.js";
-
-// ---- Defaults ----
-export { defaultPieces } from "./pieces/default-pieces.js";
 export {
   CSS_VARS,
   DEFAULT_ILLEGAL_FLASH_TINT,
@@ -41,6 +16,29 @@ export {
   defaultArrowColors,
   defaultTheme,
 } from "./default-theme.js";
+export { AnimationRunner } from "./hooks/use-animation.js";
+export { useArrowGesture } from "./hooks/use-arrow-gesture.js";
+export {
+  useBoardSlice,
+  useBoardSnapshot,
+  useSquareCell,
+} from "./hooks/use-board-subscription.js";
+// ---- Hooks ----
+export { useChessGame } from "./hooks/use-chess-game.js";
+export { useClickToMove } from "./hooks/use-click-to-move.js";
+export { useDrag } from "./hooks/use-drag.js";
+export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
+export type {
+  MoveSoundKey,
+  MoveSoundOptions,
+  MoveSoundSources,
+} from "./hooks/use-move-sound.js";
+export {
+  DEFAULT_MOVE_SOUND_SOURCES,
+  useMoveSound,
+} from "./hooks/use-move-sound.js";
+// ---- Defaults ----
+export { defaultPieces } from "./pieces/default-pieces.js";
 
 // ---- Types ----
 export type {

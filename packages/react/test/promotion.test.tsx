@@ -91,9 +91,7 @@ describe("promotion — caller-provided onPromote", () => {
     renderBoard(model, { onPromote });
     fireEvent.click(screen.getByRole("gridcell", { name: "a7" }));
     fireEvent.click(screen.getByRole("gridcell", { name: "a8" }));
-    expect(onPromote).toHaveBeenCalledWith(
-      expect.objectContaining({ from: 48, to: 56, color: 0 }),
-    );
+    expect(onPromote).toHaveBeenCalledWith(expect.objectContaining({ from: 48, to: 56, color: 0 }));
     await vi.waitFor(() => {
       expect(model.getSnapshot().historyPly).toBe(1);
     });
@@ -119,9 +117,7 @@ describe("promotion — caller-provided onPromote", () => {
     renderBoard(localModel, { onPromote });
     fireEvent.click(screen.getByRole("gridcell", { name: "h2" }));
     fireEvent.click(screen.getByRole("gridcell", { name: "h1" }));
-    expect(onPromote).toHaveBeenCalledWith(
-      expect.objectContaining({ from: 15, to: 7, color: 1 }),
-    );
+    expect(onPromote).toHaveBeenCalledWith(expect.objectContaining({ from: 15, to: 7, color: 1 }));
     // Wait for the async resolver to settle before disposing the engine —
     // otherwise the Promise chain calls tryMove on a disposed Chess instance.
     await vi.waitFor(() => expect(localModel.getSnapshot().historyPly).toBe(1));

@@ -184,11 +184,6 @@ async function waitFor(cond: () => boolean, timeoutMs = 3000): Promise<void> {
   }
 }
 
-interface Scenario {
-  ultra: ProfileLog;
-  rcb: ProfileLog;
-}
-
 async function runUltra(): Promise<{ mount: ProfileLog; play: ProfileLog }> {
   const mount = newLog();
   const play = newLog();

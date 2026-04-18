@@ -24,10 +24,7 @@
 import type { ReactNode } from "react";
 
 /** Shape a consumer's `PieceRenderer` prop expects. */
-export type PieceRenderer = (args: {
-  readonly cell: number;
-  readonly square: number;
-}) => ReactNode;
+export type PieceRenderer = (args: { readonly cell: number; readonly square: number }) => ReactNode;
 
 /**
  * 12-entry URL table, indexed by board cell `1..12`. Cell `0` is the

@@ -7,8 +7,7 @@
  */
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { type SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installBoardGeometry, makeBoardModel, renderBoard } from "./helpers.js";
 
@@ -21,8 +20,7 @@ function installAnimateStub(): Array<{
   keyframes: unknown;
   options: unknown;
 }> {
-  const calls: Array<{ element: HTMLElement; keyframes: unknown; options: unknown }> =
-    [];
+  const calls: Array<{ element: HTMLElement; keyframes: unknown; options: unknown }> = [];
   const fakeAnimation = {
     cancel: () => {},
     finish: () => {},
@@ -36,9 +34,7 @@ function installAnimateStub(): Array<{
     return fakeAnimation;
   };
   // biome-ignore lint/suspicious/noExplicitAny: stub
-  (HTMLElement.prototype as any).getAnimations = function () {
-    return [];
-  };
+  (HTMLElement.prototype as any).getAnimations = () => [];
   return calls;
 }
 

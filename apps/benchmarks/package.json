@@ -10,7 +10,8 @@
     "bench": "bun run bench:core && bun run bench:render",
     "bench:core": "node ./scripts/bench-core.mjs",
     "bench:render": "vitest run --config ./vitest.bench.config.ts",
-    "lint": "biome check src scripts",
+    "bench:playwright": "playwright test --config ./playwright.config.ts",
+    "lint": "biome check src scripts bench",
     "typecheck": "tsc --noEmit",
     "test": "echo \"(benchmarks don't run under test; see 'bun run bench')\" && exit 0",
     "clean": "rm -rf dist .turbo bench-results"
@@ -21,12 +22,14 @@
     "@ultrachess/react": "workspace:*",
     "@ultrachess/themes": "workspace:*",
     "chess.js": "^1.4.0",
+    "chessground": "^9.2.0",
     "react": "^19.0.0",
     "react-chessboard": "^5.10.0",
     "react-dom": "^19.0.0",
     "ultrachess": "^1.1.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@testing-library/react": "^16.1.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

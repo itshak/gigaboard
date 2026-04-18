@@ -54,16 +54,15 @@ export type MoveSoundSources = Partial<Readonly<Record<MoveSoundKey, string>>>;
  * Default URL map. Points at the MP3 files shipped with this package; the
  * tsup `file` loader rewrites these imports to hashed URLs at build time.
  */
-export const DEFAULT_MOVE_SOUND_SOURCES: Readonly<Record<MoveSoundKey, string>> =
-  Object.freeze({
-    moveSelf: moveSelfUrl,
-    moveOpponent: moveOpponentUrl,
-    capture: captureUrl,
-    castle: castleUrl,
-    moveCheck: moveCheckUrl,
-    promote: promoteUrl,
-    gameEnd: gameEndUrl,
-  });
+export const DEFAULT_MOVE_SOUND_SOURCES: Readonly<Record<MoveSoundKey, string>> = Object.freeze({
+  moveSelf: moveSelfUrl,
+  moveOpponent: moveOpponentUrl,
+  capture: captureUrl,
+  castle: castleUrl,
+  moveCheck: moveCheckUrl,
+  promote: promoteUrl,
+  gameEnd: gameEndUrl,
+});
 
 /** Public configuration for the hook (and the `<Chessboard sound/>` prop). */
 export interface MoveSoundOptions {
@@ -140,10 +139,7 @@ type Pool = {
  * useMoveSound(game, { enabled: soundOn, volume: 0.6 });
  * ```
  */
-export function useMoveSound(
-  model: BoardModel | null,
-  options: MoveSoundOptions = {},
-): void {
+export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions = {}): void {
   const { enabled = true, volume = 1, sources, perspective } = options;
 
   const poolsRef = useRef<Record<MoveSoundKey, Pool> | null>(null);

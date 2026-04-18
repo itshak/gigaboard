@@ -14,13 +14,10 @@
  * OS menu.
  */
 
-import {
-  type ArrowColors,
-  type Orientation,
-} from "../types.js";
-import { type BoardModel, type SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { type RefObject, useEffect } from "react";
 import type { ArrowsLayerHandle } from "../components/arrows-layer.js";
+import type { ArrowColors, Orientation } from "../types.js";
 
 /** Resolve modifier keys to a colour channel. */
 function colorForModifiers(e: PointerEvent, palette: Required<ArrowColors>): string {
@@ -64,8 +61,7 @@ export interface UseArrowGestureOptions {
  * effect's closure and is torn down on unmount / dep change.
  */
 export function useArrowGesture(options: UseArrowGestureOptions): void {
-  const { game, orientation, containerRef, arrowsLayerRef, enabled, palette } =
-    options;
+  const { game, orientation, containerRef, arrowsLayerRef, enabled, palette } = options;
 
   useEffect(() => {
     if (!enabled) return;
@@ -121,8 +117,7 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
     const onPointerUp = (e: PointerEvent): void => {
       if (origin === null) return;
       if (activePointerId !== null && e.pointerId !== activePointerId) return;
-      const target =
-        squareAt(container, e.clientX, e.clientY, orientation) ?? origin;
+      const target = squareAt(container, e.clientX, e.clientY, orientation) ?? origin;
       const color = colorForModifiers(e, palette);
       game.toggleArrow({ from: origin, to: target, color });
       origin = null;

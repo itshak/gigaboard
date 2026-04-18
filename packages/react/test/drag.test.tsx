@@ -8,14 +8,14 @@
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { BoardModel } from "@ultrachess/core";
-import { Color, type SquareIndex } from "@ultrachess/core";
+import { Color } from "@ultrachess/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  squareCentre as centreOf,
   installBoardGeometry,
   makeBoardModel,
   pointerEvent,
   renderBoard,
-  squareCentre as centreOf,
 } from "./helpers.js";
 
 function container(): HTMLElement {

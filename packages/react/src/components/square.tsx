@@ -21,7 +21,7 @@
  *   with the React-driven focus state.
  */
 
-import { type SquareIndex } from "@ultrachess/core";
+import type { SquareIndex } from "@ultrachess/core";
 import { memo, type ReactNode, useEffect, useRef } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { SquareContext } from "../types.js";
@@ -83,9 +83,7 @@ function SquareImpl({ index, onClick, renderSquare, isFocused }: SquareProps) {
         cursor: "pointer",
         userSelect: "none",
         outline: "none",
-        boxShadow: isFocused
-          ? "inset 0 0 0 3px rgba(255, 206, 76, 0.95)"
-          : "none",
+        boxShadow: isFocused ? "inset 0 0 0 3px rgba(255, 206, 76, 0.95)" : "none",
         // Squares carry the container-query context so pieces inside can
         // size relative to this cell (85cqh glyph sizing).
         containerType: "size",

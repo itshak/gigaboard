@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type SquareIndex, createLegalMoveIndex } from "../src/index.js";
+import { createLegalMoveIndex, type SquareIndex } from "../src/index.js";
 
 describe("createLegalMoveIndex", () => {
   it("returns undefined on miss and increments miss counter", () => {

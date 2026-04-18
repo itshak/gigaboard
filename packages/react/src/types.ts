@@ -6,13 +6,7 @@
  * their respective modules; this file is types-only.
  */
 
-import type {
-  BoardCell,
-  BoardModel,
-  PackedMove,
-  PieceType,
-  SquareIndex,
-} from "@ultrachess/core";
+import type { BoardCell, BoardModel, PackedMove, PieceType, SquareIndex } from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 

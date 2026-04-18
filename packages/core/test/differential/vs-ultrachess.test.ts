@@ -12,22 +12,22 @@
  * Default: 1,000 games, depth ≤ 120. The nightly CI shell multiplies both.
  */
 
-import { Chess, type VerboseMove, moveFrom, moveTo } from "ultrachess";
+import { Chess, moveFrom, moveTo, type VerboseMove } from "ultrachess";
 import { describe, expect, it } from "vitest";
 import {
   type AnimDescriptor,
   type BoardCell,
+  encodeBoardCell,
   type PackedMove,
   PieceType,
-  type SquareIndex,
-  encodeBoardCell,
   planAnimations,
+  type SquareIndex,
 } from "../../src/index.js";
 
-const DEFAULT_GAMES = Number(process.env["DIFFERENTIAL_GAMES"] ?? 1000);
-const DEFAULT_DEPTH = Number(process.env["DIFFERENTIAL_DEPTH"] ?? 120);
+const DEFAULT_GAMES = Number(process.env.DIFFERENTIAL_GAMES ?? 1000);
+const DEFAULT_DEPTH = Number(process.env.DIFFERENTIAL_DEPTH ?? 120);
 /** Deterministic PRNG keeps failures reproducible. */
-const SEED = Number(process.env["DIFFERENTIAL_SEED"] ?? 0xdeadbeef);
+const SEED = Number(process.env.DIFFERENTIAL_SEED ?? 0xdeadbeef);
 
 /** Tiny LCG — fine for a shuffle, not cryptography. */
 function makeRng(seed: number): () => number {
@@ -66,7 +66,7 @@ function expectDescriptorMatchesVerbose(d: AnimDescriptor, v: VerboseMove): void
         if (d.kind !== "capture") return;
         expect(d.from).toBe(v.fromIndex);
         expect(d.to).toBe(v.toIndex);
-        expect(d.captured).toBe(encodeBoardCell(1 - v.color as 0 | 1, v.captured));
+        expect(d.captured).toBe(encodeBoardCell((1 - v.color) as 0 | 1, v.captured));
       } else {
         expect(d.kind).toBe("move");
         if (d.kind !== "move") return;
@@ -83,7 +83,7 @@ function expectDescriptorMatchesVerbose(d: AnimDescriptor, v: VerboseMove): void
       // Promoted-to piece.
       expect(d.pieceAfter).toBe(encodeBoardCell(v.color, v.promotion ?? PieceType.Queen));
       if (v.captured !== undefined) {
-        expect(d.captured).toBe(encodeBoardCell(1 - v.color as 0 | 1, v.captured));
+        expect(d.captured).toBe(encodeBoardCell((1 - v.color) as 0 | 1, v.captured));
       } else {
         expect(d.captured).toBeNull();
       }
@@ -108,48 +108,44 @@ function expectDescriptorMatchesVerbose(d: AnimDescriptor, v: VerboseMove): void
 
 describe("differential: @ultrachess/core planAnimations vs ultrachess.verboseMove", () => {
   // Slow, exhaustive — raise timeout generously but keep defaults frugal.
-  it(
-    `${DEFAULT_GAMES} random games agree on every ply`,
-    { timeout: 120_000 },
-    async () => {
-      const rng = makeRng(SEED);
-      const chess = await Chess.create();
-      const prev = new Uint8Array(64);
-      const next = new Uint8Array(64);
+  it(`${DEFAULT_GAMES} random games agree on every ply`, { timeout: 120_000 }, async () => {
+    const rng = makeRng(SEED);
+    const chess = await Chess.create();
+    const prev = new Uint8Array(64);
+    const next = new Uint8Array(64);
 
-      let plyCount = 0;
+    let plyCount = 0;
 
-      for (let game = 0; game < DEFAULT_GAMES; game++) {
-        chess.reset();
-        for (let ply = 0; ply < DEFAULT_DEPTH; ply++) {
-          if (chess.isGameOver()) break;
-          const moves = chess.moves({ raw: true });
-          if (moves.length === 0) break;
-          const pick = Math.floor(rng() * moves.length);
-          const move = moves[pick];
-          if (move === undefined) break;
+    for (let game = 0; game < DEFAULT_GAMES; game++) {
+      chess.reset();
+      for (let ply = 0; ply < DEFAULT_DEPTH; ply++) {
+        if (chess.isGameOver()) break;
+        const moves = chess.moves({ raw: true });
+        if (moves.length === 0) break;
+        const pick = Math.floor(rng() * moves.length);
+        const move = moves[pick];
+        if (move === undefined) break;
 
-          readBoardBytes(chess, prev);
-          const verbose = chess.verboseMove(move);
-          chess.move(move);
-          readBoardBytes(chess, next);
+        readBoardBytes(chess, prev);
+        const verbose = chess.verboseMove(move);
+        chess.move(move);
+        readBoardBytes(chess, next);
 
-          // Sanity: the packed move's from / to agree with verbose.
-          expect(moveFrom(move)).toBe(verbose.fromIndex);
-          expect(moveTo(move)).toBe(verbose.toIndex);
+        // Sanity: the packed move's from / to agree with verbose.
+        expect(moveFrom(move)).toBe(verbose.fromIndex);
+        expect(moveTo(move)).toBe(verbose.toIndex);
 
-          const descriptors = planAnimations(prev, next, move as unknown as PackedMove);
-          expect(descriptors).toHaveLength(1);
-          expectDescriptorMatchesVerbose(descriptors[0]!, verbose);
-          plyCount++;
-        }
+        const descriptors = planAnimations(prev, next, move as unknown as PackedMove);
+        expect(descriptors).toHaveLength(1);
+        expectDescriptorMatchesVerbose(descriptors[0]!, verbose);
+        plyCount++;
       }
+    }
 
-      chess.dispose();
-      // Sanity check: meaningful coverage happened (games did progress).
-      expect(plyCount).toBeGreaterThan(DEFAULT_GAMES); // at least one ply per game
-    },
-  );
+    chess.dispose();
+    // Sanity check: meaningful coverage happened (games did progress).
+    expect(plyCount).toBeGreaterThan(DEFAULT_GAMES); // at least one ply per game
+  });
 });
 
 // Silence unused binding on the SquareIndex type — kept for clarity at call sites.

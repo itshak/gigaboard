@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  type BoardCell,
   BOARD_CELL_BK,
   BOARD_CELL_BP,
   BOARD_CELL_BR,
@@ -9,9 +8,10 @@ import {
   BOARD_CELL_WP,
   BOARD_CELL_WQ,
   BOARD_CELL_WR,
+  type BoardCell,
+  decodePackedMove,
   type PackedMove,
   PieceType,
-  decodePackedMove,
   planAnimations,
 } from "../src/index.js";
 
@@ -219,9 +219,7 @@ describe("decodePackedMove", () => {
 
   it("round-trips castle and en-passant kinds", () => {
     expect(decodePackedMove(pack({ from: 4, to: 6, kind: 3 })).kind).toBe("castle");
-    expect(decodePackedMove(pack({ from: 36, to: 43, kind: 2 })).kind).toBe(
-      "en-passant",
-    );
+    expect(decodePackedMove(pack({ from: 36, to: 43, kind: 2 })).kind).toBe("en-passant");
   });
 });
 

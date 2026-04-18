@@ -15,7 +15,7 @@
  */
 
 import type { AnimDescriptor, BoardCell, PackedMove, SquareIndex } from "./types.js";
-import { Color, PieceType, colorOf, isEmptyCell, pieceTypeOf } from "./types.js";
+import { Color, colorOf, isEmptyCell, PieceType, pieceTypeOf } from "./types.js";
 
 /** Bit layout of a packed `Move` — matches `ultrachess`. */
 const MOVE_FROM_MASK = 0x3f;
@@ -26,7 +26,10 @@ const MOVE_PROMO_MASK = 0b11;
 const MOVE_KIND_SHIFT = 14;
 const MOVE_KIND_MASK = 0b11;
 
-const MOVE_KIND_NORMAL = 0;
+// `MOVE_KIND_NORMAL = 0` is the fall-through path — the switch below
+// has no explicit case for it because the default branch handles all
+// non-special moves. Kept here as a comment so the encoding table stays
+// self-documenting.
 const MOVE_KIND_PROMOTION = 1;
 const MOVE_KIND_EN_PASSANT = 2;
 const MOVE_KIND_CASTLE = 3;
@@ -127,7 +130,6 @@ function planFromMove(
         },
       ];
     }
-    case MOVE_KIND_NORMAL:
     default: {
       if (!isEmptyCell(targetBefore)) {
         return [
@@ -150,10 +152,7 @@ function planFromMove(
  * square as `appear` / `disappear`. The UI renders these as fades rather
  * than glides — we can't recover the original trajectory.
  */
-function planFromDiff(
-  prev: Readonly<Uint8Array>,
-  next: Readonly<Uint8Array>,
-): AnimDescriptor[] {
+function planFromDiff(prev: Readonly<Uint8Array>, next: Readonly<Uint8Array>): AnimDescriptor[] {
   const descriptors: AnimDescriptor[] = [];
   for (let i = 0; i < 64; i++) {
     const a = prev[i] as BoardCell;

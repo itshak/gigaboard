@@ -7,6 +7,15 @@
     "noEmit": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.mjs"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.mjs",
+    "bench/**/*.ts",
+    "bench/**/*.tsx",
+    "playwright.config.ts",
+    "vite.config.ts",
+    "vitest.bench.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

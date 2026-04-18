@@ -66,7 +66,7 @@ export function useChessGame(
     // options that change over a session are applied through the model's
     // own methods, not by tearing it down.
     // biome-ignore lint/correctness/useExhaustiveDependencies: modelOptions is a stable, sub-pattern derivative
-  }, [fen]);
+  }, [fen, modelOptions]);
 
   return model;
 }

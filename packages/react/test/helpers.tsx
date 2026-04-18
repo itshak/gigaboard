@@ -6,11 +6,11 @@
  * component and awaits the async model — keeps tests concise.
  */
 
-import { createBoardModel, createUltrachessAdapter, type BoardModel } from "@ultrachess/core";
-import { render, type RenderResult } from "@testing-library/react";
+import { type RenderResult, render } from "@testing-library/react";
+import { type BoardModel, createBoardModel, createUltrachessAdapter } from "@ultrachess/core";
 import { afterAll, beforeAll } from "vitest";
-import type { ChessboardProps } from "../src/types.js";
 import { Chessboard } from "../src/chessboard.js";
+import type { ChessboardProps } from "../src/types.js";
 
 /** Build a live board model synchronously (for tests that need deterministic timing). */
 export async function makeBoardModel(fen?: string): Promise<BoardModel> {
@@ -39,19 +39,17 @@ export function installBoardGeometry(size = 400): void {
   beforeAll(() => {
     original = Element.prototype.getBoundingClientRect;
     // biome-ignore lint/suspicious/noExplicitAny: stub
-    (Element.prototype.getBoundingClientRect as any) = function () {
-      return {
-        x: 0,
-        y: 0,
-        top: 0,
-        left: 0,
-        right: size,
-        bottom: size,
-        width: size,
-        height: size,
-        toJSON: () => ({}),
-      };
-    };
+    (Element.prototype.getBoundingClientRect as any) = () => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: size,
+      bottom: size,
+      width: size,
+      height: size,
+      toJSON: () => ({}),
+    });
   });
   afterAll(() => {
     Element.prototype.getBoundingClientRect = original;

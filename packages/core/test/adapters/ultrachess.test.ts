@@ -4,8 +4,8 @@ import {
   BOARD_CELL_WK,
   BOARD_CELL_WP,
   Color,
-  type SquareIndex,
   createUltrachessAdapter,
+  type SquareIndex,
 } from "../../src/index.js";
 
 const E2 = 12 as SquareIndex;

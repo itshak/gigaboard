@@ -7,8 +7,8 @@
  */
 
 import { act, render } from "@testing-library/react";
+import type { BoardModel } from "@ultrachess/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type BoardModel } from "@ultrachess/core";
 import { useMoveSound } from "../src/hooks/use-move-sound.js";
 import { makeBoardModel } from "./helpers.js";
 
@@ -51,7 +51,13 @@ function cueOf(url: string | undefined): string | undefined {
 }
 
 /** Minimal consumer: mounts `useMoveSound` against a model. */
-function SoundProbe({ model, options }: { model: BoardModel | null; options?: Parameters<typeof useMoveSound>[1] }) {
+function SoundProbe({
+  model,
+  options,
+}: {
+  model: BoardModel | null;
+  options?: Parameters<typeof useMoveSound>[1];
+}) {
   useMoveSound(model, options);
   return null;
 }

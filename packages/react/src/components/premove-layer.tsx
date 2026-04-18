@@ -17,14 +17,14 @@
 
 import type { BoardCell, BoardModel, SquareIndex } from "@ultrachess/core";
 import { DEFAULT_PREMOVE_TINT } from "../default-theme.js";
-import {
-  useBoardSlice,
-  useSquareCell,
-} from "../hooks/use-board-subscription.js";
+import { useBoardSlice, useSquareCell } from "../hooks/use-board-subscription.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 
 /** CSS-percentage position of the square inside the board. */
-function positionOf(index: SquareIndex, orientation: Orientation): {
+function positionOf(
+  index: SquareIndex,
+  orientation: Orientation,
+): {
   x: number;
   y: number;
 } {
@@ -74,13 +74,7 @@ interface PremoveLayerInnerProps {
   readonly to: SquareIndex;
 }
 
-function PremoveLayerInner({
-  model,
-  orientation,
-  pieces,
-  from,
-  to,
-}: PremoveLayerInnerProps) {
+function PremoveLayerInner({ model, orientation, pieces, from, to }: PremoveLayerInnerProps) {
   const cell = useSquareCell(model, from) as BoardCell;
   if (cell === 0) return null;
   const origin = positionOf(from, orientation);

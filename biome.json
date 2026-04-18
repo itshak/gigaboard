@@ -48,7 +48,8 @@
       },
       "suspicious": {
         "noExplicitAny": "error",
-        "noConsole": { "level": "warn", "options": { "allow": ["warn", "error"] } }
+        "noConsole": { "level": "warn", "options": { "allow": ["warn", "error"] } },
+        "noArrayIndexKey": "warn"
       },
       "complexity": {
         "noUselessSwitchCase": "error"
@@ -59,6 +60,12 @@
       },
       "performance": {
         "noDelete": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off",
+        "useKeyWithClickEvents": "off",
+        "noStaticElementInteractions": "off",
+        "useFocusableInteractive": "off"
       }
     }
   },

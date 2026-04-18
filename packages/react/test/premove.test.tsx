@@ -42,9 +42,7 @@ describe("premove", () => {
 
   beforeEach(async () => {
     // Position after `1.e4` — black to move, white pieces otherwise intact.
-    model = await makeBoardModel(
-      "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
-    );
+    model = await makeBoardModel("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
   });
 
   afterEach(() => {

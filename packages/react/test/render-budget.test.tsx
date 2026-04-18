@@ -10,14 +10,12 @@
  * wrap `<Chessboard/>` in a `<Profiler>` and let React report each commit.
  */
 
-import { act, fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { type SquareIndex } from "@ultrachess/core";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { Profiler, type ProfilerOnRenderCallback } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import { makeBoardModel } from "./helpers.js";
-import { render } from "@testing-library/react";
 
 function countingRender(model: BoardModel): {
   unmount: () => void;

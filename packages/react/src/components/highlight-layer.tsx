@@ -16,8 +16,8 @@
 
 import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { CSS_VARS } from "../default-theme.js";
-import type { LegalTargetStyle, Orientation } from "../types.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
+import type { LegalTargetStyle, Orientation } from "../types.js";
 
 /** Pack the `(selected, legalTargets)` pair into a referentially-stable slice. */
 function selectSelection(snapshot: {
@@ -116,9 +116,7 @@ export function SelectionLayer({ model, orientation, style }: SelectionLayerProp
                   height: "100%",
                   boxSizing: "border-box",
                   borderRadius: "50%",
-                  border: isCapture
-                    ? `10% solid var(${CSS_VARS.LEGAL_TARGET_CAPTURE})`
-                    : "none",
+                  border: isCapture ? `10% solid var(${CSS_VARS.LEGAL_TARGET_CAPTURE})` : "none",
                   // Non-capture: small inner dot; capture: full-size ring.
                   background: isCapture
                     ? "transparent"

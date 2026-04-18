@@ -29,7 +29,10 @@ function findKing(board: Readonly<Uint8Array>, turn: 0 | 1): SquareIndex | null 
 }
 
 /** Pixel position of a square within the board, as `{ x%, y% }`. */
-function positionOf(index: SquareIndex, orientation: Orientation): {
+function positionOf(
+  index: SquareIndex,
+  orientation: Orientation,
+): {
   x: number;
   y: number;
 } {

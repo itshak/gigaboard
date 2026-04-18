@@ -12,13 +12,16 @@
  * a pulse.
  */
 
-import { type SquareIndex } from "@ultrachess/core";
+import type { SquareIndex } from "@ultrachess/core";
 import { useLayoutEffect, useRef } from "react";
 import { DEFAULT_ILLEGAL_FLASH_TINT } from "../default-theme.js";
 import type { Orientation } from "../types.js";
 
 /** CSS-percentage position of the square inside the board. */
-function positionOf(index: SquareIndex, orientation: Orientation): {
+function positionOf(
+  index: SquareIndex,
+  orientation: Orientation,
+): {
   x: number;
   y: number;
 } {

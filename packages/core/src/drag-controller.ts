@@ -67,12 +67,7 @@ export interface CancelEvent {
 }
 
 /** Any event emitted by the drag controller. */
-export type DragEvent =
-  | DragStartEvent
-  | DragMoveEvent
-  | DropEvent
-  | ClickEvent
-  | CancelEvent;
+export type DragEvent = DragStartEvent | DragMoveEvent | DropEvent | ClickEvent | CancelEvent;
 
 /** Controller options. */
 export interface DragControllerOptions {
@@ -146,11 +141,7 @@ export function createDragController(options: DragControllerOptions = {}): DragC
     return { kind: "drag-move", from: state.from, x, y };
   };
 
-  const pointerUp = (
-    pointerId: number,
-    x: number,
-    y: number,
-  ): DropEvent | ClickEvent | null => {
+  const pointerUp = (pointerId: number, x: number, y: number): DropEvent | ClickEvent | null => {
     if (state.kind === "idle") return null;
     if (state.pointerId !== pointerId) return null;
 

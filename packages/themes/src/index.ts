@@ -23,15 +23,15 @@
  * ```
  */
 
-import { brown } from "./brown.js";
 import { blue } from "./blue.js";
+import { brown } from "./brown.js";
 import { green } from "./green.js";
 import { wood } from "./wood.js";
 
 /** Shape of a board theme: CSS custom-property pairs. */
 export type Theme = Readonly<Record<string, string>>;
 
-export { brown, blue, green, wood };
+export { blue, brown, green, wood };
 
 /** Registry mapping a theme name to its theme object. */
 export const themes = Object.freeze({

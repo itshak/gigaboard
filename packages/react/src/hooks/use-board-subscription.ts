@@ -31,14 +31,8 @@ export function useBoardSnapshot(model: BoardModel): BoardSnapshot {
  * data didn't change. Our snapshot store guarantees stability for primitive
  * fields and for the `legalTargets` / `arrows` / `premoves` collections.
  */
-export function useBoardSlice<T>(
-  model: BoardModel,
-  selector: (snapshot: BoardSnapshot) => T,
-): T {
-  const getSnapshot = useCallback(
-    (): T => selector(model.getSnapshot()),
-    [model, selector],
-  );
+export function useBoardSlice<T>(model: BoardModel, selector: (snapshot: BoardSnapshot) => T): T {
+  const getSnapshot = useCallback((): T => selector(model.getSnapshot()), [model, selector]);
   return useSyncExternalStore(model.subscribe, getSnapshot, getSnapshot);
 }
 

@@ -32,8 +32,8 @@
 
 import type { Arrow, BoardModel } from "@ultrachess/core";
 import {
-  type RefObject,
   forwardRef,
+  type RefObject,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -64,10 +64,7 @@ export interface ArrowsLayerProps {
 /* ============================================================ geometry */
 
 /** Square-index → (centreX%, centreY%) in board-local coordinates. */
-function squareCentrePct(
-  index: number,
-  orientation: Orientation,
-): { cx: number; cy: number } {
+function squareCentrePct(index: number, orientation: Orientation): { cx: number; cy: number } {
   const file = index & 7;
   const rank = index >> 3;
   const col = orientation === "white" ? file : 7 - file;
@@ -195,64 +192,64 @@ function redraw(
  * forwarded ref so the gesture hook can update the preview arrow without
  * forcing a React re-render.
  */
-export const ArrowsLayer = forwardRef<ArrowsLayerHandle, ArrowsLayerProps>(
-  function ArrowsLayer({ model, orientation }, handle) {
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const previewRef = useRef<PreviewArrow | null>(null);
-    const arrows = useBoardSlice(model, (s) => s.arrows);
+export const ArrowsLayer = forwardRef<ArrowsLayerHandle, ArrowsLayerProps>(function ArrowsLayer(
+  { model, orientation },
+  handle,
+) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const previewRef = useRef<PreviewArrow | null>(null);
+  const arrows = useBoardSlice(model, (s) => s.arrows);
 
-    // Expose imperative preview-set to the gesture hook.
-    useImperativeHandle(
-      handle,
-      () => ({
-        setPreview(preview: PreviewArrow | null): void {
-          previewRef.current = preview;
-          const canvas = canvasRef.current;
-          if (canvas !== null) {
-            redraw(canvas, arrows, preview, orientation);
-          }
-        },
-      }),
-      [arrows, orientation],
-    );
+  // Expose imperative preview-set to the gesture hook.
+  useImperativeHandle(
+    handle,
+    () => ({
+      setPreview(preview: PreviewArrow | null): void {
+        previewRef.current = preview;
+        const canvas = canvasRef.current;
+        if (canvas !== null) {
+          redraw(canvas, arrows, preview, orientation);
+        }
+      },
+    }),
+    [arrows, orientation],
+  );
 
-    // Redraw whenever committed arrows or orientation change.
-    useLayoutEffect(() => {
-      const canvas = canvasRef.current;
-      if (canvas === null) return;
+  // Redraw whenever committed arrows or orientation change.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    redraw(canvas, arrows, previewRef.current, orientation);
+  }, [arrows, orientation]);
+
+  // Re-size the canvas with the board.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+    const parent = canvas.parentElement;
+    if (parent === null || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
       redraw(canvas, arrows, previewRef.current, orientation);
-    }, [arrows, orientation]);
+    });
+    observer.observe(parent);
+    return () => observer.disconnect();
+  }, [arrows, orientation]);
 
-    // Re-size the canvas with the board.
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (canvas === null) return;
-      const parent = canvas.parentElement;
-      if (parent === null || typeof ResizeObserver === "undefined") return;
-      const observer = new ResizeObserver(() => {
-        redraw(canvas, arrows, previewRef.current, orientation);
-      });
-      observer.observe(parent);
-      return () => observer.disconnect();
-    }, [arrows, orientation]);
-
-    return (
-      <canvas
-        ref={canvasRef}
-        data-layer="arrows"
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          zIndex: 15,
-        }}
-      />
-    );
-  },
-);
+  return (
+    <canvas
+      ref={canvasRef}
+      data-layer="arrows"
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: 15,
+      }}
+    />
+  );
+});
 
 /** Utility for external hooks: the singleton reference shape. */
 export type ArrowsLayerRef = RefObject<ArrowsLayerHandle | null>;

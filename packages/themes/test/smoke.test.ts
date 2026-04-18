@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PACKAGE_VERSION, brown, blue, green, wood, themes } from "../src/index.js";
+import { blue, brown, green, PACKAGE_VERSION, themes, wood } from "../src/index.js";
 
 describe("@ultrachess/themes", () => {
   it("exports a semver-looking version string", () => {

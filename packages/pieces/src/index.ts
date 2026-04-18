@@ -43,14 +43,14 @@ import { chesscom } from "./sets/chesscom.js";
 import { merida } from "./sets/merida.js";
 import { neo } from "./sets/neo.js";
 
+export type {
+  PieceRenderer,
+  PieceUrlTable,
+} from "./create-image-piece-set.js";
 export {
   BOARD_CELL_KEY,
   chesscomPieceUrls,
   createImagePieceSet,
-} from "./create-image-piece-set.js";
-export type {
-  PieceRenderer,
-  PieceUrlTable,
 } from "./create-image-piece-set.js";
 export { alpha, cburnett, chesscom, merida, neo };
 

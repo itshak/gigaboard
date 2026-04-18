@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  type BoardModel,
   BOARD_CELL_WP,
+  type BoardModel,
   Color,
-  PieceType,
-  type SquareIndex,
   createBoardModel,
   createUltrachessAdapter,
   makeArrow,
   makePremove,
+  PieceType,
+  type SquareIndex,
 } from "../src/index.js";
 
 const E2 = 12 as SquareIndex;

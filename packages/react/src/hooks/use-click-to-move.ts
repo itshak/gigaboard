@@ -28,7 +28,13 @@
  *   behaviour intact.
  */
 
-import { type BoardModel, type PackedMove, type SquareIndex, Color, PieceType } from "@ultrachess/core";
+import {
+  type BoardModel,
+  Color,
+  type PackedMove,
+  PieceType,
+  type SquareIndex,
+} from "@ultrachess/core";
 import { useCallback } from "react";
 
 /** Pawn = piece-type 0; rank 7 / rank 0 is the last rank for white / black. */

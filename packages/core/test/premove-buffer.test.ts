@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  PieceType,
-  type SquareIndex,
-  createPremoveBuffer,
-  makePremove,
-} from "../src/index.js";
+import { createPremoveBuffer, makePremove, PieceType, type SquareIndex } from "../src/index.js";
 
-const pm = (from: number, to: number) =>
-  makePremove(from as SquareIndex, to as SquareIndex);
+const pm = (from: number, to: number) => makePremove(from as SquareIndex, to as SquareIndex);
 
 describe("createPremoveBuffer", () => {
   it("starts empty", () => {
@@ -32,11 +26,7 @@ describe("createPremoveBuffer", () => {
     const without = makePremove(12 as SquareIndex, 28 as SquareIndex);
     expect(Object.hasOwn(without, "promotion")).toBe(false);
 
-    const withPromo = makePremove(
-      12 as SquareIndex,
-      28 as SquareIndex,
-      PieceType.Queen,
-    );
+    const withPromo = makePremove(12 as SquareIndex, 28 as SquareIndex, PieceType.Queen);
     expect(withPromo.promotion).toBe(PieceType.Queen);
   });
 

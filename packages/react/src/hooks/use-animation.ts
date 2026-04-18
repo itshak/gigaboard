@@ -31,8 +31,9 @@
  */
 
 import type { AnimDescriptor, BoardModel, SquareIndex } from "@ultrachess/core";
-import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect } from "react";
 import type { AnimationOptions, Orientation } from "../types.js";
+import { useBoardSlice } from "./use-board-subscription.js";
 
 const DEFAULT_DURATION_MS = 180;
 const DEFAULT_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
@@ -102,10 +103,7 @@ function animateGlide(
   cancelAnimations(element);
   if (duration <= 0 || typeof element.animate !== "function") return;
   element.animate(
-    [
-      { transform: `translate(${dx}px, ${dy}px)` },
-      { transform: "translate(0, 0)" },
-    ],
+    [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0, 0)" }],
     { duration, easing, fill: "none" },
   );
 }
@@ -134,50 +132,119 @@ export interface UseAnimationRuntime {
  * @param runtime Optional runtime hooks (e.g. a `skipNextRef` to bypass
  *   the animation on the next commit).
  */
-export function useAnimation(
-  model: BoardModel | null,
-  containerRef: RefObject<HTMLElement | null>,
+/**
+ * Drive FLIP animations off a cheap scalar slice subscription.
+ *
+ * Previously this hook ran a `setState` inside `<Chessboard/>` on every
+ * model commit to make its `useLayoutEffect` re-fire. That worked, but it
+ * forced `<Chessboard/>` (and the entire layer tree below it) to re-run
+ * its function body every single move — the per-byte subscriptions saved
+ * `<Square/>` / `<PieceSlot/>` from re-rendering, but the 11 layer
+ * wrappers above them paid full price. See the M7 render-budget diagnosis
+ * in BENCH.md's "What's not measured yet" section.
+ *
+ * The fix: expose `<AnimationRunner/>` as a sibling component that
+ * subscribes to `historyPly` via `useBoardSlice`. When a move lands,
+ * only `<AnimationRunner/>` re-renders (it produces `null`), its layout
+ * effect fires, and it reads `model.lastAnimations` to run the WAAPI
+ * glides. `<Chessboard/>` never re-renders on a move.
+ */
+function runAnimations(
+  descriptors: readonly AnimDescriptor[],
+  container: HTMLElement,
   orientation: Orientation,
-  options: AnimationOptions = {},
-  runtime: UseAnimationRuntime = {},
+  duration: number,
+  easing: string,
 ): void {
-  const duration = options.durationMs ?? DEFAULT_DURATION_MS;
-  const easing = options.easing ?? DEFAULT_EASING;
-  const skipNextRef = runtime.skipNextRef;
+  const rect = container.getBoundingClientRect();
+  const sqSize = rect.width / 8;
+  if (sqSize <= 0) return;
 
-  // We want to animate *after* React has committed the new DOM but *before*
-  // the browser paints — that's what `useLayoutEffect` gives us. But the
-  // owner component (`Chessboard`) does NOT subscribe to the model directly
-  // (only its children do), so its `useLayoutEffect` wouldn't re-fire on
-  // commits. We bump a local counter on every model commit to trigger a
-  // cheap re-render of the owner, which lets the layout effect run with the
-  // fresh descriptors.
-  const [, setTick] = useState(0);
-  const pendingRef = useRef<{ descriptors: readonly AnimDescriptor[] }>({
-    descriptors: [],
-  });
+  for (const d of descriptors) {
+    switch (d.kind) {
+      case "move":
+      case "capture":
+      case "en-passant":
+      case "promotion": {
+        const toEl = container.querySelector<HTMLElement>(
+          `[data-piece-square="${algebraicOf(d.to)}"]`,
+        );
+        if (toEl === null) break;
+        const { dx, dy } = deltaFromTo(d.from, d.to, sqSize, orientation);
+        animateGlide(toEl, dx, dy, duration, easing);
+        break;
+      }
+      case "castle": {
+        const kingEl = container.querySelector<HTMLElement>(
+          `[data-piece-square="${algebraicOf(d.kingTo)}"]`,
+        );
+        const rookEl = container.querySelector<HTMLElement>(
+          `[data-piece-square="${algebraicOf(d.rookTo)}"]`,
+        );
+        if (kingEl !== null) {
+          const { dx, dy } = deltaFromTo(d.kingFrom, d.kingTo, sqSize, orientation);
+          animateGlide(kingEl, dx, dy, duration, easing);
+        }
+        if (rookEl !== null) {
+          const { dx, dy } = deltaFromTo(d.rookFrom, d.rookTo, sqSize, orientation);
+          animateGlide(rookEl, dx, dy, duration, easing);
+        }
+        break;
+      }
+      // `appear` / `disappear` deliberately not animated — they cover
+      // edge cases like `load(fen)` where no "glide" is meaningful.
+      case "appear":
+      case "disappear":
+        break;
+    }
+  }
+}
 
-  useEffect(() => {
-    if (model === null) return;
-    pendingRef.current.descriptors = model.lastAnimations;
-    return model.subscribe(() => {
-      pendingRef.current.descriptors = model.lastAnimations;
-      setTick((t) => (t + 1) | 0);
-    });
-  }, [model]);
+/** Props for {@link AnimationRunner}. */
+export interface AnimationRunnerProps {
+  readonly model: BoardModel;
+  readonly containerRef: RefObject<HTMLElement | null>;
+  readonly orientation: Orientation;
+  readonly options?: AnimationOptions;
+  readonly runtime?: UseAnimationRuntime;
+}
+
+/**
+ * Sibling component that owns the animation subscription. Renders `null`;
+ * its only job is to translate a scalar slice change (`historyPly`) into
+ * a `useLayoutEffect` firing with the descriptors from the just-committed
+ * move. Because the subscription lives here — not in `<Chessboard/>` —
+ * the root board component no longer re-renders once per move.
+ */
+export function AnimationRunner({
+  model,
+  containerRef,
+  orientation,
+  options,
+  runtime,
+}: AnimationRunnerProps): ReactNode {
+  const duration = options?.durationMs ?? DEFAULT_DURATION_MS;
+  const easing = options?.easing ?? DEFAULT_EASING;
+  const skipNextRef = runtime?.skipNextRef;
+
+  // `historyPly` advances exactly once per committed move (including
+  // undo / redo / goto). Subscribing to this single number — via React's
+  // default `Object.is` bailout — wakes us exactly when we need to run
+  // the post-commit glide. We include `historyPly` in the layout-effect
+  // deps below so the effect re-fires on every move; without it, the
+  // effect would run once on mount and sit there forever.
+  const historyPly = useBoardSlice(model, (s) => s.historyPly);
 
   useLayoutEffect(() => {
-    if (model === null) return;
     const container = containerRef.current;
     if (container === null) return;
-    const descriptors = pendingRef.current.descriptors;
+    const descriptors = model.lastAnimations;
     if (descriptors.length === 0) return;
-    pendingRef.current.descriptors = [];
 
-    // Drag-initiated commits: consume the skip flag and bail out. The user
-    // has already placed the piece at the target; replaying a glide from
-    // the source looks like the move is being undone and redone.
-    if (skipNextRef !== undefined && skipNextRef.current) {
+    // Drag-initiated commits: consume the skip flag and bail out. The
+    // user has already placed the piece at the target; replaying a glide
+    // from the source looks like the move is being undone and redone.
+    if (skipNextRef?.current) {
       skipNextRef.current = false;
       return;
     }
@@ -185,50 +252,10 @@ export function useAnimation(
     const effectiveDuration = prefersReducedMotion() ? 0 : duration;
     if (effectiveDuration <= 0) return;
 
-    const rect = container.getBoundingClientRect();
-    const sqSize = rect.width / 8;
-    if (sqSize <= 0) return;
+    runAnimations(descriptors, container, orientation, effectiveDuration, easing);
+    // `historyPly` changes per move and is THE trigger; the rest are
+    // stable-across-renders props kept here for lint correctness.
+  }, [historyPly, model, containerRef, orientation, duration, easing, skipNextRef]);
 
-    for (const d of descriptors) {
-      switch (d.kind) {
-        case "move":
-        case "capture":
-        case "en-passant":
-        case "promotion": {
-          const toEl = container.querySelector<HTMLElement>(
-            `[data-piece-square="${algebraicOf(d.to)}"]`,
-          );
-          if (toEl === null) break;
-          const { dx, dy } = deltaFromTo(d.from, d.to, sqSize, orientation);
-          animateGlide(toEl, dx, dy, effectiveDuration, easing);
-          break;
-        }
-        case "castle": {
-          const kingEl = container.querySelector<HTMLElement>(
-            `[data-piece-square="${algebraicOf(d.kingTo)}"]`,
-          );
-          const rookEl = container.querySelector<HTMLElement>(
-            `[data-piece-square="${algebraicOf(d.rookTo)}"]`,
-          );
-          if (kingEl !== null) {
-            const { dx, dy } = deltaFromTo(d.kingFrom, d.kingTo, sqSize, orientation);
-            animateGlide(kingEl, dx, dy, effectiveDuration, easing);
-          }
-          if (rookEl !== null) {
-            const { dx, dy } = deltaFromTo(d.rookFrom, d.rookTo, sqSize, orientation);
-            animateGlide(rookEl, dx, dy, effectiveDuration, easing);
-          }
-          break;
-        }
-        // `appear` / `disappear` deliberately not animated in M3 — they
-        // cover edge cases like `load(fen)` where no "glide" is meaningful.
-        case "appear":
-        case "disappear":
-          break;
-      }
-    }
-    // We want this effect to run after every commit; `model` is the
-    // subscription owner, so re-install when it changes.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional per-commit run via refs
-  });
+  return null;
 }

@@ -13,33 +13,35 @@
  * for state.
  */
 
+import { planAnimations } from "./animation-planner.js";
+import { createArrowModel } from "./arrow-model.js";
 import {
+  createDragController,
   type DragController,
   type DragControllerOptions,
-  createDragController,
 } from "./drag-controller.js";
 import type { EngineAdapter } from "./engine-adapter.js";
-import type { AnimDescriptor } from "./types.js";
 import {
+  createLegalMoveIndex,
   type LegalMoveIndex,
   type LegalMoveIndexOptions,
-  createLegalMoveIndex,
 } from "./legal-move-index.js";
-import { createArrowModel } from "./arrow-model.js";
 import { createPremoveBuffer } from "./premove-buffer.js";
 import { type BoardStore, createBoardStore, type Unsubscribe } from "./subscribe-store.js";
-import { planAnimations } from "./animation-planner.js";
 import type {
+  AnimDescriptor,
   Arrow,
   BoardSnapshot,
   PackedMove,
+  PieceType,
   Premove,
   SquareIndex,
 } from "./types.js";
-import { type PieceType } from "./types.js";
 
 /** Frozen empty set singleton — returned when nothing is selected. */
-const EMPTY_SET: ReadonlySet<SquareIndex> = Object.freeze(new Set<SquareIndex>()) as ReadonlySet<SquareIndex>;
+const EMPTY_SET: ReadonlySet<SquareIndex> = Object.freeze(
+  new Set<SquareIndex>(),
+) as ReadonlySet<SquareIndex>;
 
 /** Extract the "to" square from a packed move without importing `ultrachess`. */
 function moveTo(m: PackedMove): SquareIndex {
@@ -130,8 +132,7 @@ export function createBoardModel(
   engine: EngineAdapter,
   options: BoardModelOptions = {},
 ): BoardModel {
-  const freezeSnapshots =
-    options.freezeSnapshots ?? process.env["NODE_ENV"] !== "production";
+  const freezeSnapshots = options.freezeSnapshots ?? process.env["NODE_ENV"] !== "production";
   const legalMoveIndex = createLegalMoveIndex(options.legalMoveIndex ?? {});
   const arrowModel = createArrowModel();
   const premoveBuffer = createPremoveBuffer();
@@ -282,12 +283,7 @@ export function createBoardModel(
     if (kind === 1) {
       // Promotion piece bits 12–13: 0=N, 1=B, 2=R, 3=Q.
       const promoBits = ((m as unknown as number) >> 12) & 0b11;
-      const map: PieceType[] = [
-        1 as PieceType,
-        2 as PieceType,
-        3 as PieceType,
-        4 as PieceType,
-      ];
+      const map: PieceType[] = [1 as PieceType, 2 as PieceType, 3 as PieceType, 4 as PieceType];
       promotion = map[promoBits];
     }
     const applied = engine.makeMove(from, to, promotion);
@@ -358,11 +354,7 @@ export function createBoardModel(
     commitWith(null);
   };
 
-  const isLegal = (
-    from: SquareIndex,
-    to: SquareIndex,
-    promotion?: PieceType,
-  ): boolean => {
+  const isLegal = (from: SquareIndex, to: SquareIndex, promotion?: PieceType): boolean => {
     const hash = engine.hash();
     const cached = legalMoveIndex.get(hash, from);
     if (cached !== undefined && promotion === undefined) {

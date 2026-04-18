@@ -43,8 +43,8 @@
 import {
   type BoardCell,
   type BoardModel,
-  type SquareIndex,
   createDragController,
+  type SquareIndex,
 } from "@ultrachess/core";
 import { type RefObject, useEffect } from "react";
 import type { Orientation } from "../types.js";
@@ -171,9 +171,7 @@ export function useDrag(options: UseDragOptions): void {
         }
         // Hide origin piece imperatively (no re-render).
         const originLabel = algebraicOf(evt.from);
-        originEl = container.querySelector<HTMLElement>(
-          `[data-piece-square="${originLabel}"]`,
-        );
+        originEl = container.querySelector<HTMLElement>(`[data-piece-square="${originLabel}"]`);
         if (originEl !== null) originEl.style.opacity = "0";
 
         active = true;

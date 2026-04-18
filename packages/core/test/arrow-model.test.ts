@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type SquareIndex, createArrowModel, makeArrow } from "../src/index.js";
+import { createArrowModel, makeArrow, type SquareIndex } from "../src/index.js";
 
 const a = (from: number, to: number, color = "green") =>
   makeArrow(from as SquareIndex, to as SquareIndex, color);

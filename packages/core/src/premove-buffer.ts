@@ -9,8 +9,7 @@
  * it too).
  */
 
-import type { Premove, SquareIndex } from "./types.js";
-import { type PieceType } from "./types.js";
+import type { PieceType, Premove, SquareIndex } from "./types.js";
 
 /** Premove queue API. */
 export interface PremoveBuffer {
@@ -85,11 +84,7 @@ export function createPremoveBuffer(): PremoveBuffer {
 }
 
 /** Helper: build a frozen `Premove` literal with safe optional handling. */
-export function makePremove(
-  from: SquareIndex,
-  to: SquareIndex,
-  promotion?: PieceType,
-): Premove {
+export function makePremove(from: SquareIndex, to: SquareIndex, promotion?: PieceType): Premove {
   return promotion === undefined
     ? Object.freeze({ from, to })
     : Object.freeze({ from, to, promotion });

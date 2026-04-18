@@ -17,11 +17,7 @@
  * snapshot so no extra engine call is required.
  */
 
-import {
-  type BoardModel,
-  type PackedMove,
-  decodePackedMove,
-} from "@ultrachess/core";
+import { type BoardModel, decodePackedMove, type PackedMove } from "@ultrachess/core";
 import { useMemo } from "react";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 
@@ -76,13 +72,7 @@ function announcementFor(
 
   if (kind === "promotion" && promotion !== null) {
     const promoted =
-      promotion === 1
-        ? "knight"
-        : promotion === 2
-          ? "bishop"
-          : promotion === 3
-            ? "rook"
-            : "queen";
+      promotion === 1 ? "knight" : promotion === 2 ? "bishop" : promotion === 3 ? "rook" : "queen";
     const action = wasCapture ? "captures and promotes" : "promotes";
     return `Pawn ${fromSq} ${action} to ${promoted} on ${toSq}.`;
   }
@@ -126,23 +116,24 @@ export interface LiveRegionProps {
  * description of the most recent move.
  */
 export function LiveRegion({ model }: LiveRegionProps) {
+  // Subscribe to `lastMove` only. The board bytes relevant to the
+  // announcement (the `to` square) are read lazily inside the memo via
+  // `getSnapshot()`, so we never wake on unrelated commits (arrow draw,
+  // selection change, etc.) and never subscribe to a Uint8Array whose
+  // identity is kept across commits — both of those were quiet no-ops
+  // before and are gone now, one less thing for React to schedule.
   const lastMove = useBoardSlice(model, (s) => s.lastMove);
-  const board = useBoardSlice(model, (s) => s.board);
-
-  // Capture detection: inspect the just-emitted animation descriptors.
-  // `lastAnimations` isn't part of the snapshot object but is stable across
-  // the same commit, so reading it here is safe.
-  const wasCapture = useMemo(() => {
-    if (lastMove === null) return false;
-    return model.lastAnimations.some(
-      (d) => d.kind === "capture" || d.kind === "en-passant",
-    );
-  }, [model, lastMove]);
 
   const message = useMemo(() => {
     if (lastMove === null) return "";
-    return announcementFor(lastMove, board, wasCapture);
-  }, [lastMove, board, wasCapture]);
+    // Capture detection: inspect the just-emitted animation descriptors.
+    // `lastAnimations` isn't part of the snapshot object but is stable
+    // across the same commit, so reading it here is safe.
+    const wasCapture = model.lastAnimations.some(
+      (d) => d.kind === "capture" || d.kind === "en-passant",
+    );
+    return announcementFor(lastMove, model.getSnapshot().board, wasCapture);
+  }, [lastMove, model]);
 
   return (
     <div
@@ -156,4 +147,3 @@ export function LiveRegion({ model }: LiveRegionProps) {
     </div>
   );
 }
-

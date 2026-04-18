@@ -116,10 +116,7 @@ function algebraicOf(index: SquareIndex): string {
   return `${String.fromCharCode(0x61 + file)}${rank + 1}`;
 }
 
-function positionOf(
-  index: SquareIndex,
-  orientation: Orientation,
-): { x: number; y: number } {
+function positionOf(index: SquareIndex, orientation: Orientation): { x: number; y: number } {
   const file = index & 7;
   const rank = index >> 3;
   const col = orientation === "white" ? file : 7 - file;

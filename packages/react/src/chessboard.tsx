@@ -14,14 +14,7 @@
  */
 
 import type { BoardCell, PieceType, SquareIndex } from "@ultrachess/core";
-import {
-  type CSSProperties,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { ArrowsLayer, type ArrowsLayerHandle } from "./components/arrows-layer.js";
 import { BoardGrid } from "./components/board-grid.js";
@@ -35,7 +28,7 @@ import { PieceLayer } from "./components/piece-layer.js";
 import { PremoveLayer } from "./components/premove-layer.js";
 import { PromotionOverlay } from "./components/promotion-overlay.js";
 import { defaultArrowColors, defaultTheme } from "./default-theme.js";
-import { useAnimation } from "./hooks/use-animation.js";
+import { AnimationRunner } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
 import { useDrag } from "./hooks/use-drag.js";
@@ -125,11 +118,11 @@ export function Chessboard(props: ChessboardProps) {
   const arrowsLayerRef = useRef<ArrowsLayerHandle | null>(null);
 
   // Set to `true` whenever the next model commit is the result of a drag
-  // (or a promotion dialog opened by a drag). `useAnimation` reads this
-  // flag on each commit and skips the FLIP animation, because the piece
-  // has already been positioned by the user's pointer. Reset to `false`
-  // anywhere the move is abandoned (illegal drop, dialog cancel) so the
-  // flag never leaks into a subsequent non-drag move.
+  // (or a promotion dialog opened by a drag). `<AnimationRunner/>` reads
+  // this flag on each commit and skips the FLIP animation, because the
+  // piece has already been positioned by the user's pointer. Reset to
+  // `false` anywhere the move is abandoned (illegal drop, dialog cancel)
+  // so the flag never leaks into a subsequent non-drag move.
   const skipNextAnimationRef = useRef(false);
 
   // Latest-ref pattern for user callbacks — keeps `useCallback`/`useEffect`
@@ -160,9 +153,7 @@ export function Chessboard(props: ChessboardProps) {
   } | null>(null);
 
   // Promotion dialog state — null when no promotion is pending.
-  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(
-    null,
-  );
+  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null);
 
   // Keyboard-focus state for the roving tabindex. `null` means the board
   // hasn't been focused yet — Tabbing into it takes the user to the
@@ -351,14 +342,8 @@ export function Chessboard(props: ChessboardProps) {
         }
         // Premove promotion auto-queens (lichess convention) — the user
         // isn't given a dialog here because it's not their turn yet.
-        const promotion = movePromotesPawn(fromCell, to)
-          ? (4 as PieceType) /* Queen */
-          : undefined;
-        game.queuePremove(
-          promotion === undefined
-            ? { from, to }
-            : { from, to, promotion },
-        );
+        const promotion = movePromotesPawn(fromCell, to) ? (4 as PieceType) /* Queen */ : undefined;
+        game.queuePremove(promotion === undefined ? { from, to } : { from, to, promotion });
         return;
       }
 
@@ -433,13 +418,13 @@ export function Chessboard(props: ChessboardProps) {
     palette,
   });
 
-  useAnimation(game, containerRef, orientation, animation ?? {}, {
-    skipNextRef: skipNextAnimationRef,
-  });
-
   // Move-sound effects. Runs even when `game` is null — the hook no-ops
   // until the model exists.
   useMoveSound(game, soundOptions);
+
+  // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
+  // across `<Chessboard/>` prop changes unrelated to animation.
+  const animationRuntime = useMemo(() => ({ skipNextRef: skipNextAnimationRef }), []);
 
   // Inline theme variables → available at first paint.
   const containerStyle: CSSProperties = {
@@ -477,8 +462,15 @@ export function Chessboard(props: ChessboardProps) {
       {game !== null ? (
         <PremoveLayer model={game} orientation={orientation} pieces={pieces} />
       ) : null}
+      {game !== null ? <PieceLayer model={game} orientation={orientation} pieces={pieces} /> : null}
       {game !== null ? (
-        <PieceLayer model={game} orientation={orientation} pieces={pieces} />
+        <AnimationRunner
+          model={game}
+          containerRef={containerRef}
+          orientation={orientation}
+          {...(animation !== undefined ? { options: animation } : {})}
+          runtime={animationRuntime}
+        />
       ) : null}
       <DragLayer ref={dragLayerRef} active={dragActive} pieces={pieces} />
       {game !== null ? (

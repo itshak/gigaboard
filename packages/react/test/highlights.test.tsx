@@ -92,10 +92,9 @@ describe("illegal flash", () => {
       expect(document.querySelector('[data-layer="illegal-flash"]')).not.toBeNull();
     });
     // ILLEGAL_FLASH_HOLD_MS is 320; waitFor default timeout is 1000ms.
-    await waitFor(
-      () => expect(document.querySelector('[data-layer="illegal-flash"]')).toBeNull(),
-      { timeout: 1000 },
-    );
+    await waitFor(() => expect(document.querySelector('[data-layer="illegal-flash"]')).toBeNull(), {
+      timeout: 1000,
+    });
   });
 
   it("showIllegalFlash={false} suppresses the flash entirely", async () => {

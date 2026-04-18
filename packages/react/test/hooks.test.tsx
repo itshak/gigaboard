@@ -9,7 +9,7 @@
 
 import { act, render, screen } from "@testing-library/react";
 import type { BoardModel } from "@ultrachess/core";
-import { type SquareIndex, Color } from "@ultrachess/core";
+import { Color, type SquareIndex } from "@ultrachess/core";
 import { describe, expect, it, vi } from "vitest";
 import { useBoardSlice, useSquareCell } from "../src/hooks/use-board-subscription.js";
 import { useClickToMove } from "../src/hooks/use-click-to-move.js";
@@ -105,4 +105,3 @@ describe("useClickToMove", () => {
     expect(true).toBe(true);
   });
 });
-

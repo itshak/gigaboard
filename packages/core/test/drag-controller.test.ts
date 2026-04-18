@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type SquareIndex, createDragController } from "../src/index.js";
+import { createDragController, type SquareIndex } from "../src/index.js";
 
 const FROM = 12 as SquareIndex;
 const POINTER = 7;

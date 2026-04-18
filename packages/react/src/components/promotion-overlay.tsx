@@ -22,10 +22,10 @@
 
 import {
   type BoardCell,
-  Color,
+  type Color,
+  encodeBoardCell,
   PieceType,
   type SquareIndex,
-  encodeBoardCell,
 } from "@ultrachess/core";
 import { useEffect } from "react";
 import { CSS_VARS } from "../default-theme.js";
@@ -43,7 +43,10 @@ export interface PromotionOverlayProps {
 }
 
 /** Pixel position of a square within the board, as `{ x%, y% }`. */
-function positionOf(index: SquareIndex, orientation: Orientation): {
+function positionOf(
+  index: SquareIndex,
+  orientation: Orientation,
+): {
   x: number;
   y: number;
 } {
@@ -107,8 +110,7 @@ export function PromotionOverlay({
   // square visually sits at the bottom (row 7) — the dialog grows upward so
   // rook/bishop/knight don't fall off-board.
   const promotingColorIsBlack = color === 1;
-  const stackUpward =
-    orientation === "white" ? promotingColorIsBlack : !promotingColorIsBlack;
+  const stackUpward = orientation === "white" ? promotingColorIsBlack : !promotingColorIsBlack;
 
   return (
     <div

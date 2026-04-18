@@ -56,14 +56,8 @@ describe("arrow gesture", () => {
     const root = container();
     const e2 = squareCentre("e2");
     const e4 = squareCentre("e4");
-    fireEvent(
-      root,
-      pointerEvent("pointerdown", { x: e2.x, y: e2.y, button: 2, shiftKey: true }),
-    );
-    fireEvent(
-      root,
-      pointerEvent("pointerup", { x: e4.x, y: e4.y, button: 2, shiftKey: true }),
-    );
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y, button: 2, shiftKey: true }));
+    fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y, button: 2, shiftKey: true }));
     const arrow = model.getSnapshot().arrows[0]!;
     // Default Shift colour is the lichess red.
     expect(arrow.color).toMatch(/153, 40, 40/);
@@ -75,25 +69,13 @@ describe("arrow gesture", () => {
     const a1 = squareCentre("a1");
     const h8 = squareCentre("h8");
 
-    fireEvent(
-      root,
-      pointerEvent("pointerdown", { x: a1.x, y: a1.y, button: 2, altKey: true }),
-    );
-    fireEvent(
-      root,
-      pointerEvent("pointerup", { x: h8.x, y: h8.y, button: 2, altKey: true }),
-    );
+    fireEvent(root, pointerEvent("pointerdown", { x: a1.x, y: a1.y, button: 2, altKey: true }));
+    fireEvent(root, pointerEvent("pointerup", { x: h8.x, y: h8.y, button: 2, altKey: true }));
 
     const a1b = squareCentre("b2");
     const h8c = squareCentre("g7");
-    fireEvent(
-      root,
-      pointerEvent("pointerdown", { x: a1b.x, y: a1b.y, button: 2, ctrlKey: true }),
-    );
-    fireEvent(
-      root,
-      pointerEvent("pointerup", { x: h8c.x, y: h8c.y, button: 2, ctrlKey: true }),
-    );
+    fireEvent(root, pointerEvent("pointerdown", { x: a1b.x, y: a1b.y, button: 2, ctrlKey: true }));
+    fireEvent(root, pointerEvent("pointerup", { x: h8c.x, y: h8c.y, button: 2, ctrlKey: true }));
 
     const arrows = model.getSnapshot().arrows;
     expect(arrows).toHaveLength(2);

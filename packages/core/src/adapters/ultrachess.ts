@@ -27,7 +27,7 @@ import {
 } from "ultrachess";
 import type { EngineAdapter } from "../engine-adapter.js";
 import type { PackedMove, PieceType, SquareIndex } from "../types.js";
-import { Color, encodeBoardCell } from "../types.js";
+import { type Color, encodeBoardCell } from "../types.js";
 
 /**
  * Build an adapter from a live `Chess` instance. The adapter takes ownership

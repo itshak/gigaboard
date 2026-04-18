@@ -9,8 +9,7 @@
  */
 
 import { act } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { type SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 

@@ -23,8 +23,8 @@ export default function Page() {
     >
       <h1>Static analysis board</h1>
       <p style={{ color: "#555" }}>
-        This board is a React Server Component. No client JavaScript is sent to
-        your browser for the board itself — only the prose and layout.
+        This board is a React Server Component. No client JavaScript is sent to your browser for the
+        board itself — only the prose and layout.
       </p>
       <div style={{ maxWidth: "480px", margin: "0 auto" }}>
         <StaticChessboard fen={POSITION} />

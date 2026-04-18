@@ -7,15 +7,15 @@ import {
   BOARD_CELL_WP,
   type BoardCell,
   Color,
-  type PackedMove,
-  PieceType,
-  type SquareIndex,
   colorOf,
   encodeBoardCell,
   fromUltrachessPiece,
   isEmptyCell,
   isSquareIndex,
+  type PackedMove,
+  PieceType,
   pieceTypeOf,
+  type SquareIndex,
   toSquareIndex,
 } from "../src/index.js";
 

@@ -6,10 +6,10 @@
  * so the test contract is the same one a screen-reader user would use.
  */
 
-import { Color } from "@ultrachess/core";
 import { fireEvent, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BoardModel } from "@ultrachess/core";
+import { Color } from "@ultrachess/core";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
 function gridcell(label: string): HTMLElement {

@@ -1,15 +1,15 @@
-import { describe, expect, it } from "vitest";
 import { isValidElement } from "react";
+import { describe, expect, it } from "vitest";
 import {
-  BOARD_CELL_KEY,
-  PACKAGE_VERSION,
   alpha,
+  BOARD_CELL_KEY,
   cburnett,
   chesscom,
   chesscomPieceUrls,
   createImagePieceSet,
   merida,
   neo,
+  PACKAGE_VERSION,
   pieceSets,
 } from "../src/index.js";
 
@@ -53,9 +53,7 @@ describe("@ultrachess/pieces", () => {
     expect(Object.isFrozen(urls)).toBe(true);
     for (let cell = 1; cell <= 12; cell++) {
       const url = (urls as Record<number, string>)[cell];
-      expect(url.startsWith("https://images.chesscomfiles.com/chess-themes/pieces/")).toBe(
-        true,
-      );
+      expect(url.startsWith("https://images.chesscomfiles.com/chess-themes/pieces/")).toBe(true);
       expect(url).toMatch(/\.png$/);
     }
   });

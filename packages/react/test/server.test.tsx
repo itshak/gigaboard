@@ -11,12 +11,11 @@
  * the actual SSR code path rather than the client renderer.
  */
 
-import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import { describe, expect, it } from "vitest";
 import { StaticChessboard } from "../src/server.js";
 
-const STARTING_FEN =
-  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 describe("<StaticChessboard/> (server)", () => {
   it("renders an 8×8 grid from the starting FEN", () => {
@@ -44,12 +43,8 @@ describe("<StaticChessboard/> (server)", () => {
   });
 
   it("flips orientation in the DOM order without changing aria-label semantics", () => {
-    const white = renderToStaticMarkup(
-      <StaticChessboard fen={STARTING_FEN} orientation="white" />,
-    );
-    const black = renderToStaticMarkup(
-      <StaticChessboard fen={STARTING_FEN} orientation="black" />,
-    );
+    const white = renderToStaticMarkup(<StaticChessboard fen={STARTING_FEN} orientation="white" />);
+    const black = renderToStaticMarkup(<StaticChessboard fen={STARTING_FEN} orientation="black" />);
     // a1 is still labelled "a1" in both.
     expect(white).toContain('aria-label="a1"');
     expect(black).toContain('aria-label="a1"');
@@ -78,18 +73,14 @@ describe("<StaticChessboard/> (server)", () => {
   });
 
   it("renders an empty position without errors", () => {
-    const html = renderToStaticMarkup(
-      <StaticChessboard fen="8/8/8/8/8/8/8/8 w - - 0 1" />,
-    );
+    const html = renderToStaticMarkup(<StaticChessboard fen="8/8/8/8/8/8/8/8 w - - 0 1" />);
     // 64 cells still, but zero piece markers.
     expect(html.match(/role="gridcell"/g)?.length).toBe(64);
     expect(html.includes("data-piece-square=")).toBe(false);
   });
 
   it("throws on a malformed FEN rather than silently mis-rendering", () => {
-    expect(() =>
-      renderToStaticMarkup(<StaticChessboard fen="totally-invalid" />),
-    ).toThrow();
+    expect(() => renderToStaticMarkup(<StaticChessboard fen="totally-invalid" />)).toThrow();
   });
 
   it("does not emit any event-handler attributes (zero client JS)", () => {
