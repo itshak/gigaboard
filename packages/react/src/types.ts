@@ -14,6 +14,7 @@ import type {
   SquareIndex,
 } from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
+import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 
 /** Which way the board is facing. */
 export type Orientation = "white" | "black";
@@ -205,6 +206,18 @@ export interface ChessboardProps {
 
   /** Accessible label for the board (`aria-label`). Default "Chess board". */
   readonly ariaLabel?: string;
+
+  /**
+   * Move-sound effects. Pass `true` (default) to enable the built-in
+   * chess.com-style cue set, `false` to disable, or a {@link MoveSoundOptions}
+   * object to configure volume, per-key URL overrides, or viewer perspective.
+   *
+   * The seven cues ship as local MP3 assets inside this package; no runtime
+   * CDN dependency. Autoplay policies apply on every major browser — the
+   * first cue may be silent until the user has interacted with the page,
+   * after which playback is immediate.
+   */
+  readonly sound?: boolean | MoveSoundOptions;
 }
 
 /** Options forwarded to {@link useChessGame} on first mount. */

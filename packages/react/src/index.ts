@@ -22,6 +22,15 @@ export { useDrag } from "./hooks/use-drag.js";
 export { useAnimation } from "./hooks/use-animation.js";
 export { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
+export {
+  DEFAULT_MOVE_SOUND_SOURCES,
+  useMoveSound,
+} from "./hooks/use-move-sound.js";
+export type {
+  MoveSoundKey,
+  MoveSoundOptions,
+  MoveSoundSources,
+} from "./hooks/use-move-sound.js";
 
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";

@@ -66,6 +66,16 @@
         "default": "./dist/sets/neo.cjs"
       }
     },
+    "./chesscom": {
+      "import": {
+        "types": "./dist/sets/chesscom.d.ts",
+        "default": "./dist/sets/chesscom.js"
+      },
+      "require": {
+        "types": "./dist/sets/chesscom.d.cts",
+        "default": "./dist/sets/chesscom.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": ["dist", "README.md", "LICENSE"],
@@ -107,6 +117,13 @@
     {
       "name": "@ultrachess/pieces/alpha",
       "path": "dist/sets/alpha.js",
+      "limit": "2 KB",
+      "gzip": true,
+      "ignore": ["react"]
+    },
+    {
+      "name": "@ultrachess/pieces/chesscom",
+      "path": "dist/sets/chesscom.js",
       "limit": "2 KB",
       "gzip": true,
       "ignore": ["react"]

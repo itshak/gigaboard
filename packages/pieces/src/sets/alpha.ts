@@ -1,2 +1,15 @@
-/** alpha SVG piece set — lands in M6. */
-export const ALPHA_PLACEHOLDER = "alpha";
+/**
+ * **Alpha** — chess.com's Alpha set.
+ *
+ * Thin, minimalist silhouettes; reads well at small sizes. Good fit for
+ * mobile boards and puzzle thumbnails.
+ *
+ * ```tsx
+ * import { alpha } from "@ultrachess/pieces/alpha";
+ * <Chessboard game={game} pieces={alpha} />
+ * ```
+ */
+
+import { chesscomPieceUrls, createImagePieceSet } from "../create-image-piece-set.js";
+
+export const alpha = createImagePieceSet(chesscomPieceUrls("alpha"));

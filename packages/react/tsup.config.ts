@@ -15,4 +15,11 @@ export default defineConfig({
   treeshake: true,
   minify: false,
   external: ["react", "react-dom", "ultrachess"],
+  // Emit MP3 move-sound assets as files in `dist/` and rewrite imports to
+  // their runtime URLs. This keeps sound assets bundler-friendly — Next.js,
+  // Vite, and any modern ESM bundler will re-resolve the emitted URL via
+  // static asset handling.
+  loader: {
+    ".mp3": "file",
+  },
 });

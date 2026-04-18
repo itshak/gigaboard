@@ -7,6 +7,7 @@ export default defineConfig({
     "sets/merida": "src/sets/merida.ts",
     "sets/alpha": "src/sets/alpha.ts",
     "sets/neo": "src/sets/neo.ts",
+    "sets/chesscom": "src/sets/chesscom.ts",
   },
   format: ["esm", "cjs"],
   dts: true,

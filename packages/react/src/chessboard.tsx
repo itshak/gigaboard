@@ -40,6 +40,7 @@ import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
 import { useDrag } from "./hooks/use-drag.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
+import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type { ArrowColors, ChessboardProps } from "./types.js";
 
@@ -107,7 +108,17 @@ export function Chessboard(props: ChessboardProps) {
     allowPremove = false,
     showCheckHighlight = true,
     showIllegalFlash = true,
+    sound = true,
   } = props;
+
+  // Normalise `sound` (boolean | options) into a concrete options object.
+  // Memoised so `useMoveSound` doesn't rebuild its audio pool on every
+  // render when the caller passes a raw object literal.
+  const soundOptions = useMemo<MoveSoundOptions>(() => {
+    if (sound === true) return { enabled: true };
+    if (sound === false || sound === undefined) return { enabled: false };
+    return sound;
+  }, [sound]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragLayerRef = useRef<HTMLDivElement | null>(null);
@@ -425,6 +436,10 @@ export function Chessboard(props: ChessboardProps) {
   useAnimation(game, containerRef, orientation, animation ?? {}, {
     skipNextRef: skipNextAnimationRef,
   });
+
+  // Move-sound effects. Runs even when `game` is null — the hook no-ops
+  // until the model exists.
+  useMoveSound(game, soundOptions);
 
   // Inline theme variables → available at first paint.
   const containerStyle: CSSProperties = {
