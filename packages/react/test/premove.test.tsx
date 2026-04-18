@@ -51,8 +51,8 @@ describe("premove", () => {
     model.dispose();
   });
 
-  it("dropping an out-of-turn piece queues a premove", () => {
-    renderBoard(model);
+  it("with `allowPremove={true}`, an out-of-turn piece queues a premove", () => {
+    renderBoard(model, { allowPremove: true });
     dragWhiteD2toD3(container());
     const pre = model.getSnapshot().premoves;
     expect(pre).toHaveLength(1);
@@ -62,14 +62,21 @@ describe("premove", () => {
     expect(model.getSnapshot().historyPly).toBe(0);
   });
 
-  it("allowPremove={false} drops the intent silently", () => {
-    renderBoard(model, { allowPremove: false });
+  it("allowPremove defaults to false — out-of-turn drag is rejected", () => {
+    renderBoard(model); // no allowPremove prop → default
     dragWhiteD2toD3(container());
     expect(model.getSnapshot().premoves).toHaveLength(0);
   });
 
+  it("allowPremove={false} fires the illegal-flash (consistent with any other rejected move)", async () => {
+    renderBoard(model); // default false
+    dragWhiteD2toD3(container());
+    // The illegal-flash layer mounts on the origin square.
+    expect(document.querySelector('[data-layer="illegal-flash"]')).not.toBeNull();
+  });
+
   it("queued premove plays when the opponent moves", () => {
-    renderBoard(model);
+    renderBoard(model, { allowPremove: true });
     dragWhiteD2toD3(container());
     expect(model.getSnapshot().premoves).toHaveLength(1);
 
@@ -88,7 +95,7 @@ describe("premove", () => {
       "4k3/P7/8/8/8/8/8/4K3 b - - 0 1",
     );
     try {
-      renderBoard(localModel);
+      renderBoard(localModel, { allowPremove: true });
       const root = container();
       const a7 = squareCentre("a7");
       const a8 = squareCentre("a8");
@@ -105,7 +112,7 @@ describe("premove", () => {
   });
 
   it("renders a PremoveLayer ghost when a premove is queued", () => {
-    renderBoard(model);
+    renderBoard(model, { allowPremove: true });
     dragWhiteD2toD3(container());
     expect(document.querySelector('[data-layer="premove"]')).not.toBeNull();
     expect(document.querySelector('[data-premove-ghost="true"]')).not.toBeNull();

@@ -163,8 +163,14 @@ export interface ChessboardProps {
 
   /**
    * Queue moves attempted when it's not your turn as premoves instead of
-   * rejecting them. Default `true`. When the opponent replies, the queued
-   * premoves are attempted in order; the first illegal one voids the queue.
+   * rejecting them. **Default `false`** — premoves are an online-play
+   * affordance, and in local / analysis / tutorial boards the ghost-piece
+   * overlay is more confusing than helpful (looks like the board accepted
+   * a move it shouldn't have).
+   *
+   * Enable explicitly in networked UIs where the opponent's move is
+   * pending. When disabled (default), out-of-turn drags flash red via
+   * {@link showIllegalFlash} the same way any other illegal move does.
    */
   readonly allowPremove?: boolean;
 

@@ -102,7 +102,7 @@ export function Chessboard(props: ChessboardProps) {
     clearArrowsOnMove = true,
     clearArrowsOnClick = true,
     arrowColors,
-    allowPremove = true,
+    allowPremove = false,
     showCheckHighlight = true,
     showIllegalFlash = true,
   } = props;
@@ -314,9 +314,15 @@ export function Chessboard(props: ChessboardProps) {
       const fromCell = snap.board[from] ?? 0;
       const pieceColour = colorOfCell(fromCell);
 
-      // Not our turn? Queue as a premove instead of attempting.
+      // Not our turn? Queue as a premove if allowed; otherwise reject with
+      // the same red flash any other illegal move gets. Silently dropping
+      // the attempt was the default-true M4 behaviour but left users
+      // confused ("a blue ghost appeared from nowhere").
       if (fromCell !== 0 && pieceColour !== snap.turn) {
-        if (!allowPremove) return;
+        if (!allowPremove) {
+          triggerIllegalFlash(from);
+          return;
+        }
         // Premove promotion auto-queens (lichess convention) — the user
         // isn't given a dialog here because it's not their turn yet.
         const promotion = movePromotesPawn(fromCell, to)
