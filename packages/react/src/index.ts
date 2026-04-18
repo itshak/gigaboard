@@ -1,15 +1,38 @@
 /**
- * @ultrachess/react — the fastest React chessboard on the planet.
+ * `@ultrachess/react` — interactive React chessboard.
  *
- * Powered by {@link https://github.com/yahorbarkouski/ultrachess | ultrachess} (WASM)
- * and {@link @ultrachess/core} (framework-agnostic state). This package ships the
- * interactive `<Chessboard/>` component, `useChessGame` hook, DOM renderer (default),
- * and an opt-in Canvas renderer under `@ultrachess/react/canvas`.
+ * Hand-curated barrel; sub-modules are never re-exported wholesale so
+ * consumers can tree-shake aggressively.
  *
- * For server-only static boards (zero client JS), import from `@ultrachess/react/server`.
- *
- * @remarks
- * Public API lands in M2. This barrel is hand-curated — no `export *`.
+ * Server-only entry (static SSR board, zero client JS): `@ultrachess/react/server`.
  */
 
-export const PACKAGE_VERSION = "0.0.0";
+// ---- Components ----
+export { Chessboard } from "./chessboard.js";
+
+// ---- Hooks ----
+export { useChessGame } from "./hooks/use-chess-game.js";
+export {
+  useBoardSlice,
+  useBoardSnapshot,
+  useSquareCell,
+} from "./hooks/use-board-subscription.js";
+export { useClickToMove } from "./hooks/use-click-to-move.js";
+
+// ---- Defaults ----
+export { defaultPieces } from "./pieces/default-pieces.js";
+export { CSS_VARS, defaultTheme } from "./default-theme.js";
+
+// ---- Types ----
+export type {
+  ChessboardProps,
+  LegalTargetStyle,
+  Orientation,
+  PieceRenderer,
+  SquareContext,
+  Theme,
+  UseChessGameOptions,
+} from "./types.js";
+
+/** Package version — keep in sync with `package.json`. */
+export const PACKAGE_VERSION = "0.1.0-alpha";

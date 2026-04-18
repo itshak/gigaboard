@@ -38,25 +38,41 @@ function freezePremove(p: Premove): Premove {
   return Object.freeze({ from: p.from, to: p.to, promotion: p.promotion });
 }
 
+const EMPTY_PREMOVES: readonly Premove[] = Object.freeze([]);
+
 /** Create an empty premove buffer. */
 export function createPremoveBuffer(): PremoveBuffer {
   const queue: Premove[] = [];
+  // See `arrow-model.ts` for the motivation — React subscribers need a stable
+  // reference across no-op reads for slice equality to work.
+  let cached: readonly Premove[] | null = EMPTY_PREMOVES;
 
   const peek = (): Premove | undefined => queue[0];
 
   const push = (premove: Premove): void => {
     queue.push(freezePremove(premove));
+    cached = null;
   };
 
-  const shift = (): Premove | undefined => queue.shift();
+  const shift = (): Premove | undefined => {
+    const head = queue.shift();
+    if (head !== undefined) cached = null;
+    return head;
+  };
 
   const clear = (): void => {
-    queue.length = 0;
+    if (queue.length > 0) {
+      queue.length = 0;
+      cached = null;
+    }
   };
 
   return {
     get all() {
-      return Object.freeze([...queue]);
+      if (cached === null) {
+        cached = Object.freeze([...queue]);
+      }
+      return cached;
     },
     peek,
     push,

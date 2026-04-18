@@ -1,19 +1,26 @@
+import { BoardDemo } from "./components/board-demo";
+
 /**
  * Ultra Chess React — docs home page.
  *
- * Scaffolding placeholder. Interactive board lands in M2, live playgrounds in M6.
+ * Server component renders the layout; the interactive board is in a
+ * client-only leaf (`BoardDemo`) so the rest of the page stays RSC.
  */
 export default function HomePage() {
   return (
-    <main style={{ padding: "4rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1>Ultra Chess React</h1>
-      <p>
+    <main
+      style={{
+        maxWidth: "640px",
+        margin: "0 auto",
+        padding: "2rem 1rem",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }}
+    >
+      <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Ultra Chess React</h1>
+      <p style={{ color: "#555", margin: "0 0 1.5rem 0" }}>
         The fastest React chessboard on the planet — powered by <code>ultrachess</code> (WASM).
       </p>
-      <p>
-        This docs app is currently scaffolding. See the plan and{" "}
-        <a href="https://github.com/yahorbarkouski/ultrachess-react">GitHub</a> for progress.
-      </p>
+      <BoardDemo />
     </main>
   );
 }

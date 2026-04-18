@@ -37,10 +37,19 @@ function freezeArrow(a: Arrow): Arrow {
   return Object.freeze({ from: a.from, to: a.to, color: a.color });
 }
 
+const EMPTY_ARROWS: readonly Arrow[] = Object.freeze([]);
+
 /** Create an empty arrow model. */
 export function createArrowModel(): ArrowModel {
   const byKey = new Map<string, Arrow>();
   let changed = false;
+  // Cached materialisation of `arrows`. Invalidated on any mutation so reads
+  // return a stable reference while nothing changes — critical for the React
+  // layer's `useSyncExternalStore` slice equality.
+  let cached: readonly Arrow[] | null = EMPTY_ARROWS;
+  const invalidate = (): void => {
+    cached = null;
+  };
 
   const has = (arrow: Arrow): boolean => byKey.has(arrowKey(arrow));
 
@@ -52,10 +61,12 @@ export function createArrowModel(): ArrowModel {
     }
     byKey.set(key, freezeArrow(arrow));
     changed = true;
+    invalidate();
   };
 
   const remove = (arrow: Arrow): void => {
     changed = byKey.delete(arrowKey(arrow));
+    if (changed) invalidate();
   };
 
   const toggle = (arrow: Arrow): boolean => {
@@ -63,22 +74,27 @@ export function createArrowModel(): ArrowModel {
     if (byKey.has(key)) {
       byKey.delete(key);
       changed = true;
+      invalidate();
       return false;
     }
     byKey.set(key, freezeArrow(arrow));
     changed = true;
+    invalidate();
     return true;
   };
 
   const clear = (): void => {
     changed = byKey.size > 0;
     byKey.clear();
+    if (changed) invalidate();
   };
 
   return {
     get arrows() {
-      // Materialise a frozen array snapshot. Map iteration is insertion order.
-      return Object.freeze([...byKey.values()]);
+      if (cached === null) {
+        cached = Object.freeze([...byKey.values()]);
+      }
+      return cached;
     },
     has,
     add,
