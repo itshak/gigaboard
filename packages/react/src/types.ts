@@ -6,7 +6,13 @@
  * their respective modules; this file is types-only.
  */
 
-import type { BoardCell, BoardModel, PackedMove, SquareIndex } from "@ultrachess/core";
+import type {
+  BoardCell,
+  BoardModel,
+  PackedMove,
+  PieceType,
+  SquareIndex,
+} from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
 
 /** Which way the board is facing. */
@@ -37,6 +43,28 @@ export interface SquareContext {
   readonly index: SquareIndex;
   readonly isLight: boolean;
   readonly label: string;
+}
+
+/** Context passed to a user-supplied `onPromote` callback. */
+export interface PromotionContext {
+  readonly from: SquareIndex;
+  readonly to: SquareIndex;
+  /** Colour of the promoting pawn (0 = white, 1 = black). */
+  readonly color: 0 | 1;
+}
+
+/**
+ * Configuration for the piece-glide animations played after every move.
+ *
+ * Animations run entirely on the compositor via the Web Animations API —
+ * they never re-enter React. Honours `prefers-reduced-motion: reduce` by
+ * collapsing the duration to zero regardless of the configured value.
+ */
+export interface AnimationOptions {
+  /** Glide duration in ms. Default `180`. Set to `0` to disable. */
+  readonly durationMs?: number;
+  /** CSS easing curve. Default `cubic-bezier(0.22, 0.61, 0.36, 1)` (ease-out). */
+  readonly easing?: string;
 }
 
 /** Props accepted by the top-level `<Chessboard/>` component. */
@@ -74,6 +102,25 @@ export interface ChessboardProps {
 
   /** Called after every successful move; receives the packed `Move`. */
   readonly onMove?: (move: PackedMove) => void;
+
+  /**
+   * Called when a pawn needs to promote. Return (or resolve) the chosen
+   * {@link PieceType}. If omitted, the built-in promotion overlay is shown.
+   *
+   * The returned promise may be rejected (e.g. user clicks outside the
+   * dialog) — in that case the move is abandoned and the board returns to
+   * the pre-drag state.
+   */
+  readonly onPromote?: (ctx: PromotionContext) => PieceType | Promise<PieceType>;
+
+  /** Animation configuration. Passes through to the WAAPI glide runner. */
+  readonly animation?: AnimationOptions;
+
+  /**
+   * Whether drag-and-drop is enabled. When `false`, click-to-move still
+   * works but the board ignores pointer-down initiated drags. Default `true`.
+   */
+  readonly allowDrag?: boolean;
 
   /**
    * Escape hatch for custom per-square overlays. The callback receives the

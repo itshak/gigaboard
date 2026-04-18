@@ -11,7 +11,7 @@
  * | nothing selected | own piece         | select it                         |
  * | nothing selected | empty / opponent  | no-op                             |
  * | piece selected   | same square       | deselect                          |
- * | piece selected   | legal target      | play the move (+ auto-promote Q)  |
+ * | piece selected   | legal target      | play (or defer to onPromotion)    |
  * | piece selected   | own piece         | switch selection                  |
  * | piece selected   | illegal square    | deselect                          |
  *
@@ -19,8 +19,13 @@
  * subscribe — the component wrapping this hook never re-renders because of
  * it.
  *
- * Promotion auto-defaults to queen in M2; M3 introduces the promise-based
- * promotion dialog via `onPromote`.
+ * When a promotion is required:
+ *
+ * - If `onPromotionNeeded` is supplied, it's invoked with `(from, to)` and
+ *   `tryMove` is NOT called — the caller is responsible for resolving the
+ *   promotion and invoking `model.tryMove(from, to, chosenPiece)`.
+ * - Otherwise we auto-promote to queen. This keeps the zero-config default
+ *   behaviour intact.
  */
 
 import { type BoardModel, type PackedMove, type SquareIndex, Color, PieceType } from "@ultrachess/core";
@@ -38,18 +43,20 @@ function wouldPromote(fromCell: number, toIndex: SquareIndex): boolean {
 /**
  * @param model The board model, or `null` while the engine is loading.
  * @param onMove Optional callback fired on every successful move.
- * @returns A stable callback suitable for `onClick` on square components.
+ * @param onPromotionNeeded Optional deferred-promotion handler. When
+ *   provided, `tryMove` is not called — the caller resolves the promotion
+ *   piece and invokes `model.tryMove` itself.
  */
 export function useClickToMove(
   model: BoardModel | null,
   onMove?: (m: PackedMove) => void,
+  onPromotionNeeded?: (from: SquareIndex, to: SquareIndex) => void,
 ): (index: SquareIndex) => void {
   return useCallback(
     (index: SquareIndex) => {
       if (model === null) return;
       const snap = model.getSnapshot();
       const cell = snap.board[index] ?? 0;
-      // Colour of the piece on `index` (or -1 if empty).
       const pieceColour = cell === 0 ? -1 : cell > 6 ? Color.Black : Color.White;
 
       if (snap.selected === null) {
@@ -64,8 +71,16 @@ export function useClickToMove(
 
       if (snap.legalTargets.has(index)) {
         const fromCell = snap.board[snap.selected] ?? 0;
-        const promotion = wouldPromote(fromCell, index) ? PieceType.Queen : undefined;
-        const played = model.tryMove(snap.selected, index, promotion);
+        if (wouldPromote(fromCell, index)) {
+          if (onPromotionNeeded !== undefined) {
+            onPromotionNeeded(snap.selected, index);
+            return;
+          }
+          const played = model.tryMove(snap.selected, index, PieceType.Queen);
+          if (played !== null && onMove !== undefined) onMove(played);
+          return;
+        }
+        const played = model.tryMove(snap.selected, index);
         if (played !== null && onMove !== undefined) onMove(played);
         return;
       }
@@ -77,6 +92,6 @@ export function useClickToMove(
 
       model.selectSquare(null);
     },
-    [model, onMove],
+    [model, onMove, onPromotionNeeded],
   );
 }

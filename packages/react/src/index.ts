@@ -18,6 +18,8 @@ export {
   useSquareCell,
 } from "./hooks/use-board-subscription.js";
 export { useClickToMove } from "./hooks/use-click-to-move.js";
+export { useDrag } from "./hooks/use-drag.js";
+export { useAnimation } from "./hooks/use-animation.js";
 
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";
@@ -25,10 +27,12 @@ export { CSS_VARS, defaultTheme } from "./default-theme.js";
 
 // ---- Types ----
 export type {
+  AnimationOptions,
   ChessboardProps,
   LegalTargetStyle,
   Orientation,
   PieceRenderer,
+  PromotionContext,
   SquareContext,
   Theme,
   UseChessGameOptions,
