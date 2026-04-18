@@ -28,10 +28,7 @@ import type { Orientation, PieceRenderer } from "../types.js";
  * 8 columns and 8 rows; white orientation puts rank 1 at row 8 (the
  * bottom) and rank 8 at row 1 (the top).
  */
-function gridCoord(
-  index: SquareIndex,
-  orientation: Orientation,
-): { col: number; row: number } {
+function gridCoord(index: SquareIndex, orientation: Orientation): { col: number; row: number } {
   const file = index & 7;
   const rank = index >> 3;
   const col = orientation === "white" ? file + 1 : 8 - file;

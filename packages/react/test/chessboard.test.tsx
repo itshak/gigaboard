@@ -139,12 +139,26 @@ describe("<Chessboard/>", () => {
     expect(gridcell("e2")).toBeDefined();
   });
 
-  it("showLegalTargets={false} suppresses the selection overlay", () => {
+  it("showLegalTargets={false} suppresses legal-target highlights", () => {
     const { container } = renderBoard(model, { showLegalTargets: false });
     fireEvent.click(gridcell("e2"));
-    // Selection still happens in the model, but the overlay layer is absent.
+    // Selection still lands in the model.
     expect(model.getSnapshot().selected).toBe(12);
-    expect(container.querySelector('[data-layer="selection"]')).toBeNull();
+    // The selected square is still tinted via `data-ucr-selection` on
+    // the square itself — the imperative controller always honours
+    // `selected`, regardless of target style.
+    const selectedEl = gridcell("e2");
+    expect(selectedEl?.dataset["ucrSelection"]).toBe("selected");
+    // But no legal-target squares get the quiet / capture states.
+    const anyQuiet = container.querySelector('[data-ucr-selection="legal-quiet"]');
+    const anyCapture = container.querySelector('[data-ucr-selection="legal-capture"]');
+    expect(anyQuiet).toBeNull();
+    expect(anyCapture).toBeNull();
+    // And the container advertises that target rendering is off, so
+    // the pseudo-element CSS doesn't paint either.
+    expect(
+      container.querySelector<HTMLElement>("[data-ucr-target-style]")?.dataset["ucrTargetStyle"],
+    ).toBe("off");
   });
 
   it("renderSquare override is invoked for each square", () => {

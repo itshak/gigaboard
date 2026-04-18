@@ -49,7 +49,7 @@ describe("render budget", () => {
     model.dispose();
   });
 
-  it("a single move triggers at most one root commit", () => {
+  it("a single move triggers at most one root commit, a selection triggers zero", () => {
     const harness = countingRender(model);
     harness.resetCounts();
 
@@ -63,12 +63,14 @@ describe("render budget", () => {
     });
     const afterMove = harness.getCount("Board");
 
-    // React batches all updates within an `act()` into a single commit. The
-    // branded budget from PERFORMANCE.md is about *components* re-rendering;
-    // at the Profiler root we collapse that into "commits". 1 commit per user
-    // action is the bound we enforce here. (Per-component counts are
-    // audited in `apps/benchmarks`.)
-    expect(afterSelect).toBe(1);
+    // Selection changes never trigger a React commit anymore — the
+    // imperative `useSelectionController` hook writes `data-ucr-selection`
+    // directly on the square DOM nodes. Legal-target highlights appear
+    // without any reconciliation.
+    expect(afterSelect).toBe(0);
+    // A move still triggers exactly one commit — child components that
+    // subscribe to the changed byte / last-move / history-ply slices
+    // wake up inside that single commit.
     expect(afterMove - afterSelect).toBe(1);
 
     harness.unmount();

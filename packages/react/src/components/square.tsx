@@ -4,9 +4,10 @@
  * A single static board square.
  *
  * Static in content — dynamic highlights and pieces live on sibling
- * overlays, so a square renders exactly once per mount except when its
- * `isFocused` prop flips (for roving tabindex). This preserves the
- * "0 re-renders per hover" budget in PERFORMANCE.md.
+ * overlays (piece layer, arrows canvas, drag ghost), so a square
+ * renders exactly once per mount except when its `isFocused` prop
+ * flips. This preserves the "0 re-renders per hover" budget in
+ * PERFORMANCE.md.
  *
  * ### ARIA grid pattern
  *
@@ -17,12 +18,24 @@
  * - Roving tabindex: the one focused cell has `tabindex=0`, every other
  *   cell has `tabindex=-1`. Tab steps into the board once, then out.
  * - When the `isFocused` prop flips to `true`, the cell programmatically
- *   focuses itself via a `useEffect` — this keeps the DOM focus in sync
- *   with the React-driven focus state.
+ *   focuses itself via a `useEffect`.
+ *
+ * ### Selection + legal-target highlights are NOT rendered here
+ *
+ * Chessground-style: a `useSelectionController` hook sets the
+ * `data-ucr-selection` attribute on this `<div>` imperatively, and the
+ * CSS shipped by `injectSelectionStyles()` paints a `::before`
+ * pseudo-element overlay. That bypasses React reconciliation entirely
+ * on selection changes — critical for the drag-start peak frame.
+ *
+ * To support that, the square uses `backgroundColor` (the `color` part
+ * of the CSS `background` shorthand) rather than the full `background`
+ * shorthand — which would otherwise reset `background-image` to `none`
+ * and wipe out any CSS-set gradient overlay.
  */
 
 import type { SquareIndex } from "@ultrachess/core";
-import { memo, type ReactNode, useEffect, useRef } from "react";
+import { memo, type ReactNode, useCallback, useEffect, useRef } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { SquareContext } from "../types.js";
 
@@ -43,22 +56,39 @@ export interface SquareProps {
    * When this flips to `true`, the cell focuses itself programmatically.
    */
   readonly isFocused: boolean;
+  /**
+   * Stable setter called with `(index, element | null)` whenever the
+   * square's DOM node mounts or unmounts. Consumers (the selection
+   * controller) use this to build a 64-entry refs array so they can
+   * write `data-ucr-selection` imperatively on the right square.
+   */
+  readonly setSquareRef?: (index: SquareIndex, el: HTMLElement | null) => void;
 }
 
-function SquareImpl({ index, onClick, renderSquare, isFocused }: SquareProps) {
+function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: SquareProps) {
   const file = index & 7;
   const rank = index >> 3;
   const isLight = (file + rank) % 2 === 1;
   const label = algebraicOf(index);
 
-  const ref = useRef<HTMLDivElement | null>(null);
+  const internalRef = useRef<HTMLDivElement | null>(null);
+
+  // Stable ref-setter: React only calls it when the DOM node
+  // mounts/unmounts, not per render, so `memo`'s prop-diff stays valid.
+  const setRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      internalRef.current = el;
+      setSquareRef?.(index, el);
+    },
+    [index, setSquareRef],
+  );
 
   // When focus state flips to `true`, move DOM focus to this cell — the
   // React state is the source of truth for which cell has the roving
   // tabindex.
   useEffect(() => {
     if (!isFocused) return;
-    const el = ref.current;
+    const el = internalRef.current;
     if (el === null) return;
     // Only focus if we aren't already, to avoid thrashing.
     if (document.activeElement !== el) el.focus();
@@ -68,18 +98,22 @@ function SquareImpl({ index, onClick, renderSquare, isFocused }: SquareProps) {
 
   return (
     <div
-      ref={ref}
+      ref={setRef}
       role="gridcell"
       aria-label={label}
       aria-rowindex={rank + 1}
       aria-colindex={file + 1}
       tabIndex={isFocused ? 0 : -1}
       data-square={label}
+      data-ucr-square=""
       data-light={isLight ? "true" : "false"}
       onClick={handleClick}
       style={{
         position: "relative",
-        background: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
+        // `backgroundColor` (not the `background` shorthand) so the
+        // CSS `background-image` set by `useSelectionController` can
+        // layer on top without clobbering this base colour.
+        backgroundColor: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
         cursor: "pointer",
         userSelect: "none",
         outline: "none",

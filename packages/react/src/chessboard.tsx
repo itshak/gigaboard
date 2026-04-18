@@ -20,7 +20,7 @@ import { BoardGrid } from "./components/board-grid.js";
 import { CheckLayer } from "./components/check-layer.js";
 import { Coordinates } from "./components/coordinates.js";
 import { DragLayer, type DragLayerHandle } from "./components/drag-layer.js";
-import { LastMoveLayer, SelectionLayer } from "./components/highlight-layer.js";
+import { LastMoveLayer } from "./components/highlight-layer.js";
 import { IllegalFlashLayer } from "./components/illegal-flash-layer.js";
 import { LiveRegion } from "./components/live-region.js";
 import { PieceLayer } from "./components/piece-layer.js";
@@ -33,6 +33,7 @@ import { useClickToMove } from "./hooks/use-click-to-move.js";
 import { useDrag } from "./hooks/use-drag.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
+import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type { ArrowColors, ChessboardProps } from "./types.js";
 
@@ -115,6 +116,13 @@ export function Chessboard(props: ChessboardProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragLayerRef = useRef<DragLayerHandle | null>(null);
   const arrowsLayerRef = useRef<ArrowsLayerHandle | null>(null);
+
+  // 64-slot refs array populated by each `<Square/>` on mount. The
+  // selection controller reads this to paint highlights imperatively.
+  const squareRefs = useRef<Array<HTMLElement | null>>(new Array(64).fill(null));
+  const setSquareRef = useCallback((index: SquareIndex, el: HTMLElement | null) => {
+    squareRefs.current[index] = el;
+  }, []);
 
   // Set to `true` whenever the next model commit is the result of a drag
   // (or a promotion dialog opened by a drag). `<AnimationRunner/>` reads
@@ -416,6 +424,13 @@ export function Chessboard(props: ChessboardProps) {
   // until the model exists.
   useMoveSound(game, soundOptions);
 
+  // Imperative selection + legal-target highlighter. Writes
+  // `data-ucr-selection` on the 64 square refs above; no React state,
+  // no per-commit reconciliation. This is what closes the drag-start
+  // peak-frame gap with chessground — a selectSquare call no longer
+  // triggers a React render at all.
+  useSelectionController(game, squareRefs, showLegalTargets);
+
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.
   const animationRuntime = useMemo(() => ({ skipNextRef: skipNextAnimationRef }), []);
@@ -436,11 +451,13 @@ export function Chessboard(props: ChessboardProps) {
       className={className}
       style={containerStyle}
       data-ucr-orientation={orientation}
+      data-ucr-target-style={showLegalTargets === false ? "off" : showLegalTargets}
     >
       <BoardGrid
         orientation={orientation}
         onSquareClick={handleSquareClick}
         focusedSquare={focusedSquare}
+        setSquareRef={setSquareRef}
         {...(renderSquare !== undefined ? { renderSquare } : {})}
         {...(ariaLabel !== undefined ? { ariaLabel } : {})}
       />
@@ -449,9 +466,6 @@ export function Chessboard(props: ChessboardProps) {
       ) : null}
       {game !== null && showCheckHighlight ? (
         <CheckLayer model={game} orientation={orientation} />
-      ) : null}
-      {game !== null ? (
-        <SelectionLayer model={game} orientation={orientation} style={showLegalTargets} />
       ) : null}
       {game !== null ? (
         <PremoveLayer model={game} orientation={orientation} pieces={pieces} />

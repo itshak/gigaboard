@@ -105,14 +105,7 @@ export function createImagePieceSet(urls: PieceUrlTable): PieceRenderer {
   for (let cell = 1; cell <= 12; cell++) {
     const url = (urls as Record<number, string | undefined>)[cell];
     if (url === undefined) continue;
-    pool[cell] = (
-      <img
-        src={url}
-        alt={pieceLabel(cell)}
-        draggable={false}
-        style={PIECE_IMG_STYLE}
-      />
-    );
+    pool[cell] = <img src={url} alt={pieceLabel(cell)} draggable={false} style={PIECE_IMG_STYLE} />;
   }
   return function ImagePieceSet({ cell }: { readonly cell: number }) {
     return pool[cell] ?? null;

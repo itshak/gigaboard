@@ -172,16 +172,16 @@ describe("drag + drop", () => {
       fireEvent(root, pointerEvent("pointermove", { x: e3.x, y: e3.y }));
     });
     await waitFor(() => {
-      expect(
-        document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"],
-      ).toBe("true");
+      expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe(
+        "true",
+      );
     });
 
     fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
     await waitFor(() => {
-      expect(
-        document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"],
-      ).toBe("false");
+      expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe(
+        "false",
+      );
     });
   });
 });

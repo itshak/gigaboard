@@ -48,6 +48,12 @@ export interface BoardGridProps {
    * into the board yet.
    */
   readonly focusedSquare: SquareIndex | null;
+  /**
+   * Stable setter that receives each square's DOM node on mount /
+   * unmount. The selection controller uses the resulting refs array to
+   * paint highlights imperatively — no React state, no reconciliation.
+   */
+  readonly setSquareRef?: (index: SquareIndex, el: HTMLElement | null) => void;
 }
 
 /**
@@ -61,6 +67,7 @@ export function BoardGrid({
   renderSquare,
   ariaLabel,
   focusedSquare,
+  setSquareRef,
 }: BoardGridProps) {
   const squares = useMemo(() => buildSquareOrder(orientation), [orientation]);
 
@@ -85,6 +92,7 @@ export function BoardGrid({
           onClick={onSquareClick}
           isFocused={focusedSquare === index}
           {...(renderSquare !== undefined ? { renderSquare } : {})}
+          {...(setSquareRef !== undefined ? { setSquareRef } : {})}
         />
       ))}
     </div>
