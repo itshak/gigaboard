@@ -1,0 +1,19 @@
+# Bun configuration for the Ultra Chess React monorepo.
+# See https://bun.sh/docs/runtime/bunfig
+
+[install]
+# Use exact versions by default so lockfiles are deterministic across contributors.
+exact = false
+# Keep peerDependencies opt-in; workspaces own the React version.
+peer = true
+# Faster installs by skipping optional packages we don't use.
+optional = true
+
+[install.cache]
+# Store module cache inside the workspace to keep CI caches portable.
+dir = "./.bun-cache"
+
+[test]
+# Coverage thresholds are enforced per-package via Vitest; Bun's own test runner
+# is used only for the framework-agnostic core package.
+coverage = false

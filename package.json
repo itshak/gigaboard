@@ -1,0 +1,42 @@
+{
+  "name": "ultrachess-react-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The fastest React chessboard on the planet — powered by ultrachess (WASM).",
+  "license": "MIT",
+  "author": "Yahor Barkouski",
+  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "examples/*"
+  ],
+  "packageManager": "bun@1.3.10",
+  "engines": {
+    "node": ">=20",
+    "bun": ">=1.3.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:visual": "turbo run test:visual",
+    "bench": "turbo run bench",
+    "size": "turbo run size",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "ci": "bun run lint && bun run typecheck && bun run build && bun run test && bun run size"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.12",
+    "@types/node": "^22.10.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.3"
+  }
+}

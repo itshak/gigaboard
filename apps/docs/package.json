@@ -1,0 +1,33 @@
+{
+  "name": "@ultrachess/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Documentation site for Ultra Chess React. Next.js 15 App Router + MDX.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check app",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(no unit tests for docs; see test:visual)\" && exit 0",
+    "test:visual": "playwright test",
+    "clean": "rm -rf .next .turbo playwright-report test-results"
+  },
+  "dependencies": {
+    "@ultrachess/core": "workspace:*",
+    "@ultrachess/pieces": "workspace:*",
+    "@ultrachess/react": "workspace:*",
+    "@ultrachess/themes": "workspace:*",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ultrachess": "^1.1.4"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

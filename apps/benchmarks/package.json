@@ -1,0 +1,29 @@
+{
+  "name": "@ultrachess/benchmarks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Performance regression harness for Ultra Chess React. React Profiler + PerformanceObserver + microbenchmarks.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "bench": "vite build && node ./scripts/run-bench.mjs",
+    "lint": "biome check src",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(benchmarks don't run under test; see 'bun run bench')\" && exit 0",
+    "clean": "rm -rf dist .turbo bench-results"
+  },
+  "dependencies": {
+    "@ultrachess/core": "workspace:*",
+    "@ultrachess/react": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ultrachess": "^1.1.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  }
+}

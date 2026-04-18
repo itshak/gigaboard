@@ -1,0 +1,105 @@
+{
+  "name": "@ultrachess/react",
+  "version": "0.0.0",
+  "description": "The fastest React chessboard on the planet. Powered by ultrachess (WASM).",
+  "license": "MIT",
+  "author": "Yahor Barkouski",
+  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
+    "directory": "packages/react"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./server": {
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": {
+        "types": "./dist/server.d.cts",
+        "default": "./dist/server.cjs"
+      }
+    },
+    "./canvas": {
+      "import": {
+        "types": "./dist/canvas.d.ts",
+        "default": "./dist/canvas.js"
+      },
+      "require": {
+        "types": "./dist/canvas.d.cts",
+        "default": "./dist/canvas.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "biome check src test",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "size": "size-limit",
+    "clean": "rm -rf dist .turbo coverage"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0 || ^19.0.0",
+    "react-dom": "^18.3.0 || ^19.0.0",
+    "ultrachess": "^1.1.4"
+  },
+  "dependencies": {
+    "@ultrachess/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^11.1.6",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "happy-dom": "^15.11.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "size-limit": "^11.1.6",
+    "tsup": "^8.5.1",
+    "ultrachess": "^1.1.4",
+    "vitest": "^3.0.0"
+  },
+  "size-limit": [
+    {
+      "name": "@ultrachess/react (ESM)",
+      "path": "dist/index.js",
+      "limit": "14 KB",
+      "gzip": true,
+      "ignore": ["react", "react-dom", "ultrachess"]
+    },
+    {
+      "name": "@ultrachess/react/server",
+      "path": "dist/server.js",
+      "limit": "4 KB",
+      "gzip": true,
+      "ignore": ["react", "react-dom"]
+    }
+  ]
+}
