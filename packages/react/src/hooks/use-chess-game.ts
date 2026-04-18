@@ -65,8 +65,15 @@ export function useChessGame(
     // `fen` is the only field that should trigger a full re-init. Model
     // options that change over a session are applied through the model's
     // own methods, not by tearing it down.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: modelOptions is a stable, sub-pattern derivative
-  }, [fen, modelOptions]);
+    //
+    // `modelOptions` is INTENTIONALLY omitted — rest-destructuring
+    // reallocates it every render, and including it would rebuild the
+    // engine on every render (infinite loop: setModel → re-render →
+    // fresh modelOptions identity → cleanup → setModel(null) → re-render
+    // → …). A biome `--unsafe` autofix briefly added it here in M7;
+    // that was a correctness regression, not an improvement.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: stable-by-contract
+  }, [fen]);
 
   return model;
 }
