@@ -47,6 +47,7 @@ import {
   type SquareIndex,
 } from "@ultrachess/core";
 import { type RefObject, useEffect } from "react";
+import type { DragLayerHandle } from "../components/drag-layer.js";
 import type { Orientation } from "../types.js";
 
 /** Convert viewport coords to a square index, or `null` if outside the board. */
@@ -79,8 +80,13 @@ export interface UseDragOptions {
   readonly game: BoardModel | null;
   readonly orientation: Orientation;
   readonly containerRef: RefObject<HTMLElement | null>;
-  /** Ref to the single floating-piece element that follows the pointer. */
-  readonly dragLayerRef: RefObject<HTMLElement | null>;
+  /**
+   * Imperative handle to the always-mounted drag overlay. `useDrag`
+   * calls `show`, `setTransform`, and `hide` here from its pointer
+   * handlers — zero React state changes during the drag loop (and
+   * crucially, none at drag-start either).
+   */
+  readonly dragLayerRef: RefObject<DragLayerHandle | null>;
   readonly enabled: boolean;
   /** The activation distance (pixels) for `pending → dragging`. */
   readonly activationDistance?: number;
@@ -129,7 +135,7 @@ export function useDrag(options: UseDragOptions): void {
       // Centre the piece on the pointer.
       const x = clientX - rect.left - sqSize / 2;
       const y = clientY - rect.top - sqSize / 2;
-      layer.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      layer.setTransform(x, y);
     };
 
     const restoreOrigin = (): void => {
@@ -141,6 +147,8 @@ export function useDrag(options: UseDragOptions): void {
 
     const cleanup = (): void => {
       restoreOrigin();
+      // Hide the ghost imperatively; no React state change.
+      dragLayerRef.current?.hide();
       active = false;
       activePointerId = null;
       onDragEnd();
@@ -181,12 +189,18 @@ export function useDrag(options: UseDragOptions): void {
           // Some test environments don't support pointer capture; ignore.
         }
 
-        // Fire onDragStart FIRST: the Chessboard wraps the state update in
-        // `flushSync`, so by the time it returns the drag-layer DOM exists
-        // and `dragLayerRef.current` is attached. We can then write the
-        // initial transform against a real element.
-        onDragStart(evt.from, cell);
+        // Show the ghost imperatively — no React state change, no
+        // `flushSync`, no synchronous re-render of `<Chessboard/>`.
+        // This is the fix that closes the 25 ms drag-peak gap with
+        // chessground in real Chromium.
+        dragLayerRef.current?.show(cell);
         writeTransform(e.clientX, e.clientY);
+
+        // `onDragStart` still fires for callers that need to react
+        // (clear arrows, set `selectSquare` to show legal targets,
+        // analytics, haptic feedback, etc.) — but it no longer drives
+        // the drag-layer visibility.
+        onDragStart(evt.from, cell);
         return;
       }
 

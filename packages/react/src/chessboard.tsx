@@ -15,12 +15,11 @@
 
 import type { BoardCell, PieceType, SquareIndex } from "@ultrachess/core";
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { ArrowsLayer, type ArrowsLayerHandle } from "./components/arrows-layer.js";
 import { BoardGrid } from "./components/board-grid.js";
 import { CheckLayer } from "./components/check-layer.js";
 import { Coordinates } from "./components/coordinates.js";
-import { DragLayer } from "./components/drag-layer.js";
+import { DragLayer, type DragLayerHandle } from "./components/drag-layer.js";
 import { LastMoveLayer, SelectionLayer } from "./components/highlight-layer.js";
 import { IllegalFlashLayer } from "./components/illegal-flash-layer.js";
 import { LiveRegion } from "./components/live-region.js";
@@ -114,7 +113,7 @@ export function Chessboard(props: ChessboardProps) {
   }, [sound]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const dragLayerRef = useRef<HTMLDivElement | null>(null);
+  const dragLayerRef = useRef<DragLayerHandle | null>(null);
   const arrowsLayerRef = useRef<ArrowsLayerHandle | null>(null);
 
   // Set to `true` whenever the next model commit is the result of a drag
@@ -146,11 +145,12 @@ export function Chessboard(props: ChessboardProps) {
     [arrowColors?.default, arrowColors?.shift, arrowColors?.alt, arrowColors?.ctrl],
   );
 
-  // Drag-layer active piece — null when idle, cell info during a drag.
-  const [dragActive, setDragActive] = useState<{
-    readonly from: SquareIndex;
-    readonly cell: BoardCell;
-  } | null>(null);
+  // Drag state used to live here as `useState` + `flushSync` on
+  // drag-start. It's gone now: the `<DragLayer/>` below is always
+  // mounted (hidden) and exposes an imperative handle that `useDrag`
+  // drives from its pointer handlers. This keeps the drag-start
+  // pointer-move handler off React's critical path entirely, closing
+  // the drag-peak-frame gap with chessground.
 
   // Promotion dialog state — null when no promotion is pending.
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion | null>(null);
@@ -289,28 +289,22 @@ export function Chessboard(props: ChessboardProps) {
   }, [clearArrowsOnClick, game, maybeClearArrows]);
 
   // Drag callbacks — each is stable across renders so `useDrag` doesn't
-  // re-install its pointer listeners on every commit.
-  //
-  // - `flushSync` forces React to commit the drag-layer render before the
-  //   pointer-move handler continues, so `dragLayerRef.current` is populated
-  //   in time for the first transform write.
-  // - Calling `game.selectSquare(from)` propagates the drag-source into the
-  //   model so `SelectionLayer` shows legal targets while the piece is in
-  //   flight — the same visual affordance click-to-move gets.
-  // - `maybeClearArrows` runs at the same boundary so a drag is treated the
-  //   same way as a click for arrow-clearing semantics.
+  // re-install its pointer listeners on every commit. The drag-layer
+  // visibility is managed imperatively by `useDrag` itself via the
+  // `DragLayerHandle`; these callbacks only carry out the React-state
+  // side effects (arrow clear, selection update) that a drag implies.
   const onDragStart = useCallback(
-    (from: SquareIndex, cell: BoardCell): void => {
+    (from: SquareIndex, _cell: BoardCell): void => {
       maybeClearArrows();
-      flushSync(() => {
-        setDragActive({ from, cell });
-      });
+      // Calling `game.selectSquare(from)` propagates the drag-source
+      // into the model so `SelectionLayer` shows legal targets while
+      // the piece is in flight — the same visual affordance
+      // click-to-move gets.
       game?.selectSquare(from);
     },
     [game, maybeClearArrows],
   );
   const onDragEnd = useCallback((): void => {
-    setDragActive(null);
     // Clear the selection regardless of whether the drop landed — on a
     // successful move `tryMove` has already nulled it; on cancel / illegal
     // drop the selection would otherwise linger with stale legal targets.
@@ -472,7 +466,7 @@ export function Chessboard(props: ChessboardProps) {
           runtime={animationRuntime}
         />
       ) : null}
-      <DragLayer ref={dragLayerRef} active={dragActive} pieces={pieces} />
+      <DragLayer ref={dragLayerRef} pieces={pieces} />
       {game !== null ? (
         <ArrowsLayer ref={arrowsLayerRef} model={game} orientation={orientation} />
       ) : null}

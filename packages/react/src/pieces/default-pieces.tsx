@@ -7,6 +7,15 @@
  *
  * The glyphs are part of the CJK Miscellaneous Symbols block (U+2654–U+265F),
  * available in every modern system font.
+ *
+ * ### Element pool (perf)
+ *
+ * This renderer is called inside `<PieceSlot/>` on every committed move
+ * that touches its square. To keep the hot path allocation-free, we
+ * pre-materialise one React element per piece code (1..12) at module
+ * load and hand out the same identity-stable element for every call
+ * with the same cell. React's shallow-equality then short-circuits
+ * reconciliation of the slot's subtree.
  */
 
 import {
@@ -24,6 +33,7 @@ import {
   BOARD_CELL_WR,
   type BoardCell,
 } from "@ultrachess/core";
+import type { ReactNode } from "react";
 import type { PieceRenderer } from "../types.js";
 
 /** Mapping from encoded board cell to the Unicode glyph. */
@@ -42,32 +52,35 @@ const GLYPH: Readonly<Record<number, string>> = Object.freeze({
   [BOARD_CELL_BP]: "\u265F", // ♟
 });
 
+/** Frozen style object — shared across the 12 pool entries. */
+const GLYPH_SPAN_STYLE = Object.freeze({
+  display: "block",
+  width: "100%",
+  height: "100%",
+  fontSize: "85cqh",
+  lineHeight: "1",
+  textAlign: "center" as const,
+  userSelect: "none" as const,
+});
+
+/** Pre-materialised element pool, keyed by cell code (0 = empty → null). */
+const GLYPH_POOL: Array<ReactNode | null> = (() => {
+  const pool: Array<ReactNode | null> = new Array(13).fill(null);
+  for (const [cellStr, glyph] of Object.entries(GLYPH)) {
+    const cell = Number(cellStr);
+    pool[cell] = (
+      <span aria-hidden="true" style={GLYPH_SPAN_STYLE}>
+        {glyph}
+      </span>
+    );
+  }
+  return pool;
+})();
+
 /**
- * Unicode piece renderer. Rendering is pure and allocation-free: a memoised
- * glyph lookup + one `<span>`. Works under SSR, respects system fonts, and
+ * Unicode piece renderer. Returns one of twelve identity-stable React
+ * elements (pre-materialised in {@link GLYPH_POOL}) so the hot path is
+ * a single array read. Works under SSR, respects system fonts, and
  * scales with container font-size.
  */
-export const defaultPieces: PieceRenderer = ({ cell }) => {
-  const glyph = GLYPH[cell as BoardCell];
-  if (glyph === undefined) return null;
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "block",
-        width: "100%",
-        height: "100%",
-        fontSize: "85cqh",
-        lineHeight: "1",
-        textAlign: "center",
-        userSelect: "none",
-        // Monochromatic fallback: the outlined black glyphs render as
-        // outlined white pieces when their color is changed via text-shadow.
-        // For M2 we rely on the native solid/outline distinction of the
-        // Unicode glyphs themselves.
-      }}
-    >
-      {glyph}
-    </span>
-  );
-};
+export const defaultPieces: PieceRenderer = ({ cell }) => GLYPH_POOL[cell as BoardCell] ?? null;

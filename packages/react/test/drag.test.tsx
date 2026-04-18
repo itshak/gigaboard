@@ -154,24 +154,34 @@ describe("drag + drop", () => {
     expect(model.getSnapshot().selected).toBeNull();
   });
 
-  it("DragLayer renders a floating piece during dragging and unmounts after drop", async () => {
+  it("DragLayer toggles visibility via its imperative handle on drag-start/end", async () => {
     renderBoard(model);
     const root = container();
     const e2 = centreOf("e2");
     const e3 = centreOf("e3");
     const e4 = centreOf("e4");
 
+    // The drag layer is pre-mounted and hidden — no React state flip
+    // at drag-start. `data-active` flips between `"true"` / `"false"`.
+    const layer = document.querySelector<HTMLElement>('[data-layer="drag"]');
+    expect(layer).not.toBeNull();
+    expect(layer?.dataset["active"]).toBe("false");
+
     act(() => {
       fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
       fireEvent(root, pointerEvent("pointermove", { x: e3.x, y: e3.y }));
     });
     await waitFor(() => {
-      expect(document.querySelector('[data-layer="drag"]')).not.toBeNull();
+      expect(
+        document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"],
+      ).toBe("true");
     });
 
     fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
     await waitFor(() => {
-      expect(document.querySelector('[data-layer="drag"]')).toBeNull();
+      expect(
+        document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"],
+      ).toBe("false");
     });
   });
 });

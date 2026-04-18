@@ -72,28 +72,50 @@ function pieceLabel(cell: number): string {
 }
 
 /**
+ * Shared style object for every `<img>` — frozen and re-used so React's
+ * shallow-equality checks short-circuit and we don't allocate a fresh
+ * object on every render.
+ */
+const PIECE_IMG_STYLE = Object.freeze({
+  display: "block",
+  width: "100%",
+  height: "100%",
+  pointerEvents: "none",
+  userSelect: "none",
+} as const);
+
+/**
  * Build a {@link PieceRenderer} backed by a URL table. The returned
- * function is referentially stable; components can spread it into props
- * without triggering re-renders.
+ * function is referentially stable AND allocates **zero** React elements
+ * on the hot path: we pre-materialise one `<img>` element per piece
+ * code at factory time and hand out the same element for every call with
+ * the same cell.
+ *
+ * Why pre-materialise? The renderer is called inside `<PieceSlot/>` on
+ * every move that touches its square. Returning a fresh React element
+ * per call means React's reconciler has to shallow-diff the new element
+ * against the last one to decide whether DOM changed. A pool of 12
+ * frozen elements (one per piece code) bypasses that entirely — React
+ * short-circuits on identity.
  */
 export function createImagePieceSet(urls: PieceUrlTable): PieceRenderer {
-  return function ImagePieceSet({ cell }: { readonly cell: number }) {
+  // Pre-materialise the 12 piece elements at factory time. `cell === 0`
+  // (empty square) returns null; we don't allocate an element for it.
+  const pool: Array<ReactNode | null> = new Array(13).fill(null);
+  for (let cell = 1; cell <= 12; cell++) {
     const url = (urls as Record<number, string | undefined>)[cell];
-    if (url === undefined) return null;
-    return (
+    if (url === undefined) continue;
+    pool[cell] = (
       <img
         src={url}
         alt={pieceLabel(cell)}
         draggable={false}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
+        style={PIECE_IMG_STYLE}
       />
     );
+  }
+  return function ImagePieceSet({ cell }: { readonly cell: number }) {
+    return pool[cell] ?? null;
   };
 }
 
