@@ -195,6 +195,24 @@ describe("createBoardModel — arrows and premoves", () => {
     expect(model.getSnapshot().arrows).toHaveLength(0);
   });
 
+  it("setArrows replaces the whole set with a single commit", () => {
+    model.addArrow(makeArrow(E2, E4, "green"));
+    const fn = vi.fn();
+    model.subscribe(fn);
+    model.setArrows([makeArrow(E7, E5, "red"), makeArrow(E2, E4, "green")]);
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(model.getSnapshot().arrows).toHaveLength(2);
+  });
+
+  it("setArrows with the identical set is a no-op (no commit)", () => {
+    model.addArrow(makeArrow(E2, E4, "green"));
+    model.addArrow(makeArrow(E7, E5, "red"));
+    const fn = vi.fn();
+    model.subscribe(fn);
+    model.setArrows([makeArrow(E2, E4, "green"), makeArrow(E7, E5, "red")]);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
   it("queuePremove attaches to the snapshot premove list", () => {
     model.queuePremove(makePremove(E2, E4));
     expect(model.getSnapshot().premoves).toHaveLength(1);

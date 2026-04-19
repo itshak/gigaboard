@@ -9,6 +9,7 @@
 export {
   createUltrachessAdapter,
   createUltrachessAdapterSync,
+  preloadUltrachessAdapter,
 } from "./adapters/ultrachess.js";
 // ---- Animation planner ----
 export { animationInspect, decodePackedMove, planAnimations } from "./animation-planner.js";
@@ -46,6 +47,8 @@ export { createBoardStore } from "./subscribe-store.js";
 export type {
   AnimDescriptor,
   Arrow,
+  ArrowCustomSvg,
+  ArrowLabel,
   BoardCell,
   BoardSnapshot,
   DragState,

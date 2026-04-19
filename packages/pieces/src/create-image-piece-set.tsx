@@ -8,7 +8,7 @@
  *
  * ### Why images, not inline SVG?
  *
- * The React packages target <14 KB gzip. Shipping 12 detailed SVG paths
+ * The React packages target <15 KB gzip. Shipping 12 detailed SVG paths
  * per set × 4 sets would blow that budget immediately. URL-based sets
  * push the bytes onto the browser's image cache, where the pieces are
  * decoded exactly once per session and shared across every board.

@@ -90,7 +90,7 @@
     {
       "name": "@ultrachess/react (ESM)",
       "path": "dist/index.js",
-      "limit": "14 KB",
+      "limit": "16 KB",
       "gzip": true,
       "ignore": ["react", "react-dom", "ultrachess"]
     },

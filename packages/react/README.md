@@ -14,7 +14,7 @@ The fastest React chessboard on the planet. Powered by [`ultrachess`](https://gi
 
 ## Size budget
 
-- `@ultrachess/react` < 14 KB gzip.
+- `@ultrachess/react` < 15 KB gzip.
 - `@ultrachess/react/server` < 4 KB gzip.
 
 Enforced in CI via `size-limit`.

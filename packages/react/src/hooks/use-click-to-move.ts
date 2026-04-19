@@ -52,14 +52,19 @@ function wouldPromote(fromCell: number, toIndex: SquareIndex): boolean {
  * @param onPromotionNeeded Optional deferred-promotion handler. When
  *   provided, `tryMove` is not called — the caller resolves the promotion
  *   piece and invokes `model.tryMove` itself.
+ * @param enabled Gate click-to-move. When `false` the returned callback
+ *   is a no-op — used by `viewOnly` boards and anywhere the caller needs
+ *   a stable identity while suppressing input. Defaults to `true`.
  */
 export function useClickToMove(
   model: BoardModel | null,
   onMove?: (m: PackedMove) => void,
   onPromotionNeeded?: (from: SquareIndex, to: SquareIndex) => void,
+  enabled = true,
 ): (index: SquareIndex) => void {
   return useCallback(
     (index: SquareIndex) => {
+      if (!enabled) return;
       if (model === null) return;
       const snap = model.getSnapshot();
       const cell = snap.board[index] ?? 0;
@@ -98,6 +103,6 @@ export function useClickToMove(
 
       model.selectSquare(null);
     },
-    [model, onMove, onPromotionNeeded],
+    [model, onMove, onPromotionNeeded, enabled],
   );
 }

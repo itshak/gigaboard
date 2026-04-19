@@ -1,34 +1,34 @@
 /**
- * Analysis board example — SSR-static board from a FEN.
+ * Analysis board example.
  *
- * This whole page is a React Server Component: it imports
- * `@ultrachess/react/server` and ships **zero** client JavaScript for the
- * board itself.
+ * A Stockfish-backed position explorer: drag or click to make moves, the
+ * engine streams an evaluation, best line, and a green "best move" arrow
+ * that repaints on every position change. Mirrors the react-chessboard
+ * docs' "Analysis Board" story — see `./analysis-board.tsx` for details.
  */
 
-import { StaticChessboard } from "@ultrachess/react/server";
-
-// Tactical puzzle: Scholar's-mate motif.
-const POSITION = "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4";
+import { AnalysisBoard } from "./analysis-board";
 
 export default function Page() {
   return (
     <main
       style={{
-        maxWidth: "640px",
+        maxWidth: "1120px",
         margin: "0 auto",
-        padding: "2rem 1rem",
+        padding: "2rem 1.5rem",
         fontFamily: "system-ui, sans-serif",
+        color: "#cfd3da",
+        background: "#0b0e14",
+        minHeight: "100vh",
       }}
     >
-      <h1>Static analysis board</h1>
-      <p style={{ color: "#555" }}>
-        This board is a React Server Component. No client JavaScript is sent to your browser for the
-        board itself — only the prose and layout.
-      </p>
-      <div style={{ maxWidth: "480px", margin: "0 auto" }}>
-        <StaticChessboard fen={POSITION} />
-      </div>
+      <header style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+        <h1 style={{ margin: "0 0 0.25rem", fontSize: "1.5rem" }}>Analysis board</h1>
+        <p style={{ margin: 0, color: "#6b7280", fontSize: "0.9rem" }}>
+          Stockfish-powered evaluation · drag to move · undo / redo supported
+        </p>
+      </header>
+      <AnalysisBoard />
     </main>
   );
 }

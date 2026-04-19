@@ -111,14 +111,85 @@ export function fromUltrachessPiece(code: number): BoardCell {
 }
 
 /**
- * An on-board arrow annotation. Identity is `(from, to, color)` — two arrows
- * with the same triple are considered equal.
+ * Optional text label rendered alongside an arrow. Positioned at the
+ * endpoint by default; use `ArrowShape["labelCenter"]` to anchor it on
+ * `"orig"` (source square) or at the arrow's midpoint instead.
+ */
+export interface ArrowLabel {
+  readonly text: string;
+  /** CSS color for the label glyph. Defaults to the arrow's `color`. */
+  readonly fill?: string;
+}
+
+/**
+ * Arbitrary inline SVG payload rendered on top of the canvas overlay.
+ * `html` is injected into an `<svg>` group as a `foreignObject`-free
+ * child so downstream CSS animations and `stroke-dasharray` tricks
+ * work as-is. The renderer never parses or sanitises the string —
+ * consumers are responsible for trusting the source. Typical uses:
+ *   - Stockfish best-move numerals ("+1.2", "♔")
+ *   - Coach annotations (stars, exclamations, `!!`/`??`)
+ *   - Custom variation markers
+ */
+export interface ArrowCustomSvg {
+  /** SVG fragment injected as-is. Must be safe markup — no sanitisation. */
+  readonly html: string;
+  /**
+   * Anchor point for the fragment. Default `"dest"`. `"orig"` is useful
+   * for same-square marks (circles); `"label"` centres on the midpoint.
+   */
+  readonly center?: "orig" | "dest" | "label";
+}
+
+/**
+ * An on-board arrow annotation. Identity is the tuple
+ * `(from, to, color, brush, label.text, customSvg.html, below)` — two
+ * arrows that agree on every field are considered equal.
+ *
+ * @remarks
+ * The original `(from, to, color)` identity is preserved: any arrow
+ * that doesn't carry the optional decorations behaves exactly as in
+ * M1. Additive-only extension.
  */
 export interface Arrow {
   readonly from: SquareIndex;
   readonly to: SquareIndex;
   /** Any CSS-legal color string. Common values: `"green"`, `"red"`, `"blue"`. */
   readonly color: string;
+  /**
+   * Optional palette key that lets the renderer resolve the arrow's
+   * visual style (colour, stroke width, opacity) from a user-supplied
+   * `ArrowColors` map at draw time. When absent, `color` is used as-is
+   * and the modifier-key channels (`default`/`shift`/`alt`/`ctrl`)
+   * continue to work.
+   */
+  readonly brush?: string;
+  /** Optional text label. See {@link ArrowLabel}. */
+  readonly label?: ArrowLabel;
+  /** Optional custom SVG payload. See {@link ArrowCustomSvg}. */
+  readonly customSvg?: ArrowCustomSvg;
+  /**
+   * When `true`, the arrow renders **beneath** the piece layer instead
+   * of on top. Useful for "heatmap" tints that shouldn't occlude pieces
+   * (analysis boards, pawn-structure overlays).
+   */
+  readonly below?: boolean;
+  /**
+   * Marks an arrow as owned by the application rather than the user.
+   * "Managed" arrows survive the two reflex-clearing hooks
+   * (`clearArrowsOnClick`, `clearArrowsOnMove`) — the idiomatic use-case
+   * is an engine best-move hint on an analysis board, where the hint
+   * should update when the position changes but ignore the user's
+   * click-to-dismiss gesture on the board.
+   *
+   * User-drawn arrows (right-click gesture) always land with
+   * `managed: false`; programmatic callers opt in explicitly.
+   *
+   * A nuclear `model.clearArrows()` still wipes managed arrows —
+   * consumers who want a stricter partition call `clearUserArrows()`
+   * instead. Default `false` (unset).
+   */
+  readonly managed?: boolean;
 }
 
 /** A queued premove awaiting the opponent's reply. */

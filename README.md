@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@ultrachess/react?color=%23cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/@ultrachess/react)
 [![license](https://img.shields.io/npm/l/@ultrachess/react)](./LICENSE)
 
-The fastest React chessboard on the planet. A WASM engine ([`ultrachess`](https://github.com/yahorbarkouski/ultrachess)) wrapped in a React layer that costs **≤ 1 React commit per move**, **0 re-renders per drag frame**, and ships the whole interactive surface in **< 14 KB gzip**. Playwright numbers, committed benchmarks, and size-limit budgets gate every PR.
+Ultra-fast React chessboard backed by our own WASM chess engine ([`ultrachess`](https://github.com/yahorbarkouski/ultrachess)) wrapped in a React layer that costs **≤ 1 React commit per move**, **0 re-renders per drag frame**, and ships the whole interactive surface in **< 16 KB gzip**
 
 - Byte-level board subscription on `Uint8Array(64)` — each square subscribes to its own byte; a move touches at most 4 components.
 - Refs-only drag layer (~300 `pointermove` events per gesture, zero React state writes per frame) and WAAPI piece glides that never re-enter React.
@@ -13,39 +13,39 @@ The fastest React chessboard on the planet. A WASM engine ([`ultrachess`](https:
 - Server-rendered static board (`@ultrachess/react/server`) ships **zero client JS** and hydrates cleanly under the interactive board.
 - Seven-cue chess.com-style sound bank shipped inside the package (no CDN).
 - Four themes, five piece sets — each tree-shakable at sub-path granularity (`~660 B` / set, `~205 B` / theme).
-- Differential-fuzzed against `ultrachess` (100 k-game lock-step), axe-clean across every story, perf regressions blocked in CI.
+- `preloadEngine()` — one-liner at app boot to overlap the WASM compile with HTML parse and React hydration, so the ~250 ms init is ready before the user can interact.
 
-Full proof in [`BENCH.md`](./BENCH.md); standards and architecture in [`docs/`](./docs).
+Read more in [`BENCH.md`](./BENCH.md); standards and architecture in [`docs/`](./docs).
 
 ---
 
 ## Performance
 
-Apple-silicon MacBook, Chromium shipped with Playwright 1.50, Node 25.7.0. Every number below regenerates from a clean checkout — `bun install && bun run turbo bench && bun run bench:playwright -w apps/benchmarks`. Results are committed to [`apps/benchmarks/bench-results/`](./apps/benchmarks/bench-results/) so CI surfaces regressions as JSON diffs. Full methodology and the honest losses we don't hide in [`BENCH.md`](./BENCH.md).
+Apple-silicon MacBook, Chromium shipped with Playwright 1.50, Node 25.7.0. Every number below regenerates from a clean checkout — `bun install && bun run turbo bench && bun run bench:playwright -w apps/benchmarks`. Results are committed to [`apps/benchmarks/bench-results/`](./apps/benchmarks/bench-results/) so CI surfaces regressions as JSON diffs
 
 Short names: **`ultra`** = `@ultrachess/react`, **`rcb`** = [`react-chessboard`](https://github.com/Clariity/react-chessboard) 5.10, **`cg`** = [`chessground`](https://github.com/lichess-org/chessground) 9.2 (wrapped with `chess.js` for rules, as Lichess does).
 
 ### Real-browser head-to-head (Playwright + Chromium, 4× CPU throttle)
 
-| Metric                              |   `ultra`    |     `rcb`    |     `cg`     |
+| Metric                              |   `ultrachess-react` (React)    |     `react-chessboard` (React)    |     `chessground` (vanilla TS)     |
 |-------------------------------------|-------------:|-------------:|-------------:|
-| Drag storm — wall clock             | **750 ms**   |   1 429 ms   | **744 ms**   |
-| Drag storm — total blocking time    | **0 ms**     |     580 ms   | **0 ms**     |
-| Move storm — ms per move            | **16.5 ms**  |    28.8 ms   | **16.5 ms**  |
-| Move storm — total blocking time    | **0 ms**     |     549 ms   | **0 ms**     |
-| 100-board grid — wall-clock mount   | **732 ms**   |     963 ms   |  **206 ms**  |
-| 100-board grid — JS heap            | **44.5 MB**  |    120.5 MB  |  **5.6 MB**  |
-| 100-board grid — DOM nodes          | **19 236**   |     53 332   | **15 939**   |
+| Drag storm — wall clock             | **751 ms**   |   1 368 ms   | **744 ms**   |
+| Drag storm — total blocking time    | **0 ms**     |     547 ms   | **0 ms**     |
+| Move storm — ms per move            | **16.5 ms**  |    30.9 ms   | **16.5 ms**  |
+| Move storm — total blocking time    | **0 ms**     |     632 ms   | **0 ms**     |
+| 100-board grid — wall-clock mount   | **882 ms**   |     972 ms   |  **216 ms**  |
+| 100-board grid — JS heap            | **44.8 MB**  |    120.6 MB  |  **5.6 MB**  |
+| 100-board grid — DOM nodes          | **15 940**   |     53 332   | **15 939**   |
 
-Against `rcb`: Ultra wins every post-mount metric — **1.74× faster moves, 1.91× faster drags, 2.7× less heap and 2.8× fewer DOM nodes at 100 boards**. `rcb` spends ~half of its interaction time blocked on React re-renders Ultra simply doesn't do, and drops enough frames to be felt. Against `cg` (vanilla TS, no React, GPL-3.0): within noise on post-mount single-board metrics; `cg` wins cold-mount and grid-mount on raw resource footprint, Ultra is the only React board that keeps up.
+Against `rcb`: Ultra wins every post-mount metric — **1.87× faster moves, 1.82× faster drags, 2.7× less heap, and 3.35× fewer DOM nodes at 100 boards** (now matching chessground's node count to within one — since the imperative piece layer landed in the latest release). `rcb` spends ~half of its interaction time blocked on React re-renders Ultra simply doesn't do, and drops enough frames to be felt. Against `cg` (vanilla TS, no React, GPL-3.0): within noise on post-mount single-board metrics; `cg` wins cold-mount and grid-mount on raw resource footprint, Ultra is the only React board that keeps up.
 
 ### React layer (Profiler API, 40-ply Najdorf replay)
 
 | Metric                      | `@ultrachess/react` | `react-chessboard` 5.10 | Result          |
 |-----------------------------|--------------------:|------------------------:|-----------------|
 | **Commits per move**        |           **1.00**  |                  2.83   | **2.8× fewer**  |
-| **Render time per move**    |         **0.18 ms** |               5.75 ms   | **31.8× faster**|
-| 40-ply total React work     |         **7.22 ms** |             230.06 ms   | **31.8× faster**|
+| **Render time per move**    |         **0.20 ms** |               6.00 ms   | **30.6× faster**|
+| 40-ply total React work     |         **7.84 ms** |             240.14 ms   | **30.6× faster**|
 
 The commit count is what predicts smoothness on slow devices. Ultra holds at exactly **one commit per move** because a move only ever touches at most four squares, each square subscribes to its own byte in the board's `Uint8Array(64)` via `useSyncExternalStore`, and the rest of the board is skipped at React's reconciliation entry.
 
@@ -53,18 +53,18 @@ The commit count is what predicts smoothness on slow devices. Ultra holds at exa
 
 | Scenario                         | `@ultrachess/core` | `chess.js`          | Speed-up   |
 |----------------------------------|-------------------:|--------------------:|-----------:|
-| `tryMove` + `undo`               |    **278 ns/op**   |     32 909 ns/op    | **118×**   |
-| `legalMoves` (mid-game, verbose) |    **158 ns/op**   |    427 348 ns/op    | **2 712×** |
-| Position key (hash / FEN)        |   **6.0 ns/op**    |        698 ns/op    | **116×**   |
-| 40-ply game replay + rewind      |   **15.7 µs/op**   |      2.81 ms/op     | **179×**   |
+| `tryMove` + `undo`               |    **278 ns/op**   |     33 104 ns/op    | **119×**   |
+| `legalMoves` (mid-game, verbose) |    **156 ns/op**   |    454 276 ns/op    | **2 906×** |
+| Position key (hash / FEN)        |   **6.0 ns/op**    |        737 ns/op    | **123×**   |
+| 40-ply game replay + rewind      |   **16.2 µs/op**   |      2.85 ms/op     | **177×**   |
 
-The React layer needs verbose moves to decorate legal-target squares; for a UI integration, the `legalMoves` gap is the one you feel. Construction cost: ~251 ms one-time WASM compile/instantiate (the same ~250 ms long task you see on cold mount; it amortises across every subsequent board on the page — see the grid table in BENCH.md).
+The React layer needs verbose moves to decorate legal-target squares; for a UI integration, the `legalMoves` gap is the one you feel. Construction cost: ~250 ms one-time WASM compile/instantiate (the same ~255 ms long task you see on cold mount; it amortises across every subsequent board on the page — see the grid table in BENCH.md).
 
 ### Honest losses
 
-- **Cold single-board mount.** Chessground is 4 ms faster to LCP (no framework, no WASM).
-- **Raw resource footprint at scale.** At 100 boards `cg` uses 5.6 MB of heap to our 44.5 MB — no React reconciliation and no runtime engine module per board.
-- **First-paint WASM tax.** 253 ms long task on first mount. Amortises after ~5 boards per page; see BENCH.md for the crossover curve.
+- **Cold single-board mount.** Chessground is ~8 ms faster to LCP (no framework, no WASM).
+- **Raw resource footprint at scale.** At 100 boards `cg` uses 5.6 MB of heap to our 44.8 MB — no React reconciliation and no runtime engine module per board. (DOM node count, however, is now a tie: 15 940 vs 15 939.)
+- **First-paint WASM tax.** ~255 ms long task on first mount. Amortises after ~5 boards per page; see BENCH.md for the crossover curve. Mitigatable to near-zero with [`preloadEngine()`](#warming-the-engine-at-app-boot) at app boot — the compile overlaps with hydration instead of landing on the critical path.
 
 ---
 
@@ -85,8 +85,8 @@ yarn add @ultrachess/react ultrachess
 
 | Import                                | Needs `"use client"` | Gzip       | Use when                                                             |
 |---------------------------------------|----------------------|-----------:|----------------------------------------------------------------------|
-| `@ultrachess/react`                   | yes                  |  **13.16 KB** | the interactive board — hooks, drag, animation, arrows, premoves. |
-| `@ultrachess/react/server`            | no (RSC)             |   **2.32 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
+| `@ultrachess/react`                   | yes                  |  **15.45 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, viewOnly. |
+| `@ultrachess/react/server`            | no (RSC)             |   **2.37 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
 | `@ultrachess/core`                    | no                   |   **3.74 KB** | framework-agnostic state + engine adapter; plug into RN, Jazz CRDT. |
 | `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one SVG piece set; the rest tree-shake. |
 | `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; swap live.                       |
@@ -159,6 +159,29 @@ export default function Diagram() {
 
 The static board produces the same DOM shape as the interactive one, so you can hydrate an interactive `<Chessboard/>` over it without a layout shift. Pair that with `fallbackFen` and the user never sees a flash of empty board during WASM init.
 
+### Warming the engine at app boot
+
+By default, `useChessGame()` kicks off WASM init inside a `useEffect` — which means the ~250 ms compile happens *after* React has mounted. The user sees pieces (via `fallbackFen`) but can't move one until init completes. Call `preloadEngine()` as high up the module graph as you can and the init overlaps with HTML parse, JS download, and hydration — so by the time `useChessGame()` runs, the engine is already ready:
+
+```tsx
+// Next.js App Router: app/layout.tsx
+import { preloadEngine } from "@ultrachess/react";
+
+preloadEngine();   // fire-and-forget — runs at module-import time
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html><body>{children}</body></html>;
+}
+```
+
+It is idempotent: multiple calls resolve the same Promise. Pair with a preload hint in the HTML `<head>` to overlap the WASM *fetch* with HTML parse too:
+
+```html
+<link rel="preload" as="fetch" href="/path/to/ultrachess_bg.wasm" crossorigin>
+```
+
+With both in place, the WASM bytes arrive and compile before React even mounts — the 250 ms cold-mount tax disappears into the gaps between other work.
+
 ---
 
 ## API
@@ -171,6 +194,12 @@ Signatures are TypeScript. Everything below is exported from `@ultrachess/react`
 |-------------------------------------|--------------------------------------------------------------------------------------------|
 | `<Chessboard game theme pieces …/>` | Top-level interactive board. Client component. Full prop list in [`packages/react/src/types.ts`](./packages/react/src/types.ts). |
 | `<StaticChessboard fen …/>`         | Server-only; `@ultrachess/react/server`. No client JS, hydration-parity DOM.                |
+
+### Engine lifecycle
+
+| Signature                                                            | Notes                                           |
+|----------------------------------------------------------------------|-------------------------------------------------|
+| `preloadEngine(): Promise<void>`                                     | Start `ultrachess` WASM init ahead of component mount. Call once at app boot; idempotent. |
 
 ### Hooks
 
@@ -260,8 +289,8 @@ Full matrix in [`docs/TESTING.md`](./docs/TESTING.md).
 | Package                           | Budget | Measured       |
 |-----------------------------------|-------:|---------------:|
 | `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
-| `@ultrachess/react` (ESM)         |  14 KB | **13.16 KB**   |
-| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.32 KB**   |
+| `@ultrachess/react` (ESM)         |  16 KB | **15.45 KB**   |
+| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.37 KB**   |
 | `@ultrachess/pieces/*` per set    |   2 KB |  **~660 B**    |
 | `@ultrachess/themes/*` per theme  |   1 KB |  **~205 B**    |
 
@@ -296,7 +325,7 @@ A board-shipping app therefore costs roughly **`core` + `react` + one piece set 
 
 ## Limitations
 
-- **WASM init long task on cold mount.** ~253 ms on first load (the cost of the engine's zero-allocation design). Amortises across boards: after the first, each additional board adds ~4 ms of mount cost. At any page with ≥ 5 boards Ultra becomes the fastest React option; at 1 board, `cg` wins mount.
+- **WASM init long task on cold mount.** ~255 ms on first load (the cost of the engine's zero-allocation design). Amortises across boards: after the first, each additional board adds ~5–6 ms of mount cost. At any page with ≥ 5 boards Ultra becomes the fastest React option; at 1 board, `cg` wins mount. `preloadEngine()` reclaims most of the cold-mount gap by overlapping the compile with hydration.
 - **Standard chess only.** No Chess960, atomic, antichess, crazyhouse, three-check. The engine is standard-chess. For variants, swap the `EngineAdapter` for one backed by [`chessops`](https://github.com/niklasf/chessops).
 - **Sound autoplay.** Browser autoplay policies apply. The first cue after a fresh page load may be silent until the user interacts with the document; every cue after that plays immediately. No workaround — this is a browser invariant.
 - **Full-canvas renderer is not shipped.** `@ultrachess/react/canvas` is a scaffolding placeholder; DOM is the only live renderer in this release.
@@ -340,7 +369,7 @@ Every perf claim in this README links to a committed benchmark in `apps/benchmar
 
 ## License
 
-MIT © Yahor Barkouski
+MIT
 
 ---
 

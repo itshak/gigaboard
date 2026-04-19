@@ -20,6 +20,12 @@ export type Theme = Readonly<Record<string, string>>;
 export type LegalTargetStyle = "rings" | "dots" | false;
 
 /**
+ * Edge the rank labels (1–8) are rendered against. `"left"` matches
+ * lichess and our historic default; `"right"` matches chess.com.
+ */
+export type RanksPosition = "left" | "right";
+
+/**
  * Renderer for a single piece. Given the packed board cell and its square,
  * return a React node positioned inside a 12.5% × 12.5% slot of the board.
  *
@@ -63,19 +69,39 @@ export interface AnimationOptions {
 }
 
 /**
- * CSS colour strings for the four stock right-click-arrow channels.
- * Modifier keys map to channels at draw time:
+ * CSS colour strings for the four stock right-click-arrow channels
+ * plus any number of user-defined brushes. Modifier keys still map to
+ * the built-in channels at draw time:
  *
  *   (no modifier) → `default`
  *   Shift         → `shift`
  *   Alt           → `alt`
  *   Ctrl / Meta   → `ctrl`
+ *
+ * Programmatic arrows (engine annotations via `model.setArrows`, for
+ * instance) can set `arrow.brush = "<key>"` to resolve against any
+ * other key in the palette. Unknown keys fall through to `default`.
  */
 export interface ArrowColors {
   readonly default?: string;
   readonly shift?: string;
   readonly alt?: string;
   readonly ctrl?: string;
+  /** Any additional palette entry — keyed by the arrow's `brush` field. */
+  readonly [brush: string]: string | undefined;
+}
+
+/**
+ * Fully-resolved palette consumed by the arrow renderer. The four
+ * modifier channels are guaranteed (defaults applied); user-defined
+ * brushes live alongside with whatever keys the caller supplied.
+ */
+export interface ResolvedArrowPalette {
+  readonly default: string;
+  readonly shift: string;
+  readonly alt: string;
+  readonly ctrl: string;
+  readonly [brush: string]: string;
 }
 
 /** Props accepted by the top-level `<Chessboard/>` component. */
@@ -124,6 +150,14 @@ export interface ChessboardProps {
   /** Show algebraic coordinate labels on the edges. Default `true`. */
   readonly showCoordinates?: boolean;
 
+  /**
+   * Edge against which rank labels (1–8) are rendered. Default `"left"`
+   * (lichess convention); switch to `"right"` to match chess.com. The
+   * file labels (a–h) always sit on the bottom edge; this prop doesn't
+   * affect them.
+   */
+  readonly ranksPosition?: RanksPosition;
+
   /** Style for legal-target square highlights. Default `"rings"`. */
   readonly showLegalTargets?: LegalTargetStyle;
 
@@ -153,6 +187,45 @@ export interface ChessboardProps {
   readonly allowDrag?: boolean;
 
   /**
+   * Fine-grained predicate consulted at the drag-activation boundary —
+   * returning `false` aborts the drag before the ghost appears. Use this
+   * for per-piece gating that can't be modelled by `allowDrag` or the
+   * turn-to-move check: tutorial boards ("you can only move white"),
+   * locked pieces in puzzle trainers, or rating-gated moves in online
+   * play.
+   *
+   * @remarks
+   * Fires once per drag attempt, not per pointer sample — the check
+   * sits on the cold drag-start path. Click-to-move is unaffected;
+   * gate that at the `onMove` callback if the same policy should apply.
+   */
+  readonly canDragPiece?: (ctx: {
+    readonly square: SquareIndex;
+    readonly cell: BoardCell;
+  }) => boolean;
+
+  /**
+   * Fired when the pointer enters a new square. Fires at most once per
+   * square transition — moving across the board yields `leave(old)`
+   * followed by `enter(new)`. Pointer events so both mouse and touch
+   * report consistently.
+   */
+  readonly onSquareMouseEnter?: (ctx: {
+    readonly square: SquareIndex;
+    readonly cell: BoardCell;
+  }) => void;
+
+  /**
+   * Fired when the pointer leaves a square — either crossing into a
+   * sibling square or exiting the board rect. Pairs with
+   * {@link onSquareMouseEnter} transition-for-transition.
+   */
+  readonly onSquareMouseLeave?: (ctx: {
+    readonly square: SquareIndex;
+    readonly cell: BoardCell;
+  }) => void;
+
+  /**
    * Enable drawing arrows via right-click drag. Default `true`.
    * Modifier keys select colour channels (see {@link ArrowColors}).
    */
@@ -176,6 +249,19 @@ export interface ChessboardProps {
   readonly arrowColors?: ArrowColors;
 
   /**
+   * When drawing arrows by right-click drag, snap the endpoint to the
+   * nearest legal move target from the origin square. Useful for
+   * analysis boards and tutorial UIs where annotations should line up
+   * with real moves. Default `false`.
+   *
+   * @remarks
+   * Same-square marks (circles) are never snapped. When the origin
+   * has no legal moves (empty square, or pinned piece), the endpoint
+   * is left as-is.
+   */
+  readonly snapArrowsToValidMove?: boolean;
+
+  /**
    * Queue moves attempted when it's not your turn as premoves instead of
    * rejecting them. **Default `false`** — premoves are an online-play
    * affordance, and in local / analysis / tutorial boards the ghost-piece
@@ -193,6 +279,21 @@ export interface ChessboardProps {
    * Default `true`.
    */
   readonly showCheckHighlight?: boolean;
+
+  /**
+   * Suppress the browser's right-click context menu over the board.
+   * Default `true` — the right-click gesture is reserved for drawing
+   * arrows (see {@link allowDrawingArrows}) and the OS menu would
+   * steal the trailing `pointerup`. Set to `false` only if you need
+   * the browser menu for a custom interaction.
+   *
+   * @remarks
+   * The listener is installed on the board container only; right-clicks
+   * outside the board behave normally. Works independently of
+   * `allowDrawingArrows` so consumers can disable arrows but still block
+   * the OS menu.
+   */
+  readonly disableContextMenu?: boolean;
 
   /**
    * Briefly flash the origin square red when the engine rejects a user
@@ -219,6 +320,26 @@ export interface ChessboardProps {
 
   /** Accessible label for the board (`aria-label`). Default "Chess board". */
   readonly ariaLabel?: string;
+
+  /**
+   * Read-only board. Disables every user-input subsystem at once —
+   * drag, click-to-move, keyboard navigation, arrow drawing — while
+   * preserving the accessible live region, highlights, animations,
+   * coordinates, and check glow. Use this for PGN viewers, position
+   * diagrams, and any surface where the board is purely declarative.
+   *
+   * Equivalent to setting `allowDrag={false}`, `allowDrawingArrows=
+   * {false}`, and wiring a no-op click handler, collapsed into a single
+   * switch that also removes the board from the keyboard tab order.
+   * Default `false`.
+   *
+   * @remarks
+   * The roving-tabindex seed is suppressed while `viewOnly` is true, so
+   * no square receives `tabindex=0` and the grid is skipped entirely by
+   * the browser's focus ring. Programmatic arrow placement (e.g. engine
+   * annotations via `model.addArrow`) continues to paint normally.
+   */
+  readonly viewOnly?: boolean;
 
   /**
    * Move-sound effects. Pass `true` (default) to enable the built-in

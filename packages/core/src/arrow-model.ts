@@ -23,18 +23,77 @@ export interface ArrowModel {
    * (`true` if the arrow is in the set after the call).
    */
   toggle(arrow: Arrow): boolean;
-  /** Drop every arrow. */
+  /** Drop every arrow, managed or not. */
   clear(): void;
+  /**
+   * Drop only **user-drawn** arrows (anything without `managed: true`).
+   *
+   * Used by the board's reflex-clearing hooks (`clearArrowsOnClick`,
+   * `clearArrowsOnMove`) so engine / app-owned annotations survive the
+   * user's click-to-dismiss gesture. Reports `lastChanged` like every
+   * other mutator.
+   */
+  clearUser(): void;
+  /** Drop only **managed** arrows (those with `managed: true`). */
+  clearManaged(): void;
+  /**
+   * Atomic replace of the **managed** subset. User-drawn arrows are
+   * untouched. Every incoming arrow is stamped `managed: true` — callers
+   * don't have to set the flag explicitly, and the method's name carries
+   * the intent. Identity preservation works the same way as
+   * {@link setAll}: arrows whose identity key already exists are reused
+   * from the stored frozen instances so consumer `Object.is` checks stay
+   * cheap across commits.
+   */
+  setManaged(arrows: readonly Arrow[]): void;
+  /**
+   * Replace the entire arrow set in one atomic step. Preserves identity
+   * for arrows whose `(from, to, color)` tuple was already present —
+   * freshly-provided arrows are frozen and keyed; removed ones are
+   * dropped. Single `lastChanged` flag covers the whole batch.
+   */
+  setAll(arrows: readonly Arrow[]): void;
   /** Whether the last call actually changed the state. */
   readonly lastChanged: boolean;
 }
 
 function arrowKey(arrow: Arrow): string {
-  return `${arrow.from}|${arrow.to}|${arrow.color}`;
+  // Required fields first; optional decorations fold in only when
+  // present. Preserves the three-field key for plain arrows so any
+  // caller persisting keys survives the M2 upgrade unchanged.
+  //
+  // `managed` is **not** part of the identity. An app that re-submits
+  // the same (from, to, color) pair should not create a duplicate just
+  // because ownership flipped — ownership is metadata, not identity.
+  let key = `${arrow.from}|${arrow.to}|${arrow.color}`;
+  if (arrow.brush !== undefined) key += `|b:${arrow.brush}`;
+  if (arrow.label !== undefined) key += `|l:${arrow.label.text}`;
+  if (arrow.customSvg !== undefined) key += `|s:${arrow.customSvg.html}`;
+  if (arrow.below === true) key += "|below";
+  return key;
 }
 
 function freezeArrow(a: Arrow): Arrow {
-  return Object.freeze({ from: a.from, to: a.to, color: a.color });
+  // Build the frozen shape conditionally so plain arrows still have
+  // exactly three own properties (consumers that iterate `Object.keys`
+  // shouldn't suddenly see `undefined` entries for the optional fields).
+  // Nested records are deep-frozen.
+  const out: {
+    from: Arrow["from"];
+    to: Arrow["to"];
+    color: Arrow["color"];
+    brush?: string;
+    label?: Arrow["label"];
+    customSvg?: Arrow["customSvg"];
+    below?: boolean;
+    managed?: boolean;
+  } = { from: a.from, to: a.to, color: a.color };
+  if (a.brush !== undefined) out.brush = a.brush;
+  if (a.label !== undefined) out.label = Object.freeze({ ...a.label });
+  if (a.customSvg !== undefined) out.customSvg = Object.freeze({ ...a.customSvg });
+  if (a.below === true) out.below = true;
+  if (a.managed === true) out.managed = true;
+  return Object.freeze(out) as Arrow;
 }
 
 const EMPTY_ARROWS: readonly Arrow[] = Object.freeze([]);
@@ -89,6 +148,89 @@ export function createArrowModel(): ArrowModel {
     if (changed) invalidate();
   };
 
+  /**
+   * Drop every entry that fails `keep`. One Map pass; zero allocations
+   * when nothing changes. The predicate is inlined at each call-site
+   * via closure.
+   */
+  const dropWhere = (remove: (arrow: Arrow) => boolean): void => {
+    let mutated = false;
+    for (const [key, arrow] of byKey) {
+      if (remove(arrow)) {
+        byKey.delete(key);
+        mutated = true;
+      }
+    }
+    changed = mutated;
+    if (mutated) invalidate();
+  };
+
+  const clearUser = (): void => dropWhere((a) => a.managed !== true);
+  const clearManaged = (): void => dropWhere((a) => a.managed === true);
+
+  const setManaged = (arrows: readonly Arrow[]): void => {
+    // Build the next managed-key set. Existing managed entries not in
+    // the incoming list are dropped; user-drawn entries are never
+    // touched. Identity of re-appearing managed entries is preserved —
+    // we reuse the stored frozen instance instead of re-freezing.
+    const nextKeys = new Set<string>();
+    let mutated = false;
+    for (let i = 0; i < arrows.length; i++) {
+      const raw = arrows[i];
+      if (raw === undefined) continue;
+      // Stamp managed on the way in so callers don't have to.
+      const marked: Arrow = raw.managed === true ? raw : { ...raw, managed: true };
+      const key = arrowKey(marked);
+      if (nextKeys.has(key)) continue;
+      nextKeys.add(key);
+      if (!byKey.has(key)) {
+        byKey.set(key, freezeArrow(marked));
+        mutated = true;
+      }
+    }
+    // Sweep: remove any previously-managed entry whose key isn't in the
+    // next set. User-drawn arrows (managed !== true) are skipped.
+    for (const [key, arrow] of byKey) {
+      if (arrow.managed === true && !nextKeys.has(key)) {
+        byKey.delete(key);
+        mutated = true;
+      }
+    }
+    changed = mutated;
+    if (mutated) invalidate();
+  };
+
+  const setAll = (arrows: readonly Arrow[]): void => {
+    // Build the next key set so we can detect adds / removes / churn
+    // without re-walking the incoming list twice. Identity of existing
+    // entries is preserved: if the incoming arrow already matches a
+    // stored one, we reuse the stored frozen instance — keeps consumer
+    // `Object.is` checks cheap across commits.
+    const nextKeys = new Set<string>();
+    let mutated = false;
+    for (let i = 0; i < arrows.length; i++) {
+      const a = arrows[i];
+      if (a === undefined) continue;
+      const key = arrowKey(a);
+      if (nextKeys.has(key)) continue;
+      nextKeys.add(key);
+      if (!byKey.has(key)) {
+        byKey.set(key, freezeArrow(a));
+        mutated = true;
+      }
+    }
+    if (byKey.size !== nextKeys.size) {
+      for (const key of byKey.keys()) {
+        if (!nextKeys.has(key)) {
+          byKey.delete(key);
+          mutated = true;
+        }
+      }
+    }
+    changed = mutated;
+    if (mutated) invalidate();
+  };
+
   return {
     get arrows() {
       if (cached === null) {
@@ -101,6 +243,10 @@ export function createArrowModel(): ArrowModel {
     remove,
     toggle,
     clear,
+    clearUser,
+    clearManaged,
+    setAll,
+    setManaged,
     get lastChanged() {
       return changed;
     },

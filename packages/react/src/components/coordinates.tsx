@@ -10,20 +10,23 @@
  */
 
 import { CSS_VARS } from "../default-theme.js";
-import type { Orientation } from "../types.js";
+import type { Orientation, RanksPosition } from "../types.js";
 
 const FILE_LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 
 /** Props for {@link Coordinates}. */
 export interface CoordinatesProps {
   readonly orientation: Orientation;
+  /** Which side of the board the rank labels sit on. Default `"left"`. */
+  readonly ranksPosition?: RanksPosition;
 }
 
 /**
  * Overlay of file and rank labels. `pointer-events: none` so clicks fall
  * through to squares underneath.
  */
-export function Coordinates({ orientation }: CoordinatesProps) {
+export function Coordinates({ orientation, ranksPosition = "left" }: CoordinatesProps) {
+  const ranksOnRight = ranksPosition === "right";
   return (
     <div
       aria-hidden="true"
@@ -61,15 +64,26 @@ export function Coordinates({ orientation }: CoordinatesProps) {
         // Re-use letter loop for ranks; the index maps directly to 1..8.
         const rank = idx; // 0..7 corresponds to ranks 1..8
         const row = orientation === "white" ? 7 - rank : rank;
-        const leftFile = orientation === "white" ? 0 : 7;
-        const isLightSquare = (leftFile + rank) % 2 === 1;
+        // `edgeFile` is the file the rank label sits on — 0 (left column)
+        // for `ranksPosition="left"`, 7 (right column) for `"right"`.
+        // In black orientation the visual edges stay put but the file
+        // indices flip.
+        const edgeFile = ranksOnRight
+          ? orientation === "white"
+            ? 7
+            : 0
+          : orientation === "white"
+            ? 0
+            : 7;
+        const isLightSquare = (edgeFile + rank) % 2 === 1;
+        const sideStyle = ranksOnRight ? { right: "1%" } : { left: "1%" };
         return (
           <span
             key={`rank-${rank}`}
             style={{
               position: "absolute",
               top: `${row * 12.5 + 1}%`,
-              left: "1%",
+              ...sideStyle,
               color: `var(${isLightSquare ? CSS_VARS.COORDINATE_LIGHT : CSS_VARS.COORDINATE_DARK})`,
             }}
           >

@@ -370,7 +370,7 @@ so non-verbose isn't a fair comparison for a UI integration.
 | Package                           | Budget | Measured       |
 |-----------------------------------|-------:|---------------:|
 | `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
-| `@ultrachess/react` (ESM)         |  14 KB | **13.16 KB**   |
+| `@ultrachess/react` (ESM)         |  15 KB | **14.67 KB**   |
 | `@ultrachess/react/server` (RSC)  |   4 KB |  **2.32 KB**   |
 | `@ultrachess/pieces/{cburnett,merida,alpha,chesscom,neo}` | 2 KB | **~660 B** per set |
 | `@ultrachess/themes/{brown,blue,green,wood}` | 1 KB | **~205 B** per theme |

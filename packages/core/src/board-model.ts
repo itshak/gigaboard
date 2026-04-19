@@ -98,7 +98,46 @@ export interface BoardModel {
   addArrow(arrow: Arrow): void;
   removeArrow(arrow: Arrow): void;
   toggleArrow(arrow: Arrow): void;
+  /** Drop every arrow, managed or not. Nuclear option. */
   clearArrows(): void;
+  /**
+   * Drop only **user-drawn** arrows (anything without `managed: true`).
+   * The board uses this for its click-to-dismiss behaviour so engine /
+   * app-owned hints survive user interaction.
+   */
+  clearUserArrows(): void;
+  /** Drop only **managed** arrows. Leaves user drawings untouched. */
+  clearManagedArrows(): void;
+  /**
+   * Atomic replace of the **entire** arrow set (managed and user). Use
+   * this when the board is a pure programmatic surface with no human
+   * drawing — a review / replay viewer, a puzzle diagram, tests.
+   *
+   * For analysis-style boards that stream engine hints alongside human
+   * arrow drawings, prefer {@link setManagedArrows}: it replaces only
+   * the managed subset and preserves whatever the user has drawn by
+   * right-clicking.
+   *
+   * @remarks
+   * Arrows whose identity tuple already exists are preserved by
+   * reference across the call, so React subscribers that compare
+   * per-arrow references skip unchanged entries. A true no-op (same set
+   * in the same order) commits nothing.
+   */
+  setArrows(arrows: readonly Arrow[]): void;
+  /**
+   * Atomic replace of **only** the managed subset. User-drawn arrows
+   * are untouched; every incoming arrow is implicitly marked
+   * `managed: true`. Idiomatic for engine-annotation feeds (Stockfish
+   * best-moves, multi-PV fans): the arrow set turns over as a whole per
+   * position without racing the user's right-click gesture.
+   *
+   * @example
+   * ```ts
+   * game.setManagedArrows(bestLine ? [uciToArrow(bestLine[0])] : []);
+   * ```
+   */
+  setManagedArrows(arrows: readonly Arrow[]): void;
 
   // ---- Premoves ----
   queuePremove(premove: Premove): void;
@@ -416,6 +455,22 @@ export function createBoardModel(
     arrowModel.clear();
     if (arrowModel.lastChanged) commitWith(null);
   };
+  const clearUserArrows = (): void => {
+    arrowModel.clearUser();
+    if (arrowModel.lastChanged) commitWith(null);
+  };
+  const clearManagedArrows = (): void => {
+    arrowModel.clearManaged();
+    if (arrowModel.lastChanged) commitWith(null);
+  };
+  const setArrows = (arrows: readonly Arrow[]): void => {
+    arrowModel.setAll(arrows);
+    if (arrowModel.lastChanged) commitWith(null);
+  };
+  const setManagedArrows = (arrows: readonly Arrow[]): void => {
+    arrowModel.setManaged(arrows);
+    if (arrowModel.lastChanged) commitWith(null);
+  };
 
   const queuePremove = (premove: Premove): void => {
     premoveBuffer.push(premove);
@@ -458,6 +513,10 @@ export function createBoardModel(
     removeArrow,
     toggleArrow,
     clearArrows,
+    clearUserArrows,
+    clearManagedArrows,
+    setArrows,
+    setManagedArrows,
 
     queuePremove,
     clearPremoves,

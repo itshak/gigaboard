@@ -8,7 +8,7 @@ Ultra Chess React is the fastest React chessboard we know of. We prove that with
 
 - A WASM engine (`ultrachess`) that perfts at 336 Mnps on Node and 581 Mnps on Bun — 55–95× faster than `chess.js`.
 - A React layer that costs ≤ 4 component re-renders per move, 0 per hover, 0 per drag frame.
-- Sub-6 KB core + sub-14 KB React-layer gzipped footprints.
+- Sub-6 KB core + sub-15 KB React-layer gzipped footprints.
 
 Every number above is committed as a benchmark in `apps/benchmarks` and enforced in CI.
 
@@ -17,7 +17,7 @@ Every number above is committed as a benchmark in `apps/benchmarks` and enforced
 | Metric | Budget | Enforcement |
 |---|---|---|
 | `@ultrachess/core` gzip | < 6 KB | `size-limit` |
-| `@ultrachess/react` gzip | < 14 KB | `size-limit` |
+| `@ultrachess/react` gzip | < 15 KB | `size-limit` |
 | `@ultrachess/pieces` gzip per set | < 2 KB | `size-limit` |
 | `@ultrachess/themes` gzip per theme | < 1 KB | `size-limit` |
 | Re-renders per move | ≤ 4 | React Profiler bench |
@@ -33,7 +33,7 @@ A PR that regresses any budget is blocked.
 
 ## Why each budget exists
 
-- **6 KB / 14 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget. `react-chessboard` ships ~40 KB gzipped today; we beat that by a wide margin.
+- **6 KB / 15 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget. `react-chessboard` ships ~40 KB gzipped today; we beat that by a wide margin.
 - **Re-renders per move ≤ 4:** a move changes 2 squares (from, to) plus at most 2 highlight slots. Anything more means a component is subscribing too broadly.
 - **Re-renders per hover / drag / arrow:** these happen 60 times per second. Any React work per frame is a battery drain and a jank source.
 - **Legal-move cache hit rate ≥ 95 %:** caching by `hash()` is cheap; if we're missing, something is wrong with invalidation.

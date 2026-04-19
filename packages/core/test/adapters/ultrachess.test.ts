@@ -5,6 +5,7 @@ import {
   BOARD_CELL_WP,
   Color,
   createUltrachessAdapter,
+  preloadUltrachessAdapter,
   type SquareIndex,
 } from "../../src/index.js";
 
@@ -91,6 +92,36 @@ describe("createUltrachessAdapter", () => {
     const engine = await createUltrachessAdapter();
     try {
       expect(() => engine.readBoard(new Uint8Array(32))).toThrow(RangeError);
+    } finally {
+      engine.dispose();
+    }
+  });
+});
+
+describe("preloadUltrachessAdapter", () => {
+  it("returns a Promise that resolves", async () => {
+    const result = preloadUltrachessAdapter();
+    expect(result).toBeInstanceOf(Promise);
+    // Resolves to `void`; we only care that it resolves without throwing.
+    await expect(result).resolves.toBeUndefined();
+  });
+
+  it("is idempotent across repeat calls", async () => {
+    const a = preloadUltrachessAdapter();
+    const b = preloadUltrachessAdapter();
+    // Same cached Promise — no extra init work is queued.
+    expect(a).toBe(b);
+    await a;
+    const c = preloadUltrachessAdapter();
+    expect(c).toBe(a);
+  });
+
+  it("does not block subsequent adapter construction", async () => {
+    await preloadUltrachessAdapter();
+    const engine = await createUltrachessAdapter();
+    try {
+      // If preload worked, the engine is fully usable immediately.
+      expect(engine.turn()).toBe(Color.White);
     } finally {
       engine.dispose();
     }

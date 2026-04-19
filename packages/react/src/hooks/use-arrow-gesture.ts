@@ -17,32 +17,15 @@
 import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { type RefObject, useEffect } from "react";
 import type { ArrowsLayerHandle } from "../components/arrows-layer.js";
-import type { ArrowColors, Orientation } from "../types.js";
+import { getSquareAtPoint } from "../lib/geometry.js";
+import type { Orientation, ResolvedArrowPalette } from "../types.js";
 
 /** Resolve modifier keys to a colour channel. */
-function colorForModifiers(e: PointerEvent, palette: Required<ArrowColors>): string {
+function colorForModifiers(e: PointerEvent, palette: ResolvedArrowPalette): string {
   if (e.shiftKey) return palette.shift;
   if (e.altKey) return palette.alt;
   if (e.ctrlKey || e.metaKey) return palette.ctrl;
   return palette.default;
-}
-
-/** Square at viewport (x, y), or `null` outside the board. */
-function squareAt(
-  container: HTMLElement,
-  clientX: number,
-  clientY: number,
-  orientation: Orientation,
-): SquareIndex | null {
-  const rect = container.getBoundingClientRect();
-  const relX = clientX - rect.left;
-  const relY = clientY - rect.top;
-  if (relX < 0 || relY < 0 || relX >= rect.width || relY >= rect.height) return null;
-  const col = Math.floor((relX / rect.width) * 8);
-  const row = Math.floor((relY / rect.height) * 8);
-  const file = orientation === "white" ? col : 7 - col;
-  const rank = orientation === "white" ? 7 - row : row;
-  return (rank * 8 + file) as SquareIndex;
 }
 
 export interface UseArrowGestureOptions {
@@ -52,7 +35,14 @@ export interface UseArrowGestureOptions {
   readonly arrowsLayerRef: RefObject<ArrowsLayerHandle | null>;
   readonly enabled: boolean;
   /** Fully-resolved colour palette (caller merges prop with defaults). */
-  readonly palette: Required<ArrowColors>;
+  readonly palette: ResolvedArrowPalette;
+  /**
+   * When `true`, an arrow endpoint that lies on a legal move target
+   * from the origin snaps to that target. Typical usage: analysis
+   * boards where the user wants to draw future-move hints that align
+   * with the rules. Default `false`.
+   */
+  readonly snapToValidMove?: boolean;
 }
 
 /**
@@ -61,7 +51,8 @@ export interface UseArrowGestureOptions {
  * effect's closure and is torn down on unmount / dep change.
  */
 export function useArrowGesture(options: UseArrowGestureOptions): void {
-  const { game, orientation, containerRef, arrowsLayerRef, enabled, palette } = options;
+  const { game, orientation, containerRef, arrowsLayerRef, enabled, palette, snapToValidMove } =
+    options;
 
   useEffect(() => {
     if (!enabled) return;
@@ -75,9 +66,41 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
       arrowsLayerRef.current?.setPreview(null);
     };
 
+    /**
+     * Constrain a candidate endpoint to a legal target from `origin`
+     * when `snapToValidMove` is enabled. Same-square (circle / mark)
+     * is always preserved. When the caller hovers a non-legal square,
+     * the arrow snaps to the nearest legal target — euclidean on square
+     * indices (cheap; no allocations in the hot path because
+     * `legalFrom` is already cached by position hash in the model).
+     */
+    const snap = (candidate: SquareIndex): SquareIndex => {
+      if (!snapToValidMove) return candidate;
+      if (origin === null) return candidate;
+      if (candidate === origin) return candidate;
+      const legals = game.legalFrom(origin);
+      if (legals.size === 0 || legals.has(candidate)) return candidate;
+      // File/rank diff to the candidate; square-index euclidean is a
+      // fine proxy since we're comparing targets on an 8×8 grid.
+      const cf = candidate & 7;
+      const cr = candidate >> 3;
+      let best = candidate;
+      let bestDist = Infinity;
+      for (const t of legals) {
+        const df = (t & 7) - cf;
+        const dr = (t >> 3) - cr;
+        const d = df * df + dr * dr;
+        if (d < bestDist) {
+          bestDist = d;
+          best = t;
+        }
+      }
+      return best;
+    };
+
     const setPreview = (to: SquareIndex, color: string): void => {
       if (origin === null) return;
-      arrowsLayerRef.current?.setPreview({ from: origin, to, color });
+      arrowsLayerRef.current?.setPreview({ from: origin, to: snap(to), color });
     };
 
     const onContextMenu = (e: MouseEvent): void => {
@@ -89,7 +112,7 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
 
     const onPointerDown = (e: PointerEvent): void => {
       if (e.button !== 2) return;
-      const sq = squareAt(container, e.clientX, e.clientY, orientation);
+      const sq = getSquareAtPoint(container, e.clientX, e.clientY, orientation);
       if (sq === null) return;
       origin = sq;
       activePointerId = e.pointerId;
@@ -105,7 +128,7 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
     const onPointerMove = (e: PointerEvent): void => {
       if (origin === null) return;
       if (activePointerId !== null && e.pointerId !== activePointerId) return;
-      const sq = squareAt(container, e.clientX, e.clientY, orientation);
+      const sq = getSquareAtPoint(container, e.clientX, e.clientY, orientation);
       if (sq === null) {
         // Pointer left the board — show the preview as a mark at origin.
         setPreview(origin, colorForModifiers(e, palette));
@@ -117,7 +140,8 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
     const onPointerUp = (e: PointerEvent): void => {
       if (origin === null) return;
       if (activePointerId !== null && e.pointerId !== activePointerId) return;
-      const target = squareAt(container, e.clientX, e.clientY, orientation) ?? origin;
+      const raw = getSquareAtPoint(container, e.clientX, e.clientY, orientation) ?? origin;
+      const target = snap(raw);
       const color = colorForModifiers(e, palette);
       game.toggleArrow({ from: origin, to: target, color });
       origin = null;
@@ -147,5 +171,5 @@ export function useArrowGesture(options: UseArrowGestureOptions): void {
       container.removeEventListener("pointercancel", onPointerCancel);
       clearPreview();
     };
-  }, [game, orientation, containerRef, arrowsLayerRef, enabled, palette]);
+  }, [game, orientation, containerRef, arrowsLayerRef, enabled, palette, snapToValidMove]);
 }

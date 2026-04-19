@@ -27,6 +27,7 @@ export {
 export { useChessGame } from "./hooks/use-chess-game.js";
 export { useClickToMove } from "./hooks/use-click-to-move.js";
 export { useDrag } from "./hooks/use-drag.js";
+export { type HoverSquareContext, useHoverSquare } from "./hooks/use-hover-square.js";
 export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 export type {
   MoveSoundKey,
@@ -37,6 +38,8 @@ export {
   DEFAULT_MOVE_SOUND_SOURCES,
   useMoveSound,
 } from "./hooks/use-move-sound.js";
+// ---- Geometry helpers ----
+export { getPointAtSquareCentre, getSquareAtPoint } from "./lib/geometry.js";
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";
 
@@ -49,6 +52,8 @@ export type {
   Orientation,
   PieceRenderer,
   PromotionContext,
+  RanksPosition,
+  ResolvedArrowPalette,
   SquareContext,
   Theme,
   UseChessGameOptions,

@@ -54,6 +54,13 @@ export interface BoardGridProps {
    * paint highlights imperatively — no React state, no reconciliation.
    */
   readonly setSquareRef?: (index: SquareIndex, el: HTMLElement | null) => void;
+  /**
+   * Flip the grid into a declarative, non-interactive mode. Emits
+   * `aria-readonly="true"` for assistive tech and mirrors the shape of
+   * the server-rendered `StaticChessboard` so a `viewOnly` client board
+   * reads the same as an SSR'd one.
+   */
+  readonly readOnly?: boolean;
 }
 
 /**
@@ -68,6 +75,7 @@ export function BoardGrid({
   ariaLabel,
   focusedSquare,
   setSquareRef,
+  readOnly,
 }: BoardGridProps) {
   const squares = useMemo(() => buildSquareOrder(orientation), [orientation]);
 
@@ -77,6 +85,7 @@ export function BoardGrid({
       aria-label={ariaLabel ?? "Chess board"}
       aria-rowcount={8}
       aria-colcount={8}
+      {...(readOnly === true ? { "aria-readonly": true } : {})}
       style={{
         position: "absolute",
         inset: 0,

@@ -31,14 +31,15 @@ import { parseFenPlacement } from "./fen.js";
 import { AnimationRunner } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
+import { useCursorController } from "./hooks/use-cursor-controller.js";
 import { useDrag } from "./hooks/use-drag.js";
+import { useHoverSquare } from "./hooks/use-hover-square.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
-import { useCursorController } from "./hooks/use-cursor-controller.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
-import type { ArrowColors, ChessboardProps } from "./types.js";
+import type { ArrowColors, ChessboardProps, ResolvedArrowPalette } from "./types.js";
 
 /** Internal record describing a pending promotion. */
 interface PendingPromotion {
@@ -88,6 +89,7 @@ export function Chessboard(props: ChessboardProps) {
     theme = defaultTheme,
     pieces = defaultPieces,
     showCoordinates = true,
+    ranksPosition = "left",
     showLegalTargets = "rings",
     highlightLastMove = true,
     onMove,
@@ -102,11 +104,27 @@ export function Chessboard(props: ChessboardProps) {
     clearArrowsOnMove = true,
     clearArrowsOnClick = true,
     arrowColors,
+    snapArrowsToValidMove = false,
     allowPremove = false,
     showCheckHighlight = true,
     showIllegalFlash = true,
     sound = true,
+    viewOnly = false,
+    canDragPiece,
+    onSquareMouseEnter,
+    onSquareMouseLeave,
+    disableContextMenu = true,
   } = props;
+
+  // Every interactive subsystem consults these resolved flags. Keeping
+  // the resolution here — rather than inlining `!viewOnly && …` at each
+  // call site — makes the blast radius of `viewOnly` explicit, keeps
+  // dependency arrays stable, and means the branch is evaluated once
+  // per render instead of once per consumer.
+  const dragEnabled = allowDrag && !viewOnly;
+  const arrowGestureEnabled = allowDrawingArrows && !viewOnly;
+  const clickToMoveEnabled = !viewOnly;
+  const keyboardNavEnabled = !viewOnly;
 
   // Parse the fallback FEN at most once per distinct string. The 64-byte
   // output is passed into `<StaticPieceLayer/>` only while `game` is null;
@@ -162,17 +180,27 @@ export function Chessboard(props: ChessboardProps) {
     onPromoteRef.current = onPromote;
   });
 
-  // Merge user-provided arrow colours with defaults. Memoised to keep the
-  // gesture hook's deps stable.
-  const palette = useMemo<Required<ArrowColors>>(
-    () => ({
-      default: arrowColors?.default ?? defaultArrowColors.default,
-      shift: arrowColors?.shift ?? defaultArrowColors.shift,
-      alt: arrowColors?.alt ?? defaultArrowColors.alt,
-      ctrl: arrowColors?.ctrl ?? defaultArrowColors.ctrl,
-    }),
-    [arrowColors?.default, arrowColors?.shift, arrowColors?.alt, arrowColors?.ctrl],
-  );
+  // Merge user-provided arrow colours with defaults. Memoised against
+  // the whole `arrowColors` reference so consumers who pass a stable
+  // object literal don't thrash the gesture hook's deps; callers who
+  // recreate it each render pay one shallow-copy per commit — cheap.
+  // Extra user-defined brush keys flow through alongside the four
+  // modifier channels that always get defaults applied.
+  const palette = useMemo<ResolvedArrowPalette>(() => {
+    const merged: { [k: string]: string } = {
+      default: defaultArrowColors.default,
+      shift: defaultArrowColors.shift,
+      alt: defaultArrowColors.alt,
+      ctrl: defaultArrowColors.ctrl,
+    };
+    if (arrowColors !== undefined) {
+      for (const k in arrowColors) {
+        const v = (arrowColors as ArrowColors)[k];
+        if (v !== undefined) merged[k] = v;
+      }
+    }
+    return merged as ResolvedArrowPalette;
+  }, [arrowColors]);
 
   // Drag state used to live here as `useState` + `flushSync` on
   // drag-start. It's gone now: the `<DragLayer/>` below is always
@@ -222,8 +250,10 @@ export function Chessboard(props: ChessboardProps) {
 
   /**
    * Auto-clear arrows when the game advances. Subscribes to `historyPly`
-   * and wipes the arrow model on every increment. Toggled off by
-   * `clearArrowsOnMove={false}`.
+   * and wipes the *user-drawn* arrows on every increment. Arrows marked
+   * `managed: true` (engine hints, programmatic annotations) survive so
+   * an analysis board can keep its best-move arrow current across the
+   * move that replaces it. Toggled off by `clearArrowsOnMove={false}`.
    */
   useEffect(() => {
     if (game === null || !clearArrowsOnMove) return;
@@ -231,7 +261,7 @@ export function Chessboard(props: ChessboardProps) {
     return game.subscribe(() => {
       const snap = game.getSnapshot();
       if (snap.historyPly > prevPly && snap.arrows.length > 0) {
-        game.clearArrows();
+        game.clearUserArrows();
       }
       prevPly = snap.historyPly;
     });
@@ -286,7 +316,7 @@ export function Chessboard(props: ChessboardProps) {
     [game],
   );
 
-  const clickToMove = useClickToMove(game, onMove, requestPromotion);
+  const clickToMove = useClickToMove(game, onMove, requestPromotion, clickToMoveEnabled);
 
   /**
    * Clear any drawn arrows if `clearArrowsOnClick` is enabled. Called at
@@ -295,27 +325,54 @@ export function Chessboard(props: ChessboardProps) {
    */
   const maybeClearArrows = useCallback((): void => {
     if (!clearArrowsOnClick || game === null) return;
-    if (game.getSnapshot().arrows.length > 0) game.clearArrows();
+    // Managed arrows (engine hints) are deliberately preserved — the
+    // user's left-click should dismiss their own annotations only, not
+    // the app's.
+    if (game.getSnapshot().arrows.length > 0) game.clearUserArrows();
   }, [clearArrowsOnClick, game]);
 
   /** Click-to-move with the arrow-clearing side effect woven in. */
   const handleSquareClick = useCallback(
     (index: SquareIndex): void => {
+      // `viewOnly` keeps clicks from perturbing any board state — including
+      // user-drawn or programmatic arrows. `clickToMove` is already a no-op
+      // when disabled; guarding the arrow-clear here keeps the click path
+      // purely declarative.
+      if (viewOnly) return;
       maybeClearArrows();
       clickToMove(index);
     },
-    [maybeClearArrows, clickToMove],
+    [viewOnly, maybeClearArrows, clickToMove],
   );
 
   /** Escape clears arrows (and is a natural analogue for "cancel"). */
   useEffect(() => {
-    if (!clearArrowsOnClick || game === null) return;
+    if (!clearArrowsOnClick || game === null || viewOnly) return;
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") maybeClearArrows();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [clearArrowsOnClick, game, maybeClearArrows]);
+  }, [clearArrowsOnClick, game, maybeClearArrows, viewOnly]);
+
+  /**
+   * Suppress the browser context menu on the board container. Works
+   * independently of `allowDrawingArrows` so consumers can have the OS
+   * menu blocked even in view-only / no-arrow configurations. When
+   * arrows are enabled, `useArrowGesture` installs its own identical
+   * listener too — both call `preventDefault` on the same event, which
+   * is idempotent.
+   */
+  useEffect(() => {
+    if (!disableContextMenu) return;
+    const container = containerRef.current;
+    if (container === null) return;
+    const onContextMenu = (e: MouseEvent): void => {
+      e.preventDefault();
+    };
+    container.addEventListener("contextmenu", onContextMenu);
+    return () => container.removeEventListener("contextmenu", onContextMenu);
+  }, [disableContextMenu]);
 
   // Drag callbacks — each is stable across renders so `useDrag` doesn't
   // re-install its pointer listeners on every commit. The drag-layer
@@ -405,18 +462,24 @@ export function Chessboard(props: ChessboardProps) {
     orientation,
     containerRef,
     dragLayerRef,
-    enabled: allowDrag && game !== null,
+    enabled: dragEnabled && game !== null,
     onDragStart,
     onDragEnd,
     onDrop,
+    ...(canDragPiece !== undefined ? { canDragPiece } : {}),
   });
 
   // Initialise keyboard focus once per orientation so Tab lands on a
   // sensible square. We deliberately do NOT auto-focus on mount — the
-  // board stays dormant until the user Tabs into it.
+  // board stays dormant until the user Tabs into it. Suppressed in
+  // `viewOnly` mode so the grid stays out of the tab order entirely.
   useEffect(() => {
+    if (!keyboardNavEnabled) {
+      setFocusedSquare(null);
+      return;
+    }
     setFocusedSquare((current) => current ?? defaultKeyboardFocus());
-  }, [defaultKeyboardFocus]);
+  }, [defaultKeyboardFocus, keyboardNavEnabled]);
 
   const onKeyboardActivate = useCallback(
     (index: SquareIndex): void => {
@@ -437,7 +500,20 @@ export function Chessboard(props: ChessboardProps) {
     setFocusedSquare,
     onActivate: onKeyboardActivate,
     onEscape: onKeyboardEscape,
-    enabled: game !== null,
+    enabled: game !== null && keyboardNavEnabled,
+  });
+
+  // Per-square hover notification — only armed when the caller supplies
+  // at least one of the two callbacks, so no container listener is
+  // installed on the default play path. Pointer events not mouse events,
+  // so touch drags through a square pair the same as pointer drags.
+  useHoverSquare({
+    game,
+    orientation,
+    containerRef,
+    enabled: onSquareMouseEnter !== undefined || onSquareMouseLeave !== undefined,
+    ...(onSquareMouseEnter !== undefined ? { onEnter: onSquareMouseEnter } : {}),
+    ...(onSquareMouseLeave !== undefined ? { onLeave: onSquareMouseLeave } : {}),
   });
 
   useArrowGesture({
@@ -445,8 +521,9 @@ export function Chessboard(props: ChessboardProps) {
     orientation,
     containerRef,
     arrowsLayerRef,
-    enabled: allowDrawingArrows && game !== null,
+    enabled: arrowGestureEnabled && game !== null,
     palette,
+    snapToValidMove: snapArrowsToValidMove,
   });
 
   // Move-sound effects. Runs even when `game` is null — the hook no-ops
@@ -472,7 +549,7 @@ export function Chessboard(props: ChessboardProps) {
   // `injectCursorStyles` flips them to `cursor: grab`. The dragging
   // cursor (`grabbing`) is applied by a container-level attribute
   // toggled from `onDragStart` / `onDragEnd` below.
-  useCursorController(game, squareRefs, allowDrag, allowPremove);
+  useCursorController(game, squareRefs, dragEnabled, allowPremove);
 
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.
@@ -495,12 +572,14 @@ export function Chessboard(props: ChessboardProps) {
       style={containerStyle}
       data-ucr-orientation={orientation}
       data-ucr-target-style={showLegalTargets === false ? "off" : showLegalTargets}
+      {...(viewOnly ? { "data-ucr-view-only": "true" } : {})}
     >
       <BoardGrid
         orientation={orientation}
         onSquareClick={handleSquareClick}
         focusedSquare={focusedSquare}
         setSquareRef={setSquareRef}
+        readOnly={viewOnly}
         {...(renderSquare !== undefined ? { renderSquare } : {})}
         {...(ariaLabel !== undefined ? { ariaLabel } : {})}
       />
@@ -509,6 +588,15 @@ export function Chessboard(props: ChessboardProps) {
       ) : null}
       {game !== null ? (
         <PremoveLayer model={game} orientation={orientation} pieces={pieces} />
+      ) : null}
+      {/*
+       * "Below" arrows — arrows marked `below: true` render beneath the
+       * piece layer by DOM order (positioned elements without z-index
+       * paint in tree order). Fresh subset per commit filters server
+       * annotations / heatmap tints away from the top overlay.
+       */}
+      {game !== null ? (
+        <ArrowsLayer model={game} orientation={orientation} palette={palette} below />
       ) : null}
       {game !== null ? (
         <PieceLayer model={game} orientation={orientation} pieces={pieces} />
@@ -526,9 +614,16 @@ export function Chessboard(props: ChessboardProps) {
       ) : null}
       <DragLayer ref={dragLayerRef} pieces={pieces} />
       {game !== null ? (
-        <ArrowsLayer ref={arrowsLayerRef} model={game} orientation={orientation} />
+        <ArrowsLayer
+          ref={arrowsLayerRef}
+          model={game}
+          orientation={orientation}
+          palette={palette}
+        />
       ) : null}
-      {showCoordinates ? <Coordinates orientation={orientation} /> : null}
+      {showCoordinates ? (
+        <Coordinates orientation={orientation} ranksPosition={ranksPosition} />
+      ) : null}
       <IllegalFlashLayer at={flashSquare} orientation={orientation} />
       {game !== null ? <LiveRegion model={game} /> : null}
       {pendingPromotion !== null ? (

@@ -22,6 +22,7 @@
 import {
   Chess,
   IllegalMoveError,
+  init,
   type Move as UltraMove,
   type PieceType as UltraPieceType,
 } from "ultrachess";
@@ -125,6 +126,48 @@ export function createUltrachessAdapterSync(chess: Chess): EngineAdapter {
 export async function createUltrachessAdapter(fen?: string): Promise<EngineAdapter> {
   const chess = fen === undefined ? await Chess.create() : await Chess.create(fen);
   return createUltrachessAdapterSync(chess);
+}
+
+/**
+ * Cached warm-up promise. `ultrachess`'s own `init()` is idempotent, but
+ * caching our reference lets us guarantee a single `Promise<void>` shape
+ * across the library regardless of the engine's internal caching strategy.
+ */
+let preloadPromise: Promise<void> | null = null;
+
+/**
+ * Warm the `ultrachess` WASM module ahead of time.
+ *
+ * Starts the `fetch → compile → instantiate` pipeline on the engine's `.wasm`
+ * so that the first `createUltrachessAdapter()` call (and, by extension, the
+ * first `useChessGame()` in `@ultrachess/react`) resolves without paying the
+ * one-time ~250 ms cold cost on the critical path.
+ *
+ * Call this once, as high up the module graph as you can — the app's root
+ * layout / entry module is ideal. The returned Promise is safe to ignore;
+ * awaiting only matters in tests or when you need to block on readiness.
+ *
+ * Idempotent. Multiple invocations resolve to the same underlying init.
+ *
+ * @example
+ * ```tsx
+ * // app/layout.tsx (Next.js App Router)
+ * import { preloadUltrachessAdapter } from "@ultrachess/core";
+ * preloadUltrachessAdapter();  // fire-and-forget
+ * ```
+ *
+ * @remarks
+ * Pair with a `<link rel="preload" as="fetch" href="…ultrachess.wasm"
+ * crossorigin>` in the HTML head to overlap the WASM fetch with HTML parse
+ * and JS download.
+ */
+export function preloadUltrachessAdapter(): Promise<void> {
+  if (preloadPromise === null) {
+    // Discard the low-level ABI handle — consumers don't need it, and hiding
+    // it keeps our public type surface unchanged if the engine evolves.
+    preloadPromise = init().then(() => undefined);
+  }
+  return preloadPromise;
 }
 
 /**

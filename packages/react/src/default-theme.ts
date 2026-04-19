@@ -20,6 +20,12 @@ export const CSS_VARS = {
   CHECK: "--ucr-check",
   COORDINATE_LIGHT: "--ucr-coord-light",
   COORDINATE_DARK: "--ucr-coord-dark",
+  /**
+   * Opacity of the piece left behind at the drag origin while the ghost
+   * is in flight. Default `0.35` (lichess parity). Themes may override
+   * to `0` for a chess.com-style "piece vanishes" effect.
+   */
+  DRAG_GHOST_OPACITY: "--ucr-drag-ghost-opacity",
 } as const;
 
 /** The default built-in theme (brown, matches `@ultrachess/themes/brown`). */
@@ -33,6 +39,7 @@ export const defaultTheme: Theme = Object.freeze({
   [CSS_VARS.CHECK]: "radial-gradient(rgba(255, 0, 0, 0.55) 30%, rgba(255, 0, 0, 0) 80%)",
   [CSS_VARS.COORDINATE_LIGHT]: "#b58863",
   [CSS_VARS.COORDINATE_DARK]: "#f0d9b5",
+  [CSS_VARS.DRAG_GHOST_OPACITY]: "0.35",
 });
 
 /**

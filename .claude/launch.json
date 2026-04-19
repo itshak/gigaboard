@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "next-analysis",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "examples/next-analysis", "dev"],
+      "port": 3002
+    }
+  ]
+}

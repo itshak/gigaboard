@@ -46,34 +46,14 @@ import {
   createDragController,
   type SquareIndex,
 } from "@ultrachess/core";
-import { type RefObject, useEffect } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 import type { DragLayerHandle } from "../components/drag-layer.js";
+import { CSS_VARS } from "../default-theme.js";
+import { algebraicOf, getSquareAtPoint } from "../lib/geometry.js";
 import type { Orientation } from "../types.js";
 
-/** Convert viewport coords to a square index, or `null` if outside the board. */
-function squareAtViewportPoint(
-  container: HTMLElement,
-  clientX: number,
-  clientY: number,
-  orientation: Orientation,
-): SquareIndex | null {
-  const rect = container.getBoundingClientRect();
-  const relX = clientX - rect.left;
-  const relY = clientY - rect.top;
-  if (relX < 0 || relY < 0 || relX >= rect.width || relY >= rect.height) return null;
-  const col = Math.floor((relX / rect.width) * 8);
-  const row = Math.floor((relY / rect.height) * 8);
-  const file = orientation === "white" ? col : 7 - col;
-  const rank = orientation === "white" ? 7 - row : row;
-  return (rank * 8 + file) as SquareIndex;
-}
-
-/** Algebraic name `"e2"` from a square index — used to query the origin DOM. */
-function algebraicOf(index: SquareIndex): string {
-  const file = index & 7;
-  const rank = index >> 3;
-  return `${String.fromCharCode(0x61 + file)}${rank + 1}`;
-}
+/** CSS variable the theme uses to control drag-origin opacity. */
+const GHOST_OPACITY_VAR = CSS_VARS.DRAG_GHOST_OPACITY;
 
 /** Options passed to {@link useDrag}. */
 export interface UseDragOptions {
@@ -94,6 +74,15 @@ export interface UseDragOptions {
   readonly onDragStart: (from: SquareIndex, cell: BoardCell) => void;
   readonly onDragEnd: () => void;
   readonly onDrop: (from: SquareIndex, to: SquareIndex) => void;
+  /**
+   * Optional per-piece gate. If provided and it returns `false` for the
+   * would-be drag source, pointer-down is silently ignored and no drag
+   * initiates. Called once per attempt, never during a drag.
+   */
+  readonly canDragPiece?: (ctx: {
+    readonly square: SquareIndex;
+    readonly cell: BoardCell;
+  }) => boolean;
 }
 
 /**
@@ -111,7 +100,16 @@ export function useDrag(options: UseDragOptions): void {
     onDragStart,
     onDragEnd,
     onDrop,
+    canDragPiece,
   } = options;
+
+  // Latest-ref so the caller can pass a fresh predicate every render
+  // without tearing down the pointer listeners. Absorbed here — not at
+  // the call site — so consumers don't have to wrap every time.
+  const canDragPieceRef = useRef(canDragPiece);
+  useEffect(() => {
+    canDragPieceRef.current = canDragPiece;
+  });
 
   useEffect(() => {
     if (!enabled) return;
@@ -158,10 +156,16 @@ export function useDrag(options: UseDragOptions): void {
       // Primary button only. Right-clicks are reserved for arrows (M4).
       // Multi-touch is defended by drag-controller's pointerId tracking.
       if (e.button !== 0) return;
-      const sq = squareAtViewportPoint(container, e.clientX, e.clientY, orientation);
+      const sq = getSquareAtPoint(container, e.clientX, e.clientY, orientation);
       if (sq === null) return;
       const cell = game.getSnapshot().board[sq] ?? 0;
       if (cell === 0) return;
+      // Caller-supplied gate. Fires on the cold activation path — never
+      // during a drag — so the ref deref is free on the hot loop.
+      const canDrag = canDragPieceRef.current;
+      if (canDrag !== undefined && !canDrag({ square: sq, cell: cell as BoardCell })) {
+        return;
+      }
       const consumed = controller.pointerDown(sq, e.pointerId, e.clientX, e.clientY);
       if (consumed) activePointerId = e.pointerId;
     };
@@ -177,10 +181,22 @@ export function useDrag(options: UseDragOptions): void {
           controller.cancel();
           return;
         }
-        // Hide origin piece imperatively (no re-render).
+        // Fade the origin piece imperatively (no re-render). The target
+        // opacity is sourced from `--ucr-drag-ghost-opacity` on the board
+        // container so themes control the look — `0` for chess.com's
+        // vanish-on-drag, `0.35` for lichess-style translucent ghost.
+        // Reading via `var(...)` inside the inline style keeps the value
+        // live: users can toggle the CSS var and the next drag reflects
+        // it without a remount.
         const originLabel = algebraicOf(evt.from);
         originEl = container.querySelector<HTMLElement>(`[data-piece-square="${originLabel}"]`);
-        if (originEl !== null) originEl.style.opacity = "0";
+        if (originEl !== null) {
+          // Fallback `0.35` matches the lichess convention and keeps the
+          // behaviour correct when the caller swaps in a theme that
+          // doesn't define the variable (theme records replace — not
+          // merge with — the default theme).
+          originEl.style.opacity = `var(${GHOST_OPACITY_VAR}, 0.35)`;
+        }
 
         active = true;
         try {
@@ -213,7 +229,7 @@ export function useDrag(options: UseDragOptions): void {
       if (evt === null) return;
 
       if (evt.kind === "drop") {
-        const target = squareAtViewportPoint(container, e.clientX, e.clientY, orientation);
+        const target = getSquareAtPoint(container, e.clientX, e.clientY, orientation);
         if (target !== null && target !== evt.from) {
           onDrop(evt.from, target);
         }
