@@ -30,6 +30,22 @@
  * can construct `new Worker("/stockfish/...js")` directly — modern
  * browsers allow same-origin classic worker URLs without ceremony, and
  * the `.wasm` fetch inside the worker resolves to the correct sibling.
+ *
+ * ### Serialising the search lifecycle
+ *
+ * Stockfish's single-threaded build processes UCI commands on one
+ * cooperative thread. Blindly firing `stop; position fen; go depth N`
+ * back-to-back for every position change eventually wedges the engine:
+ * each `stop` needs to unwind the current search and emit `bestmove`
+ * before the next `position`/`go` pair can be consumed cleanly, and
+ * letting those pairs pile up races the engine's internal state.
+ *
+ * We avoid that entirely by **pairing every `go` with the `bestmove`
+ * reply before sending the next `go`**. If a new `evaluatePosition`
+ * arrives while a search is in flight, it replaces the single
+ * "pending" slot and waits — when the current search's `bestmove`
+ * arrives, we kick off the pending one. Redundant requests for the
+ * same FEN at the same depth are dropped.
  */
 
 "use client";
@@ -55,6 +71,12 @@ export interface StockfishMessage {
  */
 const ENGINE_LOADER_URL = "/stockfish/stockfish-18-lite-single.js";
 
+/** Search-lifecycle state. Owned entirely by the driver. */
+interface PendingSearch {
+  readonly fen: string;
+  readonly depth: number;
+}
+
 /**
  * Thin driver wrapping a single Stockfish worker. Safe to construct
  * during SSR — the constructor short-circuits when `window` is
@@ -64,6 +86,21 @@ const ENGINE_LOADER_URL = "/stockfish/stockfish-18-lite-single.js";
 export class StockfishEngine {
   private worker: Worker | null = null;
   private messageHandler: ((msg: StockfishMessage) => void) | null = null;
+
+  /**
+   * The currently-running search, or `null` when the engine is idle.
+   * A search is considered "running" from the moment we post `go` to
+   * the moment we receive the matching `bestmove`.
+   */
+  private activeSearch: PendingSearch | null = null;
+
+  /**
+   * At most one search waiting behind the active one. New requests
+   * overwrite this slot — we only care about the latest position, so
+   * older queued searches become irrelevant the moment a newer one
+   * lands.
+   */
+  private pendingSearch: PendingSearch | null = null;
 
   constructor() {
     if (typeof window === "undefined") return;
@@ -77,26 +114,53 @@ export class StockfishEngine {
 
     this.worker.onmessage = (ev: MessageEvent<string>) => {
       const line = typeof ev.data === "string" ? ev.data : String(ev.data);
-      const parsed = parseUci(line);
-      if (parsed && this.messageHandler) this.messageHandler(parsed);
+      this.handleLine(line);
     };
 
+    // Standard UCI handshake. Replies (`uciok`, `readyok`) are ignored —
+    // the engine queues commands reliably, and search start is gated by
+    // `activeSearch` tracking, not by the handshake completing.
     this.worker.postMessage("uci");
     this.worker.postMessage("isready");
     this.worker.postMessage("ucinewgame");
   }
 
-  /** Queue a fresh `go depth N` search for the given FEN. */
+  /**
+   * Request a fresh search for `fen`. Safe to call at any rate — the
+   * driver serialises against the engine's `bestmove` acknowledgements
+   * so rapid-fire invocations can't wedge the UCI pipeline. Repeat
+   * requests for an in-flight position/depth are no-ops.
+   */
   evaluatePosition(fen: string, depth = 18): void {
     if (!this.worker) return;
-    this.worker.postMessage("stop");
-    this.worker.postMessage(`position fen ${fen}`);
-    this.worker.postMessage(`go depth ${depth}`);
+    const next: PendingSearch = { fen, depth };
+
+    // De-dupe against whatever's already running or queued — no point
+    // asking the engine to re-search the same position at the same
+    // depth twice.
+    if (searchEquals(this.activeSearch, next)) return;
+    if (searchEquals(this.pendingSearch, next)) return;
+
+    this.pendingSearch = next;
+    if (this.activeSearch === null) {
+      this.startPending();
+    } else {
+      // A search is already running. Ask the engine to abort it; the
+      // `bestmove` reply will dispatch `pendingSearch`.
+      this.worker.postMessage("stop");
+    }
   }
 
-  /** Abort the current search without terminating the engine. */
+  /**
+   * Abort the current search (if any) and drop any queued request.
+   * Used when the caller knows there's no new search coming — e.g.
+   * the game ended — so we don't leave the engine running an
+   * irrelevant analysis.
+   */
   stop(): void {
-    this.worker?.postMessage("stop");
+    if (!this.worker) return;
+    this.pendingSearch = null;
+    if (this.activeSearch !== null) this.worker.postMessage("stop");
   }
 
   /** Replace the single current subscriber. Pass `null` to unsubscribe. */
@@ -109,7 +173,48 @@ export class StockfishEngine {
     this.worker?.terminate();
     this.worker = null;
     this.messageHandler = null;
+    this.activeSearch = null;
+    this.pendingSearch = null;
   }
+
+  /**
+   * Route a raw UCI line from the worker. `bestmove` drives the
+   * search-lifecycle state machine; `info` lines are parsed and
+   * forwarded to the current subscriber.
+   */
+  private handleLine(line: string): void {
+    if (line.startsWith("bestmove")) {
+      // Whatever was running is done. Immediately start the queued
+      // search if there is one — this is the *only* place we advance
+      // from one search to the next, which is what makes the pipeline
+      // non-racy.
+      this.activeSearch = null;
+      this.startPending();
+      return;
+    }
+
+    const msg = parseUci(line);
+    if (msg && this.messageHandler) this.messageHandler(msg);
+  }
+
+  /**
+   * Promote `pendingSearch` to `activeSearch` and send the UCI
+   * `position`/`go` pair. No-op when no search is queued or the
+   * worker has already been terminated.
+   */
+  private startPending(): void {
+    if (!this.worker || this.pendingSearch === null) return;
+    const next = this.pendingSearch;
+    this.pendingSearch = null;
+    this.activeSearch = next;
+    this.worker.postMessage(`position fen ${next.fen}`);
+    this.worker.postMessage(`go depth ${next.depth}`);
+  }
+}
+
+/** Structural equality for search requests. Null-safe on both sides. */
+function searchEquals(a: PendingSearch | null, b: PendingSearch): boolean {
+  return a !== null && a.fen === b.fen && a.depth === b.depth;
 }
 
 /**
@@ -117,17 +222,11 @@ export class StockfishEngine {
  *
  * Only two kinds of lines matter:
  *  - `info depth N score cp|mate X ... pv <moves>` — streamed during search.
- *  - `bestmove <uci> [ponder <uci>]` — emitted once the search finishes.
+ *  - `bestmove <uci> [ponder <uci>]` — handled by the caller, not here.
  *
  * Everything else (readyok, id, option banners, copyprotection) is dropped.
  */
 function parseUci(line: string): StockfishMessage | null {
-  if (line.startsWith("bestmove")) {
-    const m = line.match(/^bestmove\s+(\S+)/);
-    const bestMove = m?.[1];
-    return bestMove ? { bestMove } : null;
-  }
-
   if (!line.startsWith("info")) return null;
 
   const msg: Mutable<StockfishMessage> = {};
