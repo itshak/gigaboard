@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.0...react-v1.1.1) (2026-04-19)
+
+
+### Bug Fixes
+
+* replace hype taglines with concrete numbers + populate npm keywords ([e4317cc](https://github.com/yahorbarkouski/ultrachess-react/commit/e4317cc95479f898583944e9450e212da3b0bc37))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @ultrachess/core bumped to 1.1.1
+
 ## [1.1.0](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.0.0...react-v1.1.0) (2026-04-19)
 
 
