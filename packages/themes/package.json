@@ -40,24 +40,40 @@
       "import": {
         "types": "./dist/brown.d.ts",
         "default": "./dist/brown.js"
+      },
+      "require": {
+        "types": "./dist/brown.d.cts",
+        "default": "./dist/brown.cjs"
       }
     },
     "./blue": {
       "import": {
         "types": "./dist/blue.d.ts",
         "default": "./dist/blue.js"
+      },
+      "require": {
+        "types": "./dist/blue.d.cts",
+        "default": "./dist/blue.cjs"
       }
     },
     "./green": {
       "import": {
         "types": "./dist/green.d.ts",
         "default": "./dist/green.js"
+      },
+      "require": {
+        "types": "./dist/green.d.cts",
+        "default": "./dist/green.cjs"
       }
     },
     "./wood": {
       "import": {
         "types": "./dist/wood.d.ts",
         "default": "./dist/wood.js"
+      },
+      "require": {
+        "types": "./dist/wood.d.cts",
+        "default": "./dist/wood.cjs"
       }
     },
     "./package.json": "./package.json"
