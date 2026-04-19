@@ -4,7 +4,7 @@
 
 ## Headline claim
 
-Ultra Chess React is the fastest React chessboard we know of. We prove that with:
+Ultra Chess React is a high-performance React chessboard. We prove the "high-performance" part with:
 
 - A WASM engine (`ultrachess`) that perfts at 336 Mnps on Node and 581 Mnps on Bun — 55–95× faster than `chess.js`.
 - A React layer that costs ≤ 4 component re-renders per move, 0 per hover, 0 per drag frame.

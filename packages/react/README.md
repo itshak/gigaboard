@@ -1,6 +1,6 @@
 # @ultrachess/react
 
-The fastest React chessboard on the planet. Powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM) and [`@ultrachess/core`](../core).
+High-performance React chessboard: **≤ 1 React commit per move**, **0 re-renders per drag frame**, and the whole interactive surface ships in **< 16 KB gzip**. Powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM) and [`@ultrachess/core`](../core).
 
 ## Status
 

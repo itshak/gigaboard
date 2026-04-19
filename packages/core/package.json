@@ -1,7 +1,7 @@
 {
   "name": "@ultrachess/core",
   "version": "1.1.0",
-  "description": "Framework-agnostic state machine and engine adapter for Ultra Chess React. Zero React, zero DOM.",
+  "description": "Framework-agnostic chess board state machine and engine adapter, backed by the ultrachess WASM engine. Byte-level Uint8Array(64) board store with per-square subscriptions — zero React, zero DOM, usable from any UI runtime.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
@@ -20,6 +20,16 @@
     "access": "public",
     "provenance": true
   },
+  "keywords": [
+    "chess",
+    "chess-engine",
+    "wasm",
+    "ultrachess",
+    "state-machine",
+    "framework-agnostic",
+    "useSyncExternalStore",
+    "typescript"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",

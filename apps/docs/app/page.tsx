@@ -18,7 +18,8 @@ export default function HomePage() {
     >
       <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Ultra Chess React</h1>
       <p style={{ color: "#555", margin: "0 0 1.5rem 0" }}>
-        The fastest React chessboard on the planet — powered by <code>ultrachess</code> (WASM).
+        High-performance React chessboard — ≤ 1 React commit per move, 0 re-renders per drag frame,
+        &lt; 16 KB gzip. Powered by <code>ultrachess</code> (WASM).
       </p>
       <BoardDemo />
     </main>

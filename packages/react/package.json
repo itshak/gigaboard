@@ -1,7 +1,7 @@
 {
   "name": "@ultrachess/react",
   "version": "1.1.0",
-  "description": "The fastest React chessboard on the planet. Powered by ultrachess (WASM).",
+  "description": "High-performance React chessboard — ≤ 1 React commit per move, 0 re-renders per drag frame, WAI-ARIA grid with keyboard parity, drag + FLIP animations, arrows + premoves, SSR static board, and < 16 KB gzip. Powered by the ultrachess WASM engine.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
@@ -20,6 +20,20 @@
     "access": "public",
     "provenance": true
   },
+  "keywords": [
+    "chess",
+    "chessboard",
+    "react",
+    "react-chessboard",
+    "wasm",
+    "ultrachess",
+    "chess-engine",
+    "chess-ui",
+    "accessibility",
+    "wai-aria",
+    "ssr",
+    "typescript"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",

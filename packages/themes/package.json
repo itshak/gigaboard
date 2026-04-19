@@ -1,7 +1,7 @@
 {
   "name": "@ultrachess/themes",
   "version": "1.1.0",
-  "description": "CSS-variable-only board themes for Ultra Chess React (brown, blue, green, wood).",
+  "description": "CSS-variable-only board themes for @ultrachess/react — brown, blue, green, wood. Each theme is a sub-path export (~205 B gzip) with zero runtime and zero JS cost at paint time.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
@@ -20,6 +20,17 @@
     "access": "public",
     "provenance": true
   },
+  "keywords": [
+    "chess",
+    "chess-theme",
+    "css-variables",
+    "brown",
+    "blue",
+    "green",
+    "wood",
+    "ultrachess",
+    "react"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
