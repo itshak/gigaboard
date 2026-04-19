@@ -1,0 +1,201 @@
+name: release
+
+# Single workflow that handles both halves of the release lifecycle:
+#
+#  1. `release-please` job — watches `master` for conventional commits and
+#     maintains an open "chore: release X.Y.Z" PR. Merging that PR runs
+#     this workflow again: release-please now sees the bumped manifest,
+#     pushes the git tags, and creates the GitHub Releases.
+#
+#  2. `publish` job — gated on `needs.release-please.outputs.releases_created`.
+#     Only fires when step 1 actually cut one or more releases this run.
+#     Runs the full test gate and publishes every released package to npm
+#     with provenance via Trusted Publishing (OIDC).
+#
+# Why both live in one workflow: events emitted by `GITHUB_TOKEN`
+# (including release-please's "release published" event) do NOT trigger
+# other workflows in this repo — it's GitHub's loop-prevention rule. A
+# separate `release: published` workflow never fires. Colocating the
+# publish step sidesteps the limitation without needing a PAT.
+#
+# Because we use `linked-versions`, every release cuts all 4 packages
+# to the same version in lockstep. `paths_released` enumerates exactly
+# which package directories need `npm publish` — we iterate that set.
+
+on:
+  push:
+    branches: [master]
+  # Safety valve for hotfixes or retries: publish all packages at an
+  # already-tagged ref without going through release-please.
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref (tag or SHA) to publish — skips release-please job"
+        required: true
+        type: string
+
+# `release-please` needs contents:write and pull-requests:write to open
+# its PR and create the GitHub Release. `publish` narrows to its own
+# minimum (id-token for OIDC, contents:read to check out).
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: "1.3.10"
+  # Node 24 ships npm 11.x — required for the Trusted Publishing OIDC
+  # handshake. On npm 10.x (Node 22 default) the provenance attestation
+  # gets signed but the tarball PUT goes anonymous and 404s.
+  NODE_VERSION: "24"
+
+jobs:
+  release-please:
+    name: release-please (version PR + GitHub Release)
+    runs-on: ubuntu-latest
+    # Skip entirely on manual dispatch — user wants to publish a
+    # specific ref, not re-run release-please.
+    if: ${{ github.event_name != 'workflow_dispatch' }}
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      paths_released: ${{ steps.release.outputs.paths_released }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+
+  publish:
+    name: npm publish (provenance via OIDC)
+    runs-on: ubuntu-latest
+    # Gate: only publish if release-please just cut releases OR if a
+    # human explicitly dispatched. `always()` lets the job run even
+    # when release-please was skipped (workflow_dispatch path).
+    needs: release-please
+    if: >-
+      ${{
+        always() &&
+        (
+          (needs.release-please.result == 'success' &&
+           needs.release-please.outputs.releases_created == 'true')
+          ||
+          github.event_name == 'workflow_dispatch'
+        )
+      }}
+    environment: npm-publish
+    permissions:
+      # id-token: write is what turns OIDC on — required for both
+      # npm Trusted Publishing and npm provenance attestations.
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Report runtime versions
+        run: |
+          bun --version
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Standard gate: lint + typecheck + test before publishing.
+      - name: Lint
+        run: bun run turbo lint
+
+      - name: Build
+        run: bun run turbo build
+
+      - name: Typecheck
+        run: bun run turbo typecheck
+
+      - name: Test
+        run: bun run turbo test
+
+      - name: Size budget
+        run: bun run turbo size
+
+      # Determine which package directories to publish.
+      #
+      # - release-please path: `paths_released` is a JSON array of
+      #   package dirs (e.g. ["packages/core","packages/react",...]).
+      # - workflow_dispatch path: no release-please output — publish
+      #   every package listed in the manifest. Intentional: a manual
+      #   dispatch is the retry/hotfix path and we assume the caller
+      #   wants everything at the given ref.
+      - name: Resolve packages to publish
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            paths=$(jq -c 'keys' .github/.release-please-manifest.json)
+          else
+            paths='${{ needs.release-please.outputs.paths_released }}'
+            # Defensive default — should always be non-empty when the
+            # `if:` guard above lets us in, but guard anyway.
+            if [[ -z "$paths" || "$paths" == "null" ]]; then
+              paths='[]'
+            fi
+          fi
+          echo "paths=$paths" >> "$GITHUB_OUTPUT"
+          echo "Will publish: $paths"
+
+      - name: npm pack --dry-run (sanity log per package)
+        env:
+          PATHS: ${{ steps.resolve.outputs.paths }}
+        run: |
+          set -euo pipefail
+          echo "$PATHS" | jq -r '.[]' | while read -r dir; do
+            echo "::group::pack $dir"
+            (cd "$dir" && npm pack --dry-run)
+            echo "::endgroup::"
+          done
+
+      - name: publint + arethetypeswrong (per package)
+        env:
+          PATHS: ${{ steps.resolve.outputs.paths }}
+        run: |
+          set -euo pipefail
+          echo "$PATHS" | jq -r '.[]' | while read -r dir; do
+            echo "::group::publint $dir"
+            (cd "$dir" && npx --yes publint)
+            echo "::endgroup::"
+            echo "::group::attw $dir"
+            # We target Node >=20 (see `engines` at the root), so we
+            # intentionally skip the node10 resolver — it pre-dates the
+            # `exports` field and can't find subpath entries.
+            (cd "$dir" && npx --yes -p @arethetypeswrong/cli attw --pack . --profile node16)
+            echo "::endgroup::"
+          done
+
+      - name: npm publish with provenance
+        env:
+          PATHS: ${{ steps.resolve.outputs.paths }}
+        # Trusted Publishing must be configured on npmjs.com for every
+        # package (@ultrachess/core, /react, /pieces, /themes) pointing
+        # at this workflow + environment. npm exchanges the OIDC token
+        # (`id-token: write` above) for a short-lived publish credential.
+        # No NODE_AUTH_TOKEN needed.
+        run: |
+          set -euo pipefail
+          echo "$PATHS" | jq -r '.[]' | while read -r dir; do
+            echo "::group::publish $dir"
+            (cd "$dir" && npm publish --provenance --access public)
+            echo "::endgroup::"
+          done

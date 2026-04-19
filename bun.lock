@@ -111,7 +111,7 @@
     },
     "packages/core": {
       "name": "@ultrachess/core",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
         "@vitest/coverage-v8": "^3.0.0",
@@ -127,7 +127,7 @@
     },
     "packages/pieces": {
       "name": "@ultrachess/pieces",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
         "@types/react": "^19.0.0",
@@ -142,7 +142,7 @@
     },
     "packages/react": {
       "name": "@ultrachess/react",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "dependencies": {
         "@ultrachess/core": "workspace:*",
       },
@@ -169,7 +169,7 @@
     },
     "packages/themes": {
       "name": "@ultrachess/themes",
-      "version": "0.0.0",
+      "version": "1.0.0",
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
         "size-limit": "^11.1.6",

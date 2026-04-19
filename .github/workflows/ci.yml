@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -61,3 +61,53 @@ jobs:
         run: bun run turbo build
       - name: Test
         run: bun run turbo test
+
+  package-inspect:
+    name: Package inspection (pack + publint + attw)
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build
+        run: bun run turbo build
+
+      # Iterate over every publishable package listed in the
+      # release-please manifest. Keeps this job in sync with what
+      # actually ships — no separate list to drift.
+      - name: npm pack --dry-run (per package)
+        run: |
+          set -euo pipefail
+          jq -r 'keys[]' .github/.release-please-manifest.json | while read -r dir; do
+            echo "::group::pack $dir"
+            (cd "$dir" && npm pack --dry-run)
+            echo "::endgroup::"
+          done
+
+      - name: publint (per package)
+        run: |
+          set -euo pipefail
+          jq -r 'keys[]' .github/.release-please-manifest.json | while read -r dir; do
+            echo "::group::publint $dir"
+            (cd "$dir" && npx --yes publint)
+            echo "::endgroup::"
+          done
+
+      - name: arethetypeswrong (per package)
+        # We target Node >=20 (see `engines` in each package.json), so
+        # we intentionally skip the node10 resolver — it pre-dates the
+        # `exports` field and can't find subpath entries.
+        run: |
+          set -euo pipefail
+          jq -r 'keys[]' .github/.release-please-manifest.json | while read -r dir; do
+            echo "::group::attw $dir"
+            (cd "$dir" && npx --yes -p @arethetypeswrong/cli attw --pack . --profile node16)
+            echo "::endgroup::"
+          done

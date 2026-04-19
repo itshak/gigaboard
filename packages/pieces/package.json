@@ -1,14 +1,24 @@
 {
   "name": "@ultrachess/pieces",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Tree-shakeable SVG piece sets for Ultra Chess React (cburnett, merida, alpha, neo).",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "bugs": {
+    "url": "https://github.com/yahorbarkouski/ultrachess-react/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
     "directory": "packages/pieces"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "type": "module",
   "sideEffects": false,

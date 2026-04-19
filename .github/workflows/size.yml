@@ -2,7 +2,7 @@ name: Size Limit
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: size-${{ github.ref }}
