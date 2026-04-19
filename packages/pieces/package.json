@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/pieces",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tree-shakable SVG piece sets for @ultrachess/react — cburnett, merida, alpha, neo, chesscom. Each set is a sub-path export (~660 B gzip) so unused sets drop at bundle time.",
   "license": "MIT",
   "author": "Yahor Barkouski",

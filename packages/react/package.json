@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/react",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "High-performance React chessboard — ≤ 1 React commit per move, 0 re-renders per drag frame, WAI-ARIA grid with keyboard parity, drag + FLIP animations, arrows + premoves, SSR static board, and < 16 KB gzip. Powered by the ultrachess WASM engine.",
   "license": "MIT",
   "author": "Yahor Barkouski",

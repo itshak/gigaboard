@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/themes",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CSS-variable-only board themes for @ultrachess/react — brown, blue, green, wood. Each theme is a sub-path export (~205 B gzip) with zero runtime and zero JS cost at paint time.",
   "license": "MIT",
   "author": "Yahor Barkouski",
