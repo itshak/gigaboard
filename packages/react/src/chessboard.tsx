@@ -20,7 +20,6 @@ import { BoardGrid } from "./components/board-grid.js";
 import { CheckLayer } from "./components/check-layer.js";
 import { Coordinates } from "./components/coordinates.js";
 import { DragLayer, type DragLayerHandle } from "./components/drag-layer.js";
-import { LastMoveLayer } from "./components/highlight-layer.js";
 import { IllegalFlashLayer } from "./components/illegal-flash-layer.js";
 import { LiveRegion } from "./components/live-region.js";
 import { PieceLayer } from "./components/piece-layer.js";
@@ -32,6 +31,7 @@ import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
 import { useDrag } from "./hooks/use-drag.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
+import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
@@ -305,8 +305,8 @@ export function Chessboard(props: ChessboardProps) {
     (from: SquareIndex, _cell: BoardCell): void => {
       maybeClearArrows();
       // Calling `game.selectSquare(from)` propagates the drag-source
-      // into the model so `SelectionLayer` shows legal targets while
-      // the piece is in flight — the same visual affordance
+      // into the model so the selection controller shows legal targets
+      // while the piece is in flight — the same visual affordance
       // click-to-move gets.
       game?.selectSquare(from);
     },
@@ -431,6 +431,13 @@ export function Chessboard(props: ChessboardProps) {
   // triggers a React render at all.
   useSelectionController(game, squareRefs, showLegalTargets);
 
+  // Imperative last-move tint. Same pattern as the selection
+  // controller — paints `data-ucr-last-move` on the two endpoint
+  // squares via a CSS `::after` pseudo-element. Removes the
+  // `<LastMoveLayer/>` React component from the drop-frame commit,
+  // eliminating two DOM creates + layout + paint per move.
+  useLastMoveController(game, squareRefs, highlightLastMove);
+
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.
   const animationRuntime = useMemo(() => ({ skipNextRef: skipNextAnimationRef }), []);
@@ -461,9 +468,6 @@ export function Chessboard(props: ChessboardProps) {
         {...(renderSquare !== undefined ? { renderSquare } : {})}
         {...(ariaLabel !== undefined ? { ariaLabel } : {})}
       />
-      {game !== null && highlightLastMove ? (
-        <LastMoveLayer model={game} orientation={orientation} />
-      ) : null}
       {game !== null && showCheckHighlight ? (
         <CheckLayer model={game} orientation={orientation} />
       ) : null}

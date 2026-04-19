@@ -130,7 +130,7 @@ describe("drag + drop", () => {
     await waitFor(() => expect(onMove).toHaveBeenCalledTimes(1));
   });
 
-  it("drag-start populates the model selection so SelectionLayer shows legal targets", () => {
+  it("drag-start populates the model selection so legal targets show up", () => {
     renderBoard(model);
     const root = container();
     const e2 = centreOf("e2");
