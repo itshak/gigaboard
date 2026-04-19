@@ -6,7 +6,7 @@ Zero React, zero DOM. This package owns the `ultrachess` engine handle and expos
 
 ## Status
 
-`0.0.0` — scaffolding. Public API lands in M1. See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) and the [plan](../../docs/PLAN.md) for details.
+`1.0.0` — published to npm. See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for design notes.
 
 ## Size budget
 
