@@ -27,8 +27,15 @@ import type { Orientation, PieceRenderer } from "../types.js";
  * Compute the 1-based CSS grid column + row for a square. The grid has
  * 8 columns and 8 rows; white orientation puts rank 1 at row 8 (the
  * bottom) and rank 8 at row 1 (the top).
+ *
+ * Exported so the subscription-free `<StaticPieceLayer/>` can share the
+ * same geometry and produce DOM identical to what this layer emits —
+ * keeps the "null game → fallback FEN" transition free of layout shift.
  */
-function gridCoord(index: SquareIndex, orientation: Orientation): { col: number; row: number } {
+export function gridCoord(
+  index: SquareIndex,
+  orientation: Orientation,
+): { col: number; row: number } {
   const file = index & 7;
   const rank = index >> 3;
   const col = orientation === "white" ? file + 1 : 8 - file;
@@ -45,7 +52,7 @@ interface PieceSlotProps {
 }
 
 /** Algebraic name for a square index — used as a debug/test attribute. */
-function algebraicOf(index: SquareIndex): string {
+export function algebraicOf(index: SquareIndex): string {
   const file = index & 7;
   const rank = index >> 3;
   return `${String.fromCharCode(0x61 + file)}${rank + 1}`;
@@ -54,9 +61,10 @@ function algebraicOf(index: SquareIndex): string {
 /**
  * Shared base style object for every slot. Pre-frozen so React's
  * shallow prop-diff short-circuits; the per-square placement is added
- * on top of this as an `inline-style` spread.
+ * on top of this as an `inline-style` spread. Exported for
+ * `<StaticPieceLayer/>` so both layers emit bit-identical DOM.
  */
-const SLOT_BASE_STYLE = Object.freeze({
+export const SLOT_BASE_STYLE = Object.freeze({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -91,9 +99,10 @@ export interface PieceLayerProps {
 /**
  * CSS-grid container style. 8×8, stretches to fill the board; each
  * occupied slot drops in at its `gridColumnStart` / `gridRowStart`.
- * Frozen so the outer `<div>`'s prop identity is stable across renders.
+ * Frozen so the outer `<div>`'s prop identity is stable across
+ * renders. Exported so `<StaticPieceLayer/>` can reuse it.
  */
-const CONTAINER_STYLE = Object.freeze({
+export const CONTAINER_STYLE = Object.freeze({
   position: "absolute" as const,
   inset: 0,
   display: "grid" as const,

@@ -73,9 +73,24 @@ export interface UcrBench {
   squareCentre(label: string): SquareCentre | null;
 }
 
+/**
+ * Grid-mount scenario API. Installed by the three `grid-*` apps when a
+ * page is loaded with `?grid=N`. Playwright waits on `ready` then
+ * collects host-side metrics (JS heap, DOM nodes, long tasks) while the
+ * in-page `metrics()` surfaces the same observer snapshot Ultra's
+ * single-board pages use.
+ */
+export interface UcrGrid {
+  readonly ready: Promise<void>;
+  readonly library: "ultra" | "rcb" | "cg";
+  readonly boardCount: number;
+  metrics(): BenchMetrics;
+}
+
 declare global {
   interface Window {
     __ucrBench__?: UcrBench;
+    __ucrGrid__?: UcrGrid;
   }
 }
 

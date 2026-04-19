@@ -25,7 +25,9 @@ import { LiveRegion } from "./components/live-region.js";
 import { PieceLayer } from "./components/piece-layer.js";
 import { PremoveLayer } from "./components/premove-layer.js";
 import { PromotionOverlay } from "./components/promotion-overlay.js";
+import { StaticPieceLayer } from "./components/static-piece-layer.js";
 import { defaultArrowColors, defaultTheme } from "./default-theme.js";
+import { parseFenPlacement } from "./fen.js";
 import { AnimationRunner } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
@@ -33,6 +35,7 @@ import { useDrag } from "./hooks/use-drag.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
+import { useCursorController } from "./hooks/use-cursor-controller.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type { ArrowColors, ChessboardProps } from "./types.js";
@@ -80,6 +83,7 @@ const ILLEGAL_FLASH_HOLD_MS = 320;
 export function Chessboard(props: ChessboardProps) {
   const {
     game,
+    fallbackFen,
     orientation = "white",
     theme = defaultTheme,
     pieces = defaultPieces,
@@ -103,6 +107,23 @@ export function Chessboard(props: ChessboardProps) {
     showIllegalFlash = true,
     sound = true,
   } = props;
+
+  // Parse the fallback FEN at most once per distinct string. The 64-byte
+  // output is passed into `<StaticPieceLayer/>` only while `game` is null;
+  // once a real model arrives the interactive `<PieceLayer/>` takes over.
+  // Parsing costs a few µs so the memoisation is about render-identity,
+  // not speed — `StaticPieceLayer` memos on the array reference.
+  const fallbackBoard = useMemo<Uint8Array | null>(() => {
+    if (fallbackFen === undefined || fallbackFen === "") return null;
+    try {
+      return parseFenPlacement(fallbackFen);
+    } catch {
+      // Malformed FEN → fall back to a pieceless board rather than
+      // throwing out of a render. The console warning would be noisy
+      // in tests; silent no-op is the least-surprising behaviour.
+      return null;
+    }
+  }, [fallbackFen]);
 
   // Normalise `sound` (boolean | options) into a concrete options object.
   // Memoised so `useMoveSound` doesn't rebuild its audio pool on every
@@ -304,6 +325,10 @@ export function Chessboard(props: ChessboardProps) {
   const onDragStart = useCallback(
     (from: SquareIndex, _cell: BoardCell): void => {
       maybeClearArrows();
+      // Flip the container into "grabbing" cursor mode. See
+      // `useCursorController` for the CSS rule that consumes this.
+      const container = containerRef.current;
+      if (container !== null) container.dataset["ucrDragging"] = "true";
       // Calling `game.selectSquare(from)` propagates the drag-source
       // into the model so the selection controller shows legal targets
       // while the piece is in flight — the same visual affordance
@@ -313,6 +338,10 @@ export function Chessboard(props: ChessboardProps) {
     [game, maybeClearArrows],
   );
   const onDragEnd = useCallback((): void => {
+    // Reset the cursor. We clear unconditionally because React may have
+    // skipped a render cycle between drop and the next pointer event.
+    const container = containerRef.current;
+    if (container !== null) delete container.dataset["ucrDragging"];
     // Clear the selection regardless of whether the drop landed — on a
     // successful move `tryMove` has already nulled it; on cancel / illegal
     // drop the selection would otherwise linger with stale legal targets.
@@ -438,6 +467,13 @@ export function Chessboard(props: ChessboardProps) {
   // eliminating two DOM creates + layout + paint per move.
   useLastMoveController(game, squareRefs, highlightLastMove);
 
+  // Imperative cursor paint. Tags squares that hold a grabbable piece
+  // with `data-ucr-grabbable="true"` so the CSS rule in
+  // `injectCursorStyles` flips them to `cursor: grab`. The dragging
+  // cursor (`grabbing`) is applied by a container-level attribute
+  // toggled from `onDragStart` / `onDragEnd` below.
+  useCursorController(game, squareRefs, allowDrag, allowPremove);
+
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.
   const animationRuntime = useMemo(() => ({ skipNextRef: skipNextAnimationRef }), []);
@@ -474,7 +510,11 @@ export function Chessboard(props: ChessboardProps) {
       {game !== null ? (
         <PremoveLayer model={game} orientation={orientation} pieces={pieces} />
       ) : null}
-      {game !== null ? <PieceLayer model={game} orientation={orientation} pieces={pieces} /> : null}
+      {game !== null ? (
+        <PieceLayer model={game} orientation={orientation} pieces={pieces} />
+      ) : fallbackBoard !== null ? (
+        <StaticPieceLayer board={fallbackBoard} orientation={orientation} pieces={pieces} />
+      ) : null}
       {game !== null ? (
         <AnimationRunner
           model={game}

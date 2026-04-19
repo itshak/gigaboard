@@ -43,7 +43,7 @@ A PR that regresses any budget is blocked.
 1. **Byte-level snapshot.** The board is a `Uint8Array(64)`. Each square subscribes to its own byte. Move → 2–4 byte changes → 2–4 tiny re-renders.
 2. **Canvas arrows.** Arrows render on a single `<canvas>` with imperative 2D calls. One React commit when the arrow set changes; drawing itself is not React's problem.
 3. **Refs-only drag.** `pointerdown` sets a ref; `pointermove` writes `element.style.transform` directly. React never knows the drag is happening.
-4. **WAAPI animations.** `element.animate(...)` runs off-thread on the compositor. Zero React work during the 180 ms animation window.
+4. **WAAPI animations.** `element.animate(...)` runs off-thread on the compositor. Zero React work during the 60 ms animation window.
 5. **`hash()`-keyed legal-move cache.** `ultrachess.hash()` is O(1) (measured at 0.34 ns); cache key is free.
 6. **Lazy piece-sprite paths.** Piece SVGs are imported per set; unused sets are tree-shaken. Each set is ~2 KB gzip.
 7. **Server-only static board.** For docs, PGN viewers, embedded boards, the `@ultrachess/react/server` export produces zero client JS.

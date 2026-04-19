@@ -28,85 +28,9 @@
 import type { BoardCell, SquareIndex } from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
 import { CSS_VARS, defaultTheme } from "./default-theme.js";
+import { parseFenPlacement } from "./fen.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type { Orientation, PieceRenderer, Theme } from "./types.js";
-
-/* ============================================================ FEN parser */
-
-/**
- * Parse just the piece-placement field of a FEN into a 64-byte `Uint8Array`
- * using our `BoardCell` encoding. Indexing is LERF (0 = a1 .. 63 = h8).
- *
- * Only the first whitespace-delimited field is consumed. Invalid input
- * throws so the error is surfaced at render time rather than silently
- * producing a broken board.
- */
-function parseFenPlacement(fen: string): Uint8Array {
-  const placement = fen.trim().split(/\s+/)[0];
-  if (placement === undefined) {
-    throw new Error("FEN is empty");
-  }
-  const ranks = placement.split("/");
-  if (ranks.length !== 8) {
-    throw new Error(`FEN must have 8 ranks, got ${ranks.length}`);
-  }
-  const board = new Uint8Array(64);
-  for (let r = 0; r < 8; r++) {
-    // FEN lists ranks 8→1; our `rank` counts 7 at top, 0 at bottom.
-    const rank = 7 - r;
-    const row = ranks[r];
-    if (row === undefined) throw new Error(`FEN rank ${rank + 1} missing`);
-    let file = 0;
-    for (const ch of row) {
-      if (file > 7) throw new Error(`FEN rank ${rank + 1} has too many files`);
-      const skip = Number.parseInt(ch, 10);
-      if (!Number.isNaN(skip)) {
-        file += skip;
-        continue;
-      }
-      const cell = pieceCellFromFenChar(ch);
-      if (cell === 0) throw new Error(`FEN contains unknown piece: ${ch}`);
-      board[rank * 8 + file] = cell;
-      file++;
-    }
-    if (file !== 8) {
-      throw new Error(`FEN rank ${rank + 1} ended at file ${file}, expected 8`);
-    }
-  }
-  return board;
-}
-
-/** Map a FEN piece letter to a `BoardCell` (0 for unknown). */
-function pieceCellFromFenChar(ch: string): BoardCell {
-  switch (ch) {
-    case "P":
-      return 1 as BoardCell;
-    case "N":
-      return 2 as BoardCell;
-    case "B":
-      return 3 as BoardCell;
-    case "R":
-      return 4 as BoardCell;
-    case "Q":
-      return 5 as BoardCell;
-    case "K":
-      return 6 as BoardCell;
-    case "p":
-      return 7 as BoardCell;
-    case "n":
-      return 8 as BoardCell;
-    case "b":
-      return 9 as BoardCell;
-    case "r":
-      return 10 as BoardCell;
-    case "q":
-      return 11 as BoardCell;
-    case "k":
-      return 12 as BoardCell;
-    default:
-      return 0 as BoardCell;
-  }
-}
 
 /* ============================================================ geometry */
 

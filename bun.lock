@@ -72,11 +72,14 @@
         "@types/react-dom": "^19.0.0",
       },
     },
-    "examples/next-minimal": {
-      "name": "@ultrachess/example-next-minimal",
+    "examples/next-showcase": {
+      "name": "@ultrachess/example-next-showcase",
       "version": "0.0.0",
       "dependencies": {
+        "@ultrachess/core": "workspace:*",
+        "@ultrachess/pieces": "workspace:*",
         "@ultrachess/react": "workspace:*",
+        "@ultrachess/themes": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
@@ -496,7 +499,7 @@
 
     "@ultrachess/example-next-analysis": ["@ultrachess/example-next-analysis@workspace:examples/next-analysis"],
 
-    "@ultrachess/example-next-minimal": ["@ultrachess/example-next-minimal@workspace:examples/next-minimal"],
+    "@ultrachess/example-next-showcase": ["@ultrachess/example-next-showcase@workspace:examples/next-showcase"],
 
     "@ultrachess/example-puzzle-trainer": ["@ultrachess/example-puzzle-trainer@workspace:examples/puzzle-trainer"],
 

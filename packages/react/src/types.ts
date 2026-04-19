@@ -56,7 +56,7 @@ export interface PromotionContext {
  * collapsing the duration to zero regardless of the configured value.
  */
 export interface AnimationOptions {
-  /** Glide duration in ms. Default `180`. Set to `0` to disable. */
+  /** Glide duration in ms. Default `60`. Set to `0` to disable. */
   readonly durationMs?: number;
   /** CSS easing curve. Default `cubic-bezier(0.22, 0.61, 0.36, 1)` (ease-out). */
   readonly easing?: string;
@@ -83,9 +83,28 @@ export interface ChessboardProps {
   /**
    * The board model produced by {@link useChessGame}. Pass `null` during
    * initial async engine load — the board renders a visually-identical but
-   * pieceless placeholder.
+   * pieceless placeholder. Provide {@link fallbackFen} in addition to
+   * render pieces from that FEN until the real engine arrives.
    */
   readonly game: BoardModel | null;
+
+  /**
+   * Starting-position FEN to render as a static fallback while `game`
+   * is `null`. When supplied, the board paints pieces from this FEN on
+   * the very first commit — no wait for a `useEffect`, no engine
+   * dependency. Once the real `game` resolves the interactive piece
+   * layer takes over without a layout shift (identical DOM shape).
+   *
+   * Only the placement field of the FEN is consumed; side-to-move,
+   * castling flags, and clocks are ignored (they have no visual
+   * effect). Defaults to `undefined`, in which case a `null` `game`
+   * renders a pieceless board.
+   *
+   * Useful for avoiding the "flash of empty board" on cold mount when
+   * the engine is loaded asynchronously (e.g. dynamic-import + WASM
+   * streaming compile).
+   */
+  readonly fallbackFen?: string;
 
   /** Board orientation (defaults to `"white"`). */
   readonly orientation?: Orientation;

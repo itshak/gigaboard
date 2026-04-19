@@ -17,8 +17,20 @@
  *   cell's grid position without relying on row groups in the DOM.
  * - Roving tabindex: the one focused cell has `tabindex=0`, every other
  *   cell has `tabindex=-1`. Tab steps into the board once, then out.
- * - When the `isFocused` prop flips to `true`, the cell programmatically
- *   focuses itself via a `useEffect`.
+ * - When the `isFocused` prop flips to `true` **and the board already
+ *   owns DOM focus** (arrow-key nav), the cell programmatically focuses
+ *   itself. The initial "seed" of `focusedSquare` on mount does **not**
+ *   move DOM focus, so the board stays dormant until the user engages.
+ *
+ * ### Focus ring is painted via `:focus-visible`, not inline
+ *
+ * The amber focus ring used to ship as an always-on inline `boxShadow`
+ * keyed off the `isFocused` prop, which meant the square that held the
+ * roving `tabindex=0` showed the ring on page load — even when the user
+ * had never touched the board. The ring now ships as a CSS rule that
+ * only matches `:focus-visible`, so browser heuristics keep it hidden
+ * for mouse / pointer interaction and surface it only when the user is
+ * actually navigating with the keyboard.
  *
  * ### Selection + legal-target highlights are NOT rendered here
  *
@@ -38,6 +50,29 @@ import type { SquareIndex } from "@ultrachess/core";
 import { memo, type ReactNode, useCallback, useEffect, useRef } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { SquareContext } from "../types.js";
+
+/** Singleton id used to dedupe the injected focus-ring style element. */
+const FOCUS_STYLE_ID = "ucr-focus-ring-styles";
+
+/**
+ * Inject the keyboard-focus ring CSS once per document. SSR-safe
+ * (early-returns when there's no `document`). The rule uses
+ * `:focus-visible` so the ring only appears for genuine keyboard
+ * navigation — page-load hydration, programmatic focus without prior
+ * keyboard activity, and pointer clicks all keep it hidden.
+ */
+function injectFocusRingStyles(): void {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(FOCUS_STYLE_ID) !== null) return;
+  const style = document.createElement("style");
+  style.id = FOCUS_STYLE_ID;
+  style.textContent = `
+[data-ucr-square]:focus-visible {
+  box-shadow: inset 0 0 0 3px rgba(255, 206, 76, 0.95);
+}
+`;
+  document.head.appendChild(style);
+}
 
 /** Algebraic name (`"a1"`, `"h8"`, …) for a square index. */
 function algebraicOf(index: SquareIndex): string {
@@ -83,13 +118,24 @@ function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: S
     [index, setSquareRef],
   );
 
-  // When focus state flips to `true`, move DOM focus to this cell — the
-  // React state is the source of truth for which cell has the roving
-  // tabindex.
+  // One-time CSS injection for the `:focus-visible` ring. Idempotent
+  // across remounts via a singleton `<style>` id.
+  useEffect(() => {
+    injectFocusRingStyles();
+  }, []);
+
+  // When focus state flips to `true`, move DOM focus to this cell — but
+  // ONLY if the board already contains focus. That gate prevents the
+  // initial roving-tabindex seed (which happens after mount) from
+  // stealing page focus on load. Once the user has actually entered the
+  // board via Tab or click, this effect takes over for arrow-key nav.
   useEffect(() => {
     if (!isFocused) return;
     const el = internalRef.current;
     if (el === null) return;
+    const grid = el.closest('[role="grid"]');
+    if (grid === null) return;
+    if (!grid.contains(document.activeElement)) return;
     // Only focus if we aren't already, to avoid thrashing.
     if (document.activeElement !== el) el.focus();
   }, [isFocused]);
@@ -114,10 +160,13 @@ function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: S
         // CSS `background-image` set by `useSelectionController` can
         // layer on top without clobbering this base colour.
         backgroundColor: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
-        cursor: "pointer",
+        // Cursor is managed by `useCursorController` via injected CSS so
+        // it can flip between `pointer` / `grab` / `grabbing` without a
+        // React re-render per hover.
         userSelect: "none",
+        // Suppress the browser's default focus ring; the keyboard focus
+        // indicator ships via `:focus-visible` (see `injectFocusRingStyles`).
         outline: "none",
-        boxShadow: isFocused ? "inset 0 0 0 3px rgba(255, 206, 76, 0.95)" : "none",
         // Squares carry the container-query context so pieces inside can
         // size relative to this cell (85cqh glyph sizing).
         containerType: "size",

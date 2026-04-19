@@ -1,8 +1,8 @@
 {
-  "name": "@ultrachess/example-next-minimal",
+  "name": "@ultrachess/example-next-showcase",
   "version": "0.0.0",
   "private": true,
-  "description": "Smallest working Next.js 15 + Ultra Chess React example.",
+  "description": "Comprehensive Next.js 15 + Ultra Chess React showcase — themes, piece sets, sounds, and every configurable knob.",
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
@@ -11,10 +11,15 @@
     "lint": "biome check app",
     "typecheck": "tsc --noEmit",
     "test": "echo \"(examples don't run unit tests)\" && exit 0",
-    "clean": "rm -rf .next .turbo"
+    "clean": "rm -rf .next .turbo public/sounds",
+    "copy-sounds": "node scripts/copy-sounds.mjs",
+    "postinstall": "node scripts/copy-sounds.mjs"
   },
   "dependencies": {
+    "@ultrachess/core": "workspace:*",
+    "@ultrachess/pieces": "workspace:*",
     "@ultrachess/react": "workspace:*",
+    "@ultrachess/themes": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

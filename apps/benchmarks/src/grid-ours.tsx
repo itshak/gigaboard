@@ -1,0 +1,175 @@
+/**
+ * Ultra Chess React grid-mount page.
+ *
+ * Mounts N copies of `<Chessboard/>` (N read from `?grid=N` in the
+ * URL). Exposes `window.__ucrGrid__` so the Playwright
+ * `grid.spec.ts` scenario can time paint + interactive independently
+ * and snapshot metrics.
+ *
+ * ### Mount strategy (post-optimisation)
+ *
+ * All N cells render on the **very first commit** with
+ * `fallbackFen={STARTING_FEN}`. `<Chessboard/>`'s new
+ * `<StaticPieceLayer/>` path paints pieces from the FEN on that same
+ * commit — so the user sees a full wall of boards without waiting for
+ * the WASM module to compile.
+ *
+ * Engines are built asynchronously in the background via `init()`
+ * (which runs `WebAssembly.compileStreaming` off the critical path).
+ * Once the compile resolves we allocate N `Chess` instances
+ * synchronously (each is O(1) after the module is cached) and swap
+ * the interactive `<PieceLayer/>` in for the static one. Because the
+ * static and interactive layers produce identical DOM shape, the
+ * swap is a no-reflow, no-shift transition.
+ */
+
+import {
+  type BoardModel,
+  createBoardModel,
+  createUltrachessAdapterSync,
+  type EngineAdapter,
+} from "@ultrachess/core";
+import { neo } from "@ultrachess/pieces/neo";
+import { Chessboard } from "@ultrachess/react";
+import { green } from "@ultrachess/themes/green";
+import { useEffect, useRef, useState } from "react";
+import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
+
+/** Local copy — see note in `app.tsx` for why we don't import from `ultrachess`. */
+const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+interface Props {
+  readonly n: number;
+}
+
+export function GridApp({ n }: Props) {
+  const [models, setModels] = useState<readonly BoardModel[] | null>(null);
+
+  // `ready` resolves once the interactive engines are wired up (and thus
+  // the interactive piece layer has replaced the static fallback). Kept
+  // distinct from paint-readiness so the Playwright bench can time
+  // "board visible" separately from "board interactive".
+  const readyRef = useRef<{ promise: Promise<void>; resolve: () => void } | null>(null);
+  if (readyRef.current === null) {
+    let resolve!: () => void;
+    const promise = new Promise<void>((r) => {
+      resolve = r;
+    });
+    readyRef.current = { promise, resolve };
+  }
+
+  // Deferred engine spin-up. Dynamically importing `ultrachess/inline`
+  // defers its module-eval (which includes the ~250 ms WASM compile)
+  // off the critical path: React's first commit has already painted
+  // N cells with the static fallback piece layer by the time we start
+  // fetching the chunk. A single compile serves every board — once
+  // `Chess.createSync()` is live the cost per additional `Chess`
+  // instance is a slab-allocator call.
+  useEffect(() => {
+    let cancelled = false;
+    const adapters: EngineAdapter[] = [];
+    (async () => {
+      const { Chess } = await import("ultrachess/inline");
+      if (cancelled) return;
+      const built: BoardModel[] = [];
+      for (let i = 0; i < n; i++) {
+        const chess = Chess.createSync();
+        const adapter = createUltrachessAdapterSync(chess);
+        adapters.push(adapter);
+        built.push(createBoardModel(adapter));
+      }
+      if (cancelled) {
+        for (const a of adapters) a.dispose();
+        return;
+      }
+      setModels(built);
+    })();
+    return () => {
+      cancelled = true;
+      for (const a of adapters) a.dispose();
+    };
+  }, [n]);
+
+  // Install the harness API on first commit — independent of engine
+  // readiness. Without this the spec can't reach `window.__ucrGrid__`
+  // to capture metrics until after hydration, which defeats the whole
+  // point of the optimisation.
+  useEffect(() => {
+    const observers = installObservers();
+    observers.start();
+    const api: UcrGrid = {
+      library: "ultra",
+      boardCount: n,
+      ready: readyRef.current?.promise ?? Promise.resolve(),
+      metrics(): BenchMetrics {
+        return observers.snapshot();
+      },
+    };
+    window.__ucrGrid__ = api;
+  }, [n]);
+
+  // Resolve `ready` once the interactive models have been committed —
+  // i.e. `<PieceLayer/>` has replaced `<StaticPieceLayer/>` and the
+  // board is playable.
+  useEffect(() => {
+    if (models === null) return;
+    requestAnimationFrame(() => readyRef.current?.resolve());
+  }, [models]);
+
+  return (
+    <GridShell title={`Ultra Chess React — Grid ×${n}`} n={n}>
+      {Array.from({ length: n }, (_, i) => (
+        <div key={i} className="grid-cell" data-grid-board="1">
+          <Chessboard
+            game={models?.[i] ?? null}
+            fallbackFen={STARTING_FEN}
+            theme={green}
+            pieces={neo}
+            sound={false}
+            animation={{ durationMs: 0 }}
+            showCoordinates={false}
+          />
+        </div>
+      ))}
+    </GridShell>
+  );
+}
+
+/**
+ * Fixed layout shell shared by the three grid pages. Same CSS grid,
+ * same cell size, same gap — so differences in the measured numbers
+ * are attributable to the library, not the container.
+ */
+export function GridShell({
+  title,
+  n,
+  children,
+}: {
+  readonly title: string;
+  readonly n: number;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <main
+      style={{
+        padding: "1rem",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      <h1 style={{ marginBottom: 4, fontSize: 16 }}>{title}</h1>
+      <p style={{ color: "#555", marginTop: 0, marginBottom: 12, fontSize: 12 }}>
+        {n} boards mounted · no animations · no interaction
+      </p>
+      <div
+        id="bench-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 120px)",
+          gap: 8,
+        }}
+      >
+        {children}
+      </div>
+    </main>
+  );
+}

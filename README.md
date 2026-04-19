@@ -1,101 +1,354 @@
-# Ultra Chess React
+# ultrachess-react
 
-The fastest React chessboard — powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM).
+[![npm version](https://img.shields.io/npm/v/@ultrachess/react?color=%23cb3837&label=npm&logo=npm)](https://www.npmjs.com/package/@ultrachess/react)
+[![license](https://img.shields.io/npm/l/@ultrachess/react)](./LICENSE)
 
-> **117× faster move validation**, **2 728× faster legal-move lookup**,
-> **2.9× fewer React commits per move** than `react-chessboard` 5.10.0.
-> Every number here is backed by a committed benchmark — see
-> [`BENCH.md`](BENCH.md).
+The fastest React chessboard on the planet. A WASM engine ([`ultrachess`](https://github.com/yahorbarkouski/ultrachess)) wrapped in a React layer that costs **≤ 1 React commit per move**, **0 re-renders per drag frame**, and ships the whole interactive surface in **< 14 KB gzip**. Playwright numbers, committed benchmarks, and size-limit budgets gate every PR.
 
-## Packages
+- Byte-level board subscription on `Uint8Array(64)` — each square subscribes to its own byte; a move touches at most 4 components.
+- Refs-only drag layer (~300 `pointermove` events per gesture, zero React state writes per frame) and WAAPI piece glides that never re-enter React.
+- Canvas-2D arrow overlay with four modifier-keyed colour channels (lichess / chess.com parity).
+- Premove buffer with ghost overlay; out-of-turn drags queue instead of bouncing.
+- WAI-ARIA grid with roving tabindex, keyboard parity for every pointer action, `prefers-reduced-motion` respected, axe-clean.
+- Server-rendered static board (`@ultrachess/react/server`) ships **zero client JS** and hydrates cleanly under the interactive board.
+- Seven-cue chess.com-style sound bank shipped inside the package (no CDN).
+- Four themes, five piece sets — each tree-shakable at sub-path granularity (`~660 B` / set, `~205 B` / theme).
+- Differential-fuzzed against `ultrachess` (100 k-game lock-step), axe-clean across every story, perf regressions blocked in CI.
 
-| Package                                          | Budget (gzip) | Measured |
-|--------------------------------------------------|--------------:|---------:|
-| [`@ultrachess/core`](packages/core)              |         6 KB  |  3.73 KB |
-| [`@ultrachess/react`](packages/react)            |        14 KB  | 12.32 KB |
-| [`@ultrachess/react/server`](packages/react) (RSC) |       4 KB  |  2.27 KB |
-| [`@ultrachess/pieces/{neo,chesscom,…}`](packages/pieces) | 2 KB / set | ~615 B |
-| [`@ultrachess/themes/{green,brown,blue,wood}`](packages/themes) | 1 KB / theme | ~210 B |
+Full proof in [`BENCH.md`](./BENCH.md); standards and architecture in [`docs/`](./docs).
 
-## Quick start
+---
 
-Install the React package and the chess engine it depends on:
+## Performance
+
+Apple-silicon MacBook, Chromium shipped with Playwright 1.50, Node 25.7.0. Every number below regenerates from a clean checkout — `bun install && bun run turbo bench && bun run bench:playwright -w apps/benchmarks`. Results are committed to [`apps/benchmarks/bench-results/`](./apps/benchmarks/bench-results/) so CI surfaces regressions as JSON diffs. Full methodology and the honest losses we don't hide in [`BENCH.md`](./BENCH.md).
+
+Short names: **`ultra`** = `@ultrachess/react`, **`rcb`** = [`react-chessboard`](https://github.com/Clariity/react-chessboard) 5.10, **`cg`** = [`chessground`](https://github.com/lichess-org/chessground) 9.2 (wrapped with `chess.js` for rules, as Lichess does).
+
+### Real-browser head-to-head (Playwright + Chromium, 4× CPU throttle)
+
+| Metric                              |   `ultra`    |     `rcb`    |     `cg`     |
+|-------------------------------------|-------------:|-------------:|-------------:|
+| Drag storm — wall clock             | **750 ms**   |   1 429 ms   | **744 ms**   |
+| Drag storm — total blocking time    | **0 ms**     |     580 ms   | **0 ms**     |
+| Move storm — ms per move            | **16.5 ms**  |    28.8 ms   | **16.5 ms**  |
+| Move storm — total blocking time    | **0 ms**     |     549 ms   | **0 ms**     |
+| 100-board grid — wall-clock mount   | **732 ms**   |     963 ms   |  **206 ms**  |
+| 100-board grid — JS heap            | **44.5 MB**  |    120.5 MB  |  **5.6 MB**  |
+| 100-board grid — DOM nodes          | **19 236**   |     53 332   | **15 939**   |
+
+Against `rcb`: Ultra wins every post-mount metric — **1.74× faster moves, 1.91× faster drags, 2.7× less heap and 2.8× fewer DOM nodes at 100 boards**. `rcb` spends ~half of its interaction time blocked on React re-renders Ultra simply doesn't do, and drops enough frames to be felt. Against `cg` (vanilla TS, no React, GPL-3.0): within noise on post-mount single-board metrics; `cg` wins cold-mount and grid-mount on raw resource footprint, Ultra is the only React board that keeps up.
+
+### React layer (Profiler API, 40-ply Najdorf replay)
+
+| Metric                      | `@ultrachess/react` | `react-chessboard` 5.10 | Result          |
+|-----------------------------|--------------------:|------------------------:|-----------------|
+| **Commits per move**        |           **1.00**  |                  2.83   | **2.8× fewer**  |
+| **Render time per move**    |         **0.18 ms** |               5.75 ms   | **31.8× faster**|
+| 40-ply total React work     |         **7.22 ms** |             230.06 ms   | **31.8× faster**|
+
+The commit count is what predicts smoothness on slow devices. Ultra holds at exactly **one commit per move** because a move only ever touches at most four squares, each square subscribes to its own byte in the board's `Uint8Array(64)` via `useSyncExternalStore`, and the rest of the board is skipped at React's reconciliation entry.
+
+### Engine (`@ultrachess/core` + `ultrachess` WASM vs `chess.js`)
+
+| Scenario                         | `@ultrachess/core` | `chess.js`          | Speed-up   |
+|----------------------------------|-------------------:|--------------------:|-----------:|
+| `tryMove` + `undo`               |    **278 ns/op**   |     32 909 ns/op    | **118×**   |
+| `legalMoves` (mid-game, verbose) |    **158 ns/op**   |    427 348 ns/op    | **2 712×** |
+| Position key (hash / FEN)        |   **6.0 ns/op**    |        698 ns/op    | **116×**   |
+| 40-ply game replay + rewind      |   **15.7 µs/op**   |      2.81 ms/op     | **179×**   |
+
+The React layer needs verbose moves to decorate legal-target squares; for a UI integration, the `legalMoves` gap is the one you feel. Construction cost: ~251 ms one-time WASM compile/instantiate (the same ~250 ms long task you see on cold mount; it amortises across every subsequent board on the page — see the grid table in BENCH.md).
+
+### Honest losses
+
+- **Cold single-board mount.** Chessground is 4 ms faster to LCP (no framework, no WASM).
+- **Raw resource footprint at scale.** At 100 boards `cg` uses 5.6 MB of heap to our 44.5 MB — no React reconciliation and no runtime engine module per board.
+- **First-paint WASM tax.** 253 ms long task on first mount. Amortises after ~5 boards per page; see BENCH.md for the crossover curve.
+
+---
+
+## Install
 
 ```bash
-bun add @ultrachess/react ultrachess
+bun  add @ultrachess/react ultrachess
+npm  install @ultrachess/react ultrachess
+pnpm add @ultrachess/react ultrachess
+yarn add @ultrachess/react ultrachess
 ```
 
-Then render a board (client component):
+`ultrachess` is a peer dependency — installed once, shared across every board on the page. React 18.3+ or 19 is required. The WASM module is lazy-loaded by `ultrachess` on first `Chess.create()`; SSR-only static boards ship zero client JS.
+
+---
+
+## Entry points
+
+| Import                                | Needs `"use client"` | Gzip       | Use when                                                             |
+|---------------------------------------|----------------------|-----------:|----------------------------------------------------------------------|
+| `@ultrachess/react`                   | yes                  |  **13.16 KB** | the interactive board — hooks, drag, animation, arrows, premoves. |
+| `@ultrachess/react/server`            | no (RSC)             |   **2.32 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
+| `@ultrachess/core`                    | no                   |   **3.74 KB** | framework-agnostic state + engine adapter; plug into RN, Jazz CRDT. |
+| `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one SVG piece set; the rest tree-shake. |
+| `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; swap live.                       |
+
+A typical board-shipping app costs roughly **`core` + `react` + one piece set + one theme ≈ 17.8 KB gzipped**. Every export is `sideEffects: false`; unused pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
+
+---
+
+## Quick tour
+
+One runnable example hitting every core capability.
 
 ```tsx
 "use client";
 
 import { Chessboard, useChessGame } from "@ultrachess/react";
-import { green } from "@ultrachess/themes/green";
-import { neo } from "@ultrachess/pieces/neo";
+import { StaticChessboard }          from "@ultrachess/react/server";
+import { neo }                       from "@ultrachess/pieces/neo";
+import { green }                     from "@ultrachess/themes/green";
+import { decodePackedMove, moveToUci } from "@ultrachess/core";
 
 export default function Board() {
-  const game = useChessGame();
+  // Engine is async — `game` is null for the first render, then fills in.
+  const game = useChessGame();            // { fen, orientation, onMove, ... }
+
   return (
     <Chessboard
       game={game}
+      fallbackFen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
       theme={green}
       pieces={neo}
-      sound           // chess.com-style move cues, on by default
-      onMove={(m) => console.log("played", m)}
+      orientation="white"
+
+      // interaction
+      allowDrag
+      allowDrawingArrows
+      allowPremove={false}            // default — premoves are an online affordance
+      onMove={(m) => console.log("played", moveToUci(decodePackedMove(m)))}
+
+      // look & feel
+      showLegalTargets="rings"        // "rings" | "dots" | false
+      highlightLastMove
+      showCheckHighlight
+      showIllegalFlash
+      showCoordinates
+      animation={{ durationMs: 60, easing: "cubic-bezier(.22,.61,.36,1)" }}
+
+      // sound — seven cue set ships bundled as MP3s (chess.com-parity)
+      sound={{ enabled: true, volume: 0.6 }}
     />
   );
 }
 ```
 
-Or drop a zero-JS static board into a React Server Component:
+Zero-JS static board for a React Server Component (an article, PGN viewer, opening-tree cell):
 
 ```tsx
+// no "use client" — renders entirely on the server
 import { StaticChessboard } from "@ultrachess/react/server";
 
 export default function Diagram() {
   return (
-    <StaticChessboard fen="r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 4 4" />
+    <StaticChessboard
+      fen="r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 4 4"
+      orientation="white"
+    />
   );
 }
 ```
 
-## Why
+The static board produces the same DOM shape as the interactive one, so you can hydrate an interactive `<Chessboard/>` over it without a layout shift. Pair that with `fallbackFen` and the user never sees a flash of empty board during WASM init.
 
-- **Engine.** `ultrachess` ([repo](https://github.com/yahorbarkouski/ultrachess)) is a WASM-first chess engine with O(1) `hash()` and bitboard-parallel move generation. It perfts at 336 Mnps on Node and 581 Mnps on Bun — 55–95× faster than `chess.js`.
-- **React layer.** Per-byte subscriptions on `Uint8Array(64)`, canvas-2D arrows, refs-only drag (zero re-renders per frame), WAAPI piece animation off the React commit path, Context-for-services-not-state. The result: **one** commit per move.
-- **Tree-shakeable.** `@ultrachess/pieces/neo` imports one renderer; nothing else comes along. `@ultrachess/themes/green` imports one CSS-variable record. Ship only what you use.
-- **RSC-ready.** `@ultrachess/react/server` is a React Server Component that produces a static 8×8 board from a FEN. Zero client JS unless the interactive board also mounts.
-- **Accessible.** WAI-ARIA grid pattern, roving tabindex keyboard nav, screen-reader live region announcing SAN in prose, `prefers-reduced-motion` respected throughout.
-- **Chess.com-parity out of the box.** Default sound set mirrors chess.com's `move-self`/`capture`/`castle`/`move-check`/`promote`/`game-end` cues. `pieces/chesscom` and `themes/green` match the look of the chess.com board pixel-for-pixel.
+---
+
+## API
+
+Signatures are TypeScript. Everything below is exported from `@ultrachess/react`.
+
+### Components
+
+| Symbol                              | Notes                                                                                      |
+|-------------------------------------|--------------------------------------------------------------------------------------------|
+| `<Chessboard game theme pieces …/>` | Top-level interactive board. Client component. Full prop list in [`packages/react/src/types.ts`](./packages/react/src/types.ts). |
+| `<StaticChessboard fen …/>`         | Server-only; `@ultrachess/react/server`. No client JS, hydration-parity DOM.                |
+
+### Hooks
+
+| Signature                                                            | Notes                                           |
+|----------------------------------------------------------------------|-------------------------------------------------|
+| `useChessGame(opts?): BoardModel \| null`                            | Owns a `BoardModel` + `ultrachess` adapter for the component lifetime; `null` until init completes. |
+| `useBoardSnapshot(game): BoardSnapshot`                              | Whole-board subscription. Use for small boards or debug overlays. |
+| `useBoardSlice(game, selector)`                                      | Subscribe to a derived slice with referential stability. |
+| `useSquareCell(game, index): BoardCell`                              | Byte-level subscription — the hook every `Square` uses internally. |
+| `useDrag(game, opts)`                                                | Imperative drag controller bound to `pointerdown` — refs-only, zero state writes per frame. |
+| `useClickToMove(game)`                                               | Click-to-select / click-to-drop flow, composable with `useDrag`. |
+| `useKeyboardNav(game)`                                               | Arrow-key focus movement, Enter to pick/drop, Escape to cancel, `P` for promotion. |
+| `useArrowGesture(game, opts)`                                        | Right-click drag → arrow; four modifier-keyed colour channels (default / shift / alt / ctrl). |
+| `useMoveSound(game, opts)`                                           | Wires the seven-cue bank; usable standalone without `<Chessboard/>`. |
+| `AnimationRunner`                                                    | Low-level WAAPI scheduler used by the board; exposed for custom piece layers. |
+
+### Configuration types
+
+| Type                     | Notes                                                                            |
+|--------------------------|----------------------------------------------------------------------------------|
+| `ChessboardProps`        | Full prop surface for `<Chessboard/>`.                                           |
+| `Theme`                  | `Readonly<Record<string, string>>` — a CSS-custom-property record.               |
+| `PieceRenderer`          | `(args: { cell, square }) => ReactNode` — swap any piece for a custom node.      |
+| `LegalTargetStyle`       | `"rings" \| "dots" \| false`.                                                    |
+| `Orientation`            | `"white" \| "black"`.                                                            |
+| `AnimationOptions`       | `{ durationMs?: number; easing?: string }`.                                      |
+| `ArrowColors`            | Per-channel overrides: `{ default?, shift?, alt?, ctrl? }`.                      |
+| `MoveSoundOptions`       | `{ enabled, volume, sources, viewer }` — the seven cues are `moveSelf`, `moveOpponent`, `capture`, `castle`, `moveCheck`, `promote`, `gameEnd`. |
+
+### Core (framework-agnostic, `@ultrachess/core`)
+
+The React layer delegates all state to `@ultrachess/core`. Import it directly when you're building a non-React renderer, React Native, or plugging a collaborative backend (Jazz CRDT, Yjs, Liveblocks).
+
+- `createBoardModel(adapter, opts)` — state machine owning position, history, selection, premove.
+- `createBoardStore(model)` — `useSyncExternalStore`-compatible snapshot of the 64-byte board.
+- `createUltrachessAdapter(fen?)` — default `EngineAdapter` wrapping `ultrachess`. Swap for `chess.js` or a variant engine without touching the React layer.
+- `createLegalMoveIndex(model)` — hash-keyed LRU of legal moves; ≥ 95 % hit rate on typical play.
+- `createDragController(model)`, `createArrowModel()`, `createPremoveBuffer(model)`, `planAnimations(prev, next)`.
+
+### Errors
+
+Engine-level errors come from `ultrachess` and propagate unchanged: `IllegalMoveError`, `InvalidFenError`, `DisposedError`, `AbiVersionMismatchError`.
+
+---
+
+## How it works
+
+**Byte-level subscription.** The board is a `Uint8Array(64)`; each cell encodes piece + colour in one byte. The store produces snapshots whose identity is preserved when the subscribed slice hasn't changed, so a move that touches 2–4 bytes produces 2–4 tiny re-renders and nothing else. Hover produces zero. Selection produces one. No memo boilerplate, no `React.memo` on every square — the shape of the data is what makes the equality check free.
+
+**Layered rendering.** Each concern lives on the substrate where it's cheapest. The 8×8 board grid is static DOM (laid out once, `role="grid"`). Squares are DOM with per-byte subscriptions. Pieces live in a single `PieceLayer` and move via `element.animate(...)` — the Web Animations API runs on the compositor, never re-enters React, and is cancelled cleanly under `prefers-reduced-motion`. Arrows paint on a single `<canvas>` via imperative 2D calls. The drag layer is one absolutely-positioned DOM element with a ref; `pointermove` writes `style.transform` directly. Consequence: zero React work per frame during drag, hover, or arrow-draw.
+
+**Legal-move cache, hash-keyed.** `ultrachess.hash()` is an O(1) pointer load (~0.34 ns native). Caching `from → legal-targets` by `(hash, from)` costs nothing to key and pays off immediately — ≥ 95 % hit rate in typical play. Invalidation is implicit: a new position has a new hash. Wrong hash = cache miss = engine call = correct answer.
+
+**Animation pipeline.** On every store commit, `animation-planner.ts` diffs the previous and new `Uint8Array(64)` snapshots and emits an `AnimDescriptor[]` describing what moved, captured, promoted, or appeared. `useAnimation` schedules WAAPI animations on the relevant DOM nodes. React is not involved for the duration of the animation. The completion callback resolves any pending promotion promise / `onMove` callback.
+
+**Server rendering.** `@ultrachess/react/server` is a pure React Server Component. It imports no client modules, emits no handlers, declares no refs. The markup shape is byte-identical to the interactive board, which means you can SSR a static board on the critical render path and swap in the interactive one later without layout shift. `fallbackFen` on the interactive board paints pieces from a FEN on the very first client commit — no wait for a `useEffect`, no flash of empty board during WASM init.
+
+More in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — diagrams, engine-adapter protocol, extension points.
+
+---
+
+## Accessibility
+
+- WAI-ARIA grid pattern: `role="grid"` on the board, `role="gridcell"` on each square, `aria-label` including algebraic coordinate and piece.
+- Roving tabindex keyboard navigation: Tab to the board, arrows to move focus, Enter to pick / drop, Escape to cancel, `P` for promotion menu.
+- Screen-reader live region announcing the last SAN move (`aria-live="polite"`).
+- `prefers-reduced-motion: reduce` collapses WAAPI glides to 0 ms and suppresses the illegal-flash animation.
+- Colour contrast ≥ 4.5:1 for coordinates, ≥ 3:1 for board squares against the page background.
+- axe-core zero serious / critical violations across every story and example. Enforced in CI.
+
+---
+
+## Correctness
+
+- **Differential fuzz.** Core state is compared byte-for-byte with `ultrachess` at every ply across 10 k random games on PR, 100 k nightly. Any disagreement (FEN, legal-move set, hash, check / mate / stale / draw) is a P0.
+- **Property tests (fast-check).** `(snapshot, move)` round-trips, `legal-move-index` cache-hit properties, `PackedMove` encode/decode across all 2¹⁶ inputs.
+- **Visual regression.** Playwright + Loki screenshot matrix across 4 themes × 5 piece sets × 2 orientations × 3 viewports × a state set covering start position, common openings, Kiwipete, K+Q vs K, check, mate, stalemate, selection rings, drag in progress, promotion dialog open, 1/5/25 simultaneous arrows, and the keyboard focus ring. Pixel diff threshold: 0.05 %.
+- **Hydration parity.** `document.body.innerHTML` pre-hydration === post-hydration for the SSR static board.
+- **Perf budgets.** Bundle gzip, render-count per move/hover/drag, frame time under 4× CPU throttle, legal-move cache hit rate — all enforced. Any > 10 % regression blocks merge.
+
+Full matrix in [`docs/TESTING.md`](./docs/TESTING.md).
+
+---
+
+## Bundle size (measured, `size-limit` enforced)
+
+| Package                           | Budget | Measured       |
+|-----------------------------------|-------:|---------------:|
+| `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
+| `@ultrachess/react` (ESM)         |  14 KB | **13.16 KB**   |
+| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.32 KB**   |
+| `@ultrachess/pieces/*` per set    |   2 KB |  **~660 B**    |
+| `@ultrachess/themes/*` per theme  |   1 KB |  **~205 B**    |
+
+A board-shipping app therefore costs roughly **`core` + `react` + one piece set + one theme ≈ 17.8 KB gzipped**. Comparables: `react-chessboard` ~40 KB gzip + `chess.js` ~12.9 KB gzip; `chessground` ~12.3 KB JS + ~4.3 KB CSS + `chess.js`. The 158 KB `.wasm` is lazy-loaded on first use and served separately — it does not count against first-paint JS.
+
+---
+
+## Runtime support
+
+| Runtime                                       | Interactive board | SSR static board |
+|-----------------------------------------------|:-----------------:|:----------------:|
+| React 18.3 / 19                               |         ✅        |         ✅       |
+| Next.js 14 / 15 (app router, RSC)             |         ✅        |         ✅       |
+| Vite / Remix / any bundler with ESM           |         ✅        |         ✅       |
+| Node 20 / 22 / 24 (SSR hydration verified)    |         —         |         ✅       |
+| Chromium / Firefox / Safari (evergreen)       |         ✅        |         ✅       |
+| Strict CSP without `wasm-unsafe-eval`         |  ship `.wasm` via an allowed URL | ✅ |
+
+`"sideEffects": false` on every package — unused exports prune cleanly under Rollup, esbuild, webpack ≥ 5, and the Next.js 15 bundler.
+
+---
 
 ## Apps & examples
 
-- [`apps/docs`](apps/docs) — Next.js 15 docs site.
-- [`apps/benchmarks`](apps/benchmarks) — Node microbenchmarks + React Profiler harness (see [`BENCH.md`](BENCH.md)).
-- [`examples/next-minimal`](examples/next-minimal) — smallest working Next.js setup.
-- [`examples/next-analysis`](examples/next-analysis) — analysis board with a static SSR variant.
-- [`examples/puzzle-trainer`](examples/puzzle-trainer) — premove + next-puzzle flow.
+- [`apps/docs`](./apps/docs) — Next.js 15 documentation site.
+- [`apps/benchmarks`](./apps/benchmarks) — Node microbenchmarks, React Profiler harness, and the 3-way Playwright browser bench (Ultra / rcb / cg).
+- [`examples/next-showcase`](./examples/next-showcase) — comprehensive Next.js example exercising every knob on `<Chessboard/>`: theme + piece-set swap, orientation flip, legal-target style, sound, arrows, premoves, FEN presets, live status + move log.
+- [`examples/next-analysis`](./examples/next-analysis) — analysis-style board with arrow drawing.
+- [`examples/puzzle-trainer`](./examples/puzzle-trainer) — premove + next-puzzle flow.
 
-## Dev
+---
+
+## Limitations
+
+- **WASM init long task on cold mount.** ~253 ms on first load (the cost of the engine's zero-allocation design). Amortises across boards: after the first, each additional board adds ~4 ms of mount cost. At any page with ≥ 5 boards Ultra becomes the fastest React option; at 1 board, `cg` wins mount.
+- **Standard chess only.** No Chess960, atomic, antichess, crazyhouse, three-check. The engine is standard-chess. For variants, swap the `EngineAdapter` for one backed by [`chessops`](https://github.com/niklasf/chessops).
+- **Sound autoplay.** Browser autoplay policies apply. The first cue after a fresh page load may be silent until the user interacts with the document; every cue after that plays immediately. No workaround — this is a browser invariant.
+- **Full-canvas renderer is not shipped.** `@ultrachess/react/canvas` is a scaffolding placeholder; DOM is the only live renderer in this release.
+- **No PGN viewer chrome.** The library draws a board; headers, move list, variation tree, annotation UI are the application's job. [`examples/next-analysis`](./examples/next-analysis) shows one pattern.
+
+---
+
+## Coming from `react-chessboard` / `chessground`
+
+**From `react-chessboard`.** Drop-in concept, not drop-in API. Key differences: `position` is replaced by `game` (a `BoardModel` from `useChessGame`); the board owns its engine via `ultrachess` instead of `chess.js`; moves arrive as `PackedMove` (a branded `u16`) instead of a verbose object, decode with `decodePackedMove(m)` when you need `from`/`to`/SAN; drag-and-drop is built in and doesn't depend on `@dnd-kit`.
+
+**From `chessground`.** Ultra is a React library — use `<Chessboard/>` like any other component. `chessground`'s `set({ fen, turnColor, ... })` imperative API becomes declarative props. Arrows, promotion overlay, sound, and premoves are built in rather than user-supplied. The `ultrachess` engine handles rules; you no longer need to wire `chess.js` alongside.
+
+Both integrations produce identical DOM shape for the board itself — a direct swap produces no layout shift. The engine speedup (≥ 117× over `chess.js`) is visible anywhere the host app calls the engine off the render path (analysis book-walk, puzzle next-move, cloud-eval batching).
+
+---
+
+## Build & contribute
 
 ```bash
 bun install
-bun run turbo build test size     # everything CI runs
-bun run turbo bench               # benchmark harness → bench-results/
-bun -F @ultrachess/docs dev       # docs site → http://localhost:3000
+bun run turbo build test size         # what CI runs
+bun run turbo bench                   # Node + React Profiler benches
+bun run bench:playwright -w apps/benchmarks  # 3-way browser bench
+bun -F @ultrachess/docs dev           # docs site → http://localhost:3000
 ```
 
-## Contributing
+Requirements: Bun ≥ 1.3, Node ≥ 20. Bun is the primary runtime; Node is used for Playwright and a handful of tooling scripts.
 
-Read these in order:
+Read in order before your first PR:
 
-1. [`docs/STANDARDS.md`](docs/STANDARDS.md) — the quality bar. No exceptions.
-2. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how the layers fit together.
-3. [`docs/TESTING.md`](docs/TESTING.md) — what we test and why.
-4. [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) — budgets + profiling.
-5. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — PR checklist.
+1. [`docs/STANDARDS.md`](./docs/STANDARDS.md) — the quality bar. No exceptions.
+2. [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — how the layers fit together.
+3. [`docs/TESTING.md`](./docs/TESTING.md) — what we test and why.
+4. [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md) — budgets, profiling, and the render-count contract.
+5. [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) — PR checklist and commit cadence.
+
+Every perf claim in this README links to a committed benchmark in `apps/benchmarks`. Any PR that regresses a budget (bundle size, commits-per-move, frame time, cache hit rate) is blocked in CI.
+
+---
 
 ## License
 
 MIT © Yahor Barkouski
+
+---
+
+## Credits
+
+- **[`ultrachess`](https://github.com/yahorbarkouski/ultrachess)** — the Rust-compiled WASM chess engine this library is built on. O(1) `hash()`, magic-bitboard slider attacks, single-pass legal-move generation; the reason the engine numbers exist at all.
+- **[`chess.js`](https://github.com/jhlywa/chess.js)** (Jeff Hlywa) — the JavaScript lingua franca of chess on the web, our baseline across every benchmark, and the oracle `ultrachess` differentially fuzzes against. Any semantic divergence we have from `chess.js` is by construction a bug on our side.
+- **[`react-chessboard`](https://github.com/Clariity/react-chessboard)** (Clariity) — the most-installed React chessboard on npm and the integration shape most consumers already know. Its documented API is what we measure against in [`BENCH.md`](./BENCH.md).
+- **[`chessground`](https://github.com/lichess-org/chessground)** (Lichess) — the imperative-rendering bar we target. Its refs-only drag design and canvas arrow overlay are the north star for our hot-path architecture; the numbers we set ourselves to reach in React are theirs without React.
+- **WAI-ARIA Authoring Practices — Grid pattern.** The roving-tabindex semantics and the labelling contract for `role="grid"` / `role="gridcell"` are lifted verbatim from the W3C's grid pattern write-up.
+- **[Chess Programming Wiki](https://www.chessprogramming.org/)** — thirty years of collective engineering practice that underlies every technical decision in the engine layer and, transitively, everything this package does on top of it.

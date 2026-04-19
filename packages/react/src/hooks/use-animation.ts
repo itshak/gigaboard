@@ -35,7 +35,7 @@ import { type ReactNode, type RefObject, useLayoutEffect } from "react";
 import type { AnimationOptions, Orientation } from "../types.js";
 import { useBoardSlice } from "./use-board-subscription.js";
 
-const DEFAULT_DURATION_MS = 180;
+const DEFAULT_DURATION_MS = 60;
 const DEFAULT_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
 
 /** Algebraic name `"e2"` from a square index. */
