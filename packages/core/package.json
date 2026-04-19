@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Framework-agnostic state machine and engine adapter for Ultra Chess React. Zero React, zero DOM.",
   "license": "MIT",
   "author": "Yahor Barkouski",

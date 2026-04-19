@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/pieces",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Tree-shakeable SVG piece sets for Ultra Chess React (cburnett, merida, alpha, neo).",
   "license": "MIT",
   "author": "Yahor Barkouski",
@@ -88,7 +88,11 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -115,35 +119,45 @@
       "path": "dist/sets/cburnett.js",
       "limit": "2 KB",
       "gzip": true,
-      "ignore": ["react"]
+      "ignore": [
+        "react"
+      ]
     },
     {
       "name": "@ultrachess/pieces/merida",
       "path": "dist/sets/merida.js",
       "limit": "2 KB",
       "gzip": true,
-      "ignore": ["react"]
+      "ignore": [
+        "react"
+      ]
     },
     {
       "name": "@ultrachess/pieces/alpha",
       "path": "dist/sets/alpha.js",
       "limit": "2 KB",
       "gzip": true,
-      "ignore": ["react"]
+      "ignore": [
+        "react"
+      ]
     },
     {
       "name": "@ultrachess/pieces/chesscom",
       "path": "dist/sets/chesscom.js",
       "limit": "2 KB",
       "gzip": true,
-      "ignore": ["react"]
+      "ignore": [
+        "react"
+      ]
     },
     {
       "name": "@ultrachess/pieces/neo",
       "path": "dist/sets/neo.js",
       "limit": "2 KB",
       "gzip": true,
-      "ignore": ["react"]
+      "ignore": [
+        "react"
+      ]
     }
   ]
 }

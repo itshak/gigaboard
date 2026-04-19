@@ -1,0 +1,38 @@
+# Changelog
+
+## [1.1.0](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.0.0...react-v1.1.0) (2026-04-19)
+
+
+### Features
+
+* **M6:** chess.com move sounds, piece sets, and themes ([a5240ba](https://github.com/yahorbarkouski/ultrachess-react/commit/a5240bafd94d941270f8bdbbf534ff97ec68617e))
+* **react:** M2 interactive chessboard — click-to-move, themed, layered rendering ([89a3c7f](https://github.com/yahorbarkouski/ultrachess-react/commit/89a3c7f4836e151b76f0e36c99b509587ee33afb))
+* **react:** M3 drag + FLIP animations + promotion ([58a493d](https://github.com/yahorbarkouski/ultrachess-react/commit/58a493dda863f8ff52f74c5ac612c842136f98a3))
+* **react:** M4 arrows + premoves + check/flash highlights + drag UX polish ([30b7a41](https://github.com/yahorbarkouski/ultrachess-react/commit/30b7a414e1be0e0af99f71f4ec28512a829af37b))
+* **react:** M5 keyboard navigation + screen-reader announcer + static SSR board ([ea76d3c](https://github.com/yahorbarkouski/ultrachess-react/commit/ea76d3ca53a0077af19ac90404fcf742feb6daf4))
+
+
+### Bug Fixes
+
+* **react:** default allowPremove to false; flash red on wrong-turn drag ([4653095](https://github.com/yahorbarkouski/ultrachess-react/commit/4653095f9bf4476985f5cbf11391ad6d9ddcfb59))
+* **react:** useChessGame infinite loop — drop modelOptions from useEffect deps ([bcf64ab](https://github.com/yahorbarkouski/ultrachess-react/commit/bcf64abdde86f5660864e80ed7bdea8457a356dd))
+
+
+### Performance
+
+* **react:** chessground-style imperative last-move controller ([ff93749](https://github.com/yahorbarkouski/ultrachess-react/commit/ff937491e106ec2712fc6f42c738d40a90e4db24))
+* **react:** chessground-style imperative selection controller ([e655e2d](https://github.com/yahorbarkouski/ultrachess-react/commit/e655e2d8fc97157163ecf386ea3f404b3896337e))
+* **react:** element pool, grid-area placement, imperative drag layer ([f27eed8](https://github.com/yahorbarkouski/ultrachess-react/commit/f27eed819f742abd32f1dbc325da5c9a4f7aaf49))
+* **react:** stop &lt;Chessboard/&gt; re-rendering per move + 3-way Playwright bench ([ff257c4](https://github.com/yahorbarkouski/ultrachess-react/commit/ff257c42283adbf8e6c55a81982af2032771e8ce))
+
+
+### Documentation
+
+* readme and benches ([cbafafb](https://github.com/yahorbarkouski/ultrachess-react/commit/cbafafbdec0bc704733811cef080ab20eac1c76f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @ultrachess/core bumped to 1.1.0
