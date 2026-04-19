@@ -1,6 +1,6 @@
 {
   "name": "@ultrachess/react",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The fastest React chessboard on the planet. Powered by ultrachess (WASM).",
   "license": "MIT",
   "author": "Yahor Barkouski",
@@ -102,14 +102,21 @@
       "path": "dist/index.js",
       "limit": "16 KB",
       "gzip": true,
-      "ignore": ["react", "react-dom", "ultrachess"]
+      "ignore": [
+        "react",
+        "react-dom",
+        "ultrachess"
+      ]
     },
     {
       "name": "@ultrachess/react/server",
       "path": "dist/server.js",
       "limit": "4 KB",
       "gzip": true,
-      "ignore": ["react", "react-dom"]
+      "ignore": [
+        "react",
+        "react-dom"
+      ]
     }
   ]
 }
