@@ -30,7 +30,7 @@
  * scope and belongs in a follow-up bench.
  */
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import type { BenchMetrics } from "../../src/harness/bench-harness.js";
 import { ALL_LIBRARIES, type Library, recordScenario } from "./lib.js";
 

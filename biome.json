@@ -52,7 +52,8 @@
         "noArrayIndexKey": "warn"
       },
       "complexity": {
-        "noUselessSwitchCase": "error"
+        "noUselessSwitchCase": "error",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "useExhaustiveDependencies": "warn",

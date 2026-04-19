@@ -12,8 +12,8 @@ import { Chessground } from "chessground";
 import type { Api } from "chessground/api";
 import type { Key } from "chessground/types";
 import { useEffect, useRef } from "react";
-import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 import { GridShell } from "./grid-ours.js";
+import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 
 // Chessground styles — mounted once, shared across all cells.
 import "chessground/assets/chessground.base.css";

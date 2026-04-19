@@ -10,8 +10,8 @@
 import { Chess } from "chess.js";
 import { useEffect, useMemo, useRef } from "react";
 import { Chessboard } from "react-chessboard";
-import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 import { GridShell } from "./grid-ours.js";
+import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 
 interface Props {
   readonly n: number;

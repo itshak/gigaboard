@@ -5,8 +5,12 @@ const a = (from: number, to: number, color = "green") =>
   makeArrow(from as SquareIndex, to as SquareIndex, color);
 
 /** Build a managed (`managed: true`) arrow literal for the partition tests. */
-const mg = (from: number, to: number, color = "green") =>
-  ({ from: from as SquareIndex, to: to as SquareIndex, color, managed: true as const });
+const mg = (from: number, to: number, color = "green") => ({
+  from: from as SquareIndex,
+  to: to as SquareIndex,
+  color,
+  managed: true as const,
+});
 
 describe("createArrowModel", () => {
   it("starts empty", () => {
