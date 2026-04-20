@@ -39,8 +39,10 @@ import { green } from "@ultrachess/themes/green";
 import { useEffect, useRef, useState } from "react";
 import {
   type BenchMetrics,
+  installMutationFlash,
   installObservers,
   pointerDrag,
+  pointerDragPath,
   squareCentreByDataAttr,
   type UcrBench,
 } from "./harness/bench-harness.js";
@@ -110,6 +112,14 @@ export function App() {
     if (model === null) return;
     const observers = installObservers();
     observers.start();
+    // Install the mutation-flash observer on the board root. Counter
+    // runs always; the visual overlay is off until a spec toggles it on
+    // (commit-trace scenario). Library-agnostic — the same mechanism
+    // runs on all three bench pages.
+    const boardRoot = document.getElementById("bench-board");
+    if (boardRoot !== null) {
+      window.__ucrFlash__ = installMutationFlash(boardRoot);
+    }
     const api: UcrBench = {
       library: "ultra",
       ready: readyRef.current?.promise ?? Promise.resolve(),
@@ -122,6 +132,11 @@ export function App() {
         const dst = squareCentreByDataAttr(to);
         if (src === null || dst === null) return;
         await pointerDrag(src, dst, steps);
+      },
+      async dragPath(squares, stepsPerLeg = 32) {
+        const pts = squares.map((s) => squareCentreByDataAttr(s)).filter((p) => p !== null);
+        if (pts.length < 2) return;
+        await pointerDragPath(pts, stepsPerLeg);
       },
       async reset() {
         model.reset();

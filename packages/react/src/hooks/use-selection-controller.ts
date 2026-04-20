@@ -49,33 +49,50 @@ type SelectionState = "none" | "selected" | "legal-quiet" | "legal-capture";
 /** Singleton id used to dedupe the injected `<style>` element. */
 const STYLE_ID = "ucr-selection-styles";
 
-/** Inject the selection CSS once per document. SSR-safe (early-returns). */
+/**
+ * Inject the selection CSS once per document. SSR-safe (early-returns).
+ *
+ * ### First-click INP: why `::before` is declared on EVERY square
+ *
+ * The earlier design declared `::before` only on squares currently
+ * carrying `data-ucr-selection`. That saves 64 pseudo-element nodes
+ * at mount but costs the browser a first-match materialisation pass
+ * on the user's very first click: when the attribute appears on a
+ * square for the first time, Chromium creates the ::before rendering
+ * node AND does its first paint of the radial gradient. The cost
+ * shows up as a 20-30 ms INP outlier — visible in the bench's p99
+ * per-click number and a major share of Ultra's "worst click" INP
+ * reading.
+ *
+ * We now declare a universal `::before` on every `[data-ucr-square]`
+ * with a transparent background; the selection attribute only
+ * changes `background` / `background-image`. All 64 pseudo-element
+ * rendering nodes are materialised during cold mount, where their
+ * ~0.5 ms cost is invisible inside the larger first-paint work.
+ * Subsequent clicks only repaint the already-materialised nodes —
+ * eliminating the INP outlier without any per-move cost.
+ */
 function injectSelectionStyles(): void {
   if (typeof document === "undefined") return;
   if (document.getElementById(STYLE_ID) !== null) return;
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-[data-ucr-square][data-ucr-selection="selected"]::before {
+[data-ucr-square]::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--ucr-selected);
+  background: transparent;
   pointer-events: none;
+}
+[data-ucr-square][data-ucr-selection="selected"]::before {
+  background: var(--ucr-selected);
 }
 [data-ucr-square][data-ucr-selection="legal-quiet"]::before {
-  content: "";
-  position: absolute;
-  inset: 0;
   background-image: radial-gradient(var(--ucr-legal-target) 22%, transparent 24%);
-  pointer-events: none;
 }
 [data-ucr-square][data-ucr-selection="legal-capture"]::before {
-  content: "";
-  position: absolute;
-  inset: 0;
   background-image: radial-gradient(transparent 0 75%, var(--ucr-legal-target-capture) 77% 83%, transparent 85%);
-  pointer-events: none;
 }
 [data-ucr-target-style="dots"] [data-ucr-square][data-ucr-selection="legal-quiet"]::before {
   background-image: radial-gradient(var(--ucr-legal-target) 14%, transparent 16%);

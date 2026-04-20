@@ -28,6 +28,7 @@ import { PromotionOverlay } from "./components/promotion-overlay.js";
 import { StaticPieceLayer } from "./components/static-piece-layer.js";
 import { defaultArrowColors, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
+import { getSquareAtPoint } from "./lib/geometry.js";
 import { AnimationRunner } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
@@ -355,6 +356,33 @@ export function Chessboard(props: ChessboardProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [clearArrowsOnClick, game, maybeClearArrows, viewOnly]);
 
+  // Piece slots carry `pointer-events: auto` (see `useCursorController`)
+  // so the `grab` cursor renders correctly on pickable pieces. A native
+  // click landing on a piece slot does NOT fire the underlying
+  // `<Square/>`'s React `onClick`: the square is not an ancestor of the
+  // slot in the React tree. Forward those clicks to click-to-move via
+  // coordinate resolution — same geometry path `useDrag` / `useHoverSquare`
+  // already use.
+  useEffect(() => {
+    if (viewOnly || clickToMoveEnabled === false || game === null) return;
+    const container = containerRef.current;
+    if (container === null) return;
+    const onContainerClick = (e: MouseEvent): void => {
+      if (e.button !== 0) return;
+      const target = e.target as Element | null;
+      if (target === null) return;
+      // Only handle clicks that landed on the piece overlay — clicks
+      // on squares already route through `Square.onClick`, and double
+      // dispatch would fire click-to-move twice.
+      if (target.closest("[data-piece-square]") === null) return;
+      const sq = getSquareAtPoint(container, e.clientX, e.clientY, orientation);
+      if (sq === null) return;
+      handleSquareClick(sq);
+    };
+    container.addEventListener("click", onContainerClick);
+    return () => container.removeEventListener("click", onContainerClick);
+  }, [viewOnly, clickToMoveEnabled, game, orientation, handleSquareClick]);
+
   /**
    * Suppress the browser context menu on the board container. Works
    * independently of `allowDrawingArrows` so consumers can have the OS
@@ -544,12 +572,15 @@ export function Chessboard(props: ChessboardProps) {
   // eliminating two DOM creates + layout + paint per move.
   useLastMoveController(game, squareRefs, highlightLastMove);
 
-  // Imperative cursor paint. Tags squares that hold a grabbable piece
-  // with `data-ucr-grabbable="true"` so the CSS rule in
-  // `injectCursorStyles` flips them to `cursor: grab`. The dragging
-  // cursor (`grabbing`) is applied by a container-level attribute
-  // toggled from `onDragStart` / `onDragEnd` below.
-  useCursorController(game, squareRefs, dragEnabled, allowPremove);
+  // Container-level cursor paint. Writes `data-ucr-turn` (and
+  // optionally `data-ucr-premove`) on the board container — a CSS rule
+  // chain keyed to `[data-piece-cell]` values picks out grabbable
+  // pieces without touching any square. That takes per-move cursor
+  // DOM churn from 32 attribute writes down to 0-1; the grabbing
+  // cursor (`grabbing`) is applied by the sibling `data-ucr-dragging`
+  // attribute toggled from `onDragStart` / `onDragEnd`.
+  useCursorController(game, containerRef, dragEnabled, allowPremove);
+
 
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.

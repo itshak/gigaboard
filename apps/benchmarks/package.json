@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "preview": "vite preview",
     "bench": "bun run bench:core && bun run bench:render",
     "bench:core": "node ./scripts/bench-core.mjs",
     "bench:render": "vitest run --config ./vitest.bench.config.ts",

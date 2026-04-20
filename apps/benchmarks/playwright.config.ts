@@ -35,14 +35,29 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 900 },
+        // `--enable-precise-memory-info` un-quantises
+        // `performance.memory.usedJSHeapSize` — without it, Chromium
+        // rounds cross-origin memory readings to coarse buckets for
+        // privacy, and the heap-growth bench sees every library at
+        // exactly the same rounded number. We only care about this in
+        // bench mode; the flag never ships.
+        launchOptions: {
+          args: ["--enable-precise-memory-info"],
+        },
       },
     },
   ],
+  // Benchmarks run against a PRODUCTION build (not the dev server) so
+  // React's dev-mode bloat — invariant checks, hook-dep tracking, extra
+  // reconciler bookkeeping — doesn't inflate any library's per-commit
+  // cost. Builds once, then serves via `vite preview` on the same port
+  // Playwright points at. `reuseExistingServer` keeps iteration fast
+  // locally; CI rebuilds every run.
   webServer: {
-    command: "bun run dev",
+    command: "bun run build && bun run preview",
     url: "http://localhost:5175",
     reuseExistingServer: !process.env["CI"],
-    timeout: 30_000,
+    timeout: 120_000,
     stdout: "ignore",
     stderr: "pipe",
   },

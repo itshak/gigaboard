@@ -19,8 +19,10 @@ import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import {
   type BenchMetrics,
+  installMutationFlash,
   installObservers,
   pointerDrag,
+  pointerDragPath,
   squareCentreByDataAttr,
   type UcrBench,
 } from "./harness/bench-harness.js";
@@ -46,6 +48,10 @@ export function RcbApp() {
   useEffect(() => {
     const observers = installObservers();
     observers.start();
+    const boardRoot = document.getElementById("bench-board");
+    if (boardRoot !== null) {
+      window.__ucrFlash__ = installMutationFlash(boardRoot);
+    }
     const api: UcrBench = {
       library: "rcb",
       ready: readyRef.current?.promise ?? Promise.resolve(),
@@ -64,6 +70,11 @@ export function RcbApp() {
         const dst = squareCentreByDataAttr(to);
         if (src === null || dst === null) return;
         await pointerDrag(src, dst, steps);
+      },
+      async dragPath(squares, stepsPerLeg = 32) {
+        const pts = squares.map((s) => squareCentreByDataAttr(s)).filter((p) => p !== null);
+        if (pts.length < 2) return;
+        await pointerDragPath(pts, stepsPerLeg);
       },
       async reset() {
         chessRef.current = new Chess();
@@ -96,7 +107,30 @@ export function RcbApp() {
         Reference implementation for the Playwright head-to-head.
       </p>
       <div id="bench-board" style={{ width: 400, height: 400 }}>
-        <Chessboard options={{ position: fen, showAnimations: false }} />
+        <Chessboard
+          options={{
+            position: fen,
+            showAnimations: false,
+            // Commit drags back into the chess.js model — without this,
+            // dragging a piece updates rcb's internal state but never
+            // round-trips through React, which silently under-measures
+            // rcb's per-move cost.
+            onPieceDrop: ({ sourceSquare, targetSquare }): boolean => {
+              if (targetSquare === null) return false;
+              try {
+                chessRef.current.move({
+                  from: sourceSquare,
+                  to: targetSquare,
+                  promotion: "q",
+                });
+              } catch {
+                return false;
+              }
+              setFen(chessRef.current.fen());
+              return true;
+            },
+          }}
+        />
       </div>
     </main>
   );

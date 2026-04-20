@@ -1,8 +1,13 @@
 /**
- * Tests for the cursor controller — verifies that `data-ucr-grabbable`
- * is written on the right squares per the allowDrag / allowPremove
- * predicate, and that the container flips `data-ucr-dragging` during
- * an active drag.
+ * Tests for the cursor controller — verifies that `data-ucr-turn` and
+ * `data-ucr-premove` are written on the board container per the
+ * allowDrag / allowPremove predicate, and that the container flips
+ * `data-ucr-dragging` during an active drag.
+ *
+ * The cursor controller moved from per-square data-attributes to a
+ * single container-level attribute + CSS selectors keyed to
+ * `[data-piece-cell]` — see `hooks/use-cursor-controller.ts` for the
+ * rationale. These tests verify the new surface.
  */
 
 import { fireEvent, screen } from "@testing-library/react";
@@ -35,27 +40,25 @@ describe("cursor controller", () => {
     model.dispose();
   });
 
-  it("marks white pieces grabbable on the starting position (white to move)", () => {
+  it("writes `data-ucr-turn` on the container (starting position = white)", () => {
     renderBoard(model);
-    // A white pawn — should be grabbable.
-    expect(cellFor("e2")?.dataset["ucrGrabbable"]).toBe("true");
-    // A black pawn — not our turn and premoves are off (default).
-    expect(cellFor("e7")?.dataset["ucrGrabbable"]).toBeUndefined();
-    // An empty square — never grabbable.
-    expect(cellFor("e4")?.dataset["ucrGrabbable"]).toBeUndefined();
-  });
-
-  it("does not mark anything grabbable when `allowDrag` is false", () => {
-    renderBoard(model, { allowDrag: false });
+    expect(boardContainer().dataset["ucrTurn"]).toBe("white");
+    expect(boardContainer().dataset["ucrPremove"]).toBeUndefined();
+    // Squares no longer carry per-piece grabbable state — the CSS rule
+    // keyed to `data-piece-cell` on the overlay does the matching.
     expect(cellFor("e2")?.dataset["ucrGrabbable"]).toBeUndefined();
-    expect(cellFor("e7")?.dataset["ucrGrabbable"]).toBeUndefined();
   });
 
-  it("marks opponent pieces grabbable as well when `allowPremove` is true", () => {
+  it("does NOT write `data-ucr-turn` when `allowDrag` is false", () => {
+    renderBoard(model, { allowDrag: false });
+    expect(boardContainer().dataset["ucrTurn"]).toBeUndefined();
+    expect(boardContainer().dataset["ucrPremove"]).toBeUndefined();
+  });
+
+  it("writes `data-ucr-premove=\"true\"` on the container when `allowPremove` is true", () => {
     renderBoard(model, { allowPremove: true });
-    expect(cellFor("e2")?.dataset["ucrGrabbable"]).toBe("true");
-    // The opposite colour is now also considered grabbable (premove source).
-    expect(cellFor("e7")?.dataset["ucrGrabbable"]).toBe("true");
+    expect(boardContainer().dataset["ucrTurn"]).toBe("white");
+    expect(boardContainer().dataset["ucrPremove"]).toBe("true");
   });
 
   it("flips `data-ucr-dragging` on the container during an active drag", () => {

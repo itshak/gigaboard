@@ -38,27 +38,57 @@ Apple-silicon MacBook, Chromium shipped with Playwright 1.50, Node 25.7.0. Every
 
 Short names: **`ultra`** = `@ultrachess/react`, **`rcb`** = [`react-chessboard`](https://github.com/Clariity/react-chessboard) 5.10, **`cg`** = [`chessground`](https://github.com/lichess-org/chessground) 9.2 (wrapped with `chess.js` for rules, as Lichess does).
 
-### Real-browser head-to-head (Playwright + Chromium, 4× CPU throttle)
+### Real-browser head-to-head (Playwright + Chromium, production build, 4× CPU throttle)
 
-| Metric                              |   `ultrachess-react` (React)    |     `react-chessboard` (React)    |     `chessground` (vanilla TS)     |
-|-------------------------------------|-------------:|-------------:|-------------:|
-| Drag storm — wall clock             | **751 ms**   |   1 368 ms   | **744 ms**   |
-| Drag storm — total blocking time    | **0 ms**     |     547 ms   | **0 ms**     |
-| Move storm — ms per move            | **16.5 ms**  |    30.9 ms   | **16.5 ms**  |
-| Move storm — total blocking time    | **0 ms**     |     632 ms   | **0 ms**     |
-| 100-board grid — wall-clock mount   | **882 ms**   |     972 ms   |  **216 ms**  |
-| 100-board grid — JS heap            | **44.8 MB**  |    120.6 MB  |  **5.6 MB**  |
-| 100-board grid — DOM nodes          | **15 940**   |     53 332   | **15 939**   |
+Every interaction bench below replays the **same 40-ply Sicilian Najdorf** — quiet opening, captures, queenside castle at move 17, sharp middle-game. The *drag storm* drives the game through pointer gestures (full user path); the *move storm* drives it through direct state updates (commit path only); the *continuous drag* is a sustained 960-pointermove rectangle loop without commit, isolating the drag hot path.
 
-Against `rcb`: Ultra wins every post-mount metric — **1.87× faster moves, 1.82× faster drags, 2.7× less heap, and 3.35× fewer DOM nodes at 100 boards** (now matching chessground's node count to within one — since the imperative piece layer landed in the latest release). `rcb` spends ~half of its interaction time blocked on React re-renders Ultra simply doesn't do, and drops enough frames to be felt. Against `cg` (vanilla TS, no React, GPL-3.0): within noise on post-mount single-board metrics; `cg` wins cold-mount and grid-mount on raw resource footprint, Ultra is the only React board that keeps up.
+Benchmarks run against a **production** Vite build (`vite build && vite preview`) — not the dev server — so React's dev-mode overhead doesn't inflate any library's per-commit cost.
+
+| Metric                                          |   `ultrachess-react` (React) |  `react-chessboard` (React) |  `chessground` (vanilla TS) |
+|-------------------------------------------------|-----------------------------:|----------------------------:|----------------------------:|
+| **INP — p50** (click to next paint)             |    **13.0 ms**               |  13.7 ms                    | 13.3 ms                     |
+| **INP — p75**                                   |    **14.4 ms**               |  15.4 ms                    | 15.3 ms                     |
+| **INP — p95**                                   |    **16.6 ms**               |  16.9 ms                    | 18.4 ms                     |
+| **INP — worst case** (first-interaction cold)   |    45.7 ms                   | **18.8 ms**                 | 49.1 ms                     |
+| Interactions exceeding 200 ms "poor" threshold  |    **0**                     | **0**                       | **0**                       |
+| Drag storm (40 drags) — wall clock              | **3.33 s**                   | 3.36 s                      | 3.33 s                      |
+| Drag storm — p95 / move                         | **84.2 ms**                  |  91.5 ms                    |  84.4 ms                    |
+| Drag storm — max / move                         | **84.7 ms**                  | 103.6 ms                    |  **84.4 ms**                |
+| Drag storm — dropped frames                     | **0**                        |   1                         | **0**                       |
+| Continuous drag — max frame (960 pointermoves)  | **9.4 ms**                   |  25.0 ms                    | **9.3 ms**                  |
+| Continuous drag — dropped frames                | **0**                        |   1                         | **0**                       |
+| Move storm (40 plies) — ms per move             | **16.5 ms**                  |  16.5 ms                    | **16.5 ms**                 |
+| Move storm — p95                                | **17.7 ms**                  |  17.9 ms                    | **17.7 ms**                 |
+| Move storm — DOM mutations / move               |    9.2                       |  **2.6**                    |  3.1                        |
+| Move storm — React commits / move               |    **1.00**                  |  2.83                       | *(no React)*                |
+| **Heap growth over 500-ply random game**        |  **+1.18 MB**                |  +2.97 MB                   |  +1.90 MB                   |
+| Heap peak during 40-ply drag storm              |  **5.93 MB**                 |  20.35 MB                   | **3.50 MB**                 |
+| 100-board grid — wall-clock mount               | **899 ms**                   |  992 ms                     | **204 ms**                  |
+| 100-board grid — JS heap                        | **45.3 MB**                  | 120.6 MB                    | **5.7 MB**                  |
+| 100-board grid — DOM nodes                      | **16 040**                   | 53 332                      | **15 939**                  |
+
+**Single-board interaction (INP + drag/move storm) — Ultra wins typical, rcb wins worst-case.** Ultra's INP distribution is the tightest in the "good" band: p50 13.0 ms, p95 16.6 ms — ahead of rcb and cg at every percentile up through p95. rcb's absolute worst-case INP is 18.8 ms vs Ultra's 45.7 ms outlier — a single first-move-commit cold path (first piece-slot mount-unmount, first store-commit fan-out) that's specific to the first interaction on a freshly-mounted board. All three libraries stay an order of magnitude below web.dev's 200 ms "poor" threshold; none of these gaps are perceptible on modern hardware. Drag storm wall-clock is a three-way tie at ~3.33 s.
+
+**Where Ultra wins, decisively:**
+
+- **Memory stability under sustained play.** Over a 500-ply random walk, Ultra's heap grows **+1.18 MB** (best), tied with cg at +1.90 MB. `rcb` grows **+2.97 MB** this run — variable across runs (observed 2.97 → 13.79 MB across repeated runs; rcb's heap retention is volatile, Ultra's is flat). During the 40-ply drag storm, rcb's heap peaks at 20.4 MB against Ultra's 5.93 MB — 3.4× Ultra's working set. This is the metric that shows up as "the tab feels sluggish after 30 minutes of analysis."
+- **Multi-board scaling.** At 100 boards Ultra uses **2.66× less JS heap** (45 MB vs 121 MB) and **3.32× fewer DOM nodes** (16 040 vs 53 332) than `rcb`. Paint time per extra board: 3.5 ms vs 9.0 ms. For puzzle walls, opening trees, analysis previews, game-list boards — the gap widens per board.
+- **Architectural commit count.** Ultra holds at exactly **1.00 React commits per move** (byte-level `useSyncExternalStore` per square). `rcb` averages 2.83 (whole-position re-reconciliation). This is the React Profiler number — never lies — and it's what predicts behavior on slow devices / low-end mobile.
+
+**Honest losses:**
+
+- **Worst-case INP.** `rcb` has a tighter worst-case interaction (18.8 ms vs Ultra's 45.7 ms outlier). Ultra's outlier is a single first-move-commit cold path on the first interaction after mount — first React store-commit from a user event, first piece-slot mount/unmount, first animation-planner diff. Improving it requires pre-committing a synthetic move on mount; the engineering cost to eliminate a 30 ms single outlier that happens once per page load didn't clear our bar. Fixes we *did* ship — pre-materialising CSS `::before`/`::after` pseudo-elements on every square at mount, plus warming the WASM engine's hot paths in the adapter — eliminated the first-SELECT outlier (was 52 ms, now 14 ms) and tightened p50-p95 across the board.
+- **DOM mutations per move.** Ultra emits 9.2, `rcb` emits 2.6 — `rcb` reuses piece elements across squares via transform, Ultra mounts/unmounts per affected square as a natural consequence of its per-byte subscription model. The mutation count doesn't affect wall-clock on a single board but is a legitimate architectural difference. Guarded by a CI test with budget ≤10 (`apps/benchmarks/bench/playwright/mutation-audit.spec.ts`).
+- **Cold mount.** Chessground is ~8 ms faster to LCP (no framework, no WASM).
+- **Grid scaling footprint vs `cg`.** `cg` wins raw resource footprint at 100 boards (5.7 MB vs Ultra's 45.3 MB). The cost `cg` pays is a GPL-3.0 license and bring-your-own-rules engine. Ultra is the only React board that keeps up.
 
 ### React layer (Profiler API, 40-ply Najdorf replay)
 
 | Metric                      | `@ultrachess/react` | `react-chessboard` 5.10 | Result          |
 |-----------------------------|--------------------:|------------------------:|-----------------|
-| **Commits per move**        |           **1.00**  |                  2.83   | **2.8× fewer**  |
-| **Render time per move**    |         **0.20 ms** |               6.00 ms   | **30.6× faster**|
-| 40-ply total React work     |         **7.84 ms** |             240.14 ms   | **30.6× faster**|
+| **Commits per move**        |           **1.00**  |                  2.83   | **2.83× fewer** |
+| **Render time per move**    |        **0.173 ms** |               5.50 ms   | **31.8× faster**|
+| 40-ply total React work     |         **6.90 ms** |             220.12 ms   | **31.9× faster**|
 
 The commit count is what predicts smoothness on slow devices. Ultra holds at exactly **one commit per move** because a move only ever touches at most four squares, each square subscribes to its own byte in the board's `Uint8Array(64)` via `useSyncExternalStore`, and the rest of the board is skipped at React's reconciliation entry.
 

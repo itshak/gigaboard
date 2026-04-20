@@ -76,6 +76,13 @@ function PieceSlotImpl({ index, model, orientation, pieces }: PieceSlotProps) {
   const cell = useSquareCell(model, index);
   if (cell === 0) return null;
   const { col, row } = gridCoord(index, orientation);
+  // Return-null on empty squares keeps the mutation count at 1 childList
+  // per square per move. An earlier attempt to keep all 64 slots
+  // persistently mounted (swap only the inner <img>) pushed per-move
+  // mutations UP — childList on the slot *plus* a data-piece-cell
+  // attribute write per slot = 2 mutations where the mount/unmount was
+  // 1. See `bench/playwright/mutation-audit.spec.ts` — the assertion
+  // guards this.
   return (
     <div
       data-piece-square={algebraicOf(index)}

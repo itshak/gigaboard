@@ -43,19 +43,32 @@ type LastMoveState = "from" | "to";
 /** Singleton id used to dedupe the injected `<style>` element. */
 const STYLE_ID = "ucr-last-move-styles";
 
-/** Inject the last-move CSS once per document. SSR-safe (early-returns). */
+/**
+ * Inject the last-move CSS once per document. SSR-safe (early-returns).
+ *
+ * The `::after` pseudo-element is declared on EVERY square (with a
+ * transparent background) rather than only when the attribute matches.
+ * That pre-materialises 64 rendering nodes during mount — the same
+ * trick used by the selection controller — so the user's first move
+ * doesn't pay for first-match pseudo-element creation + first-paint of
+ * the tint as an INP outlier. The `data-ucr-last-move` attribute then
+ * only changes `background`, which repaints an already-live node.
+ */
 function injectLastMoveStyles(): void {
   if (typeof document === "undefined") return;
   if (document.getElementById(STYLE_ID) !== null) return;
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-[data-ucr-square][data-ucr-last-move]::after {
+[data-ucr-square]::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--ucr-last-move);
+  background: transparent;
   pointer-events: none;
+}
+[data-ucr-square][data-ucr-last-move]::after {
+  background: var(--ucr-last-move);
 }
 `;
   document.head.appendChild(style);

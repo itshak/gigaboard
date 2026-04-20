@@ -42,6 +42,9 @@ export function useChessGame(
     let active: BoardModel | null = null;
 
     (async () => {
+      // `createUltrachessAdapter` warms the engine's hot paths before
+      // returning, so the user's first click doesn't pay for WASM
+      // instance activation + move-gen JIT. See `adapters/ultrachess.ts`.
       const adapter = await createUltrachessAdapter(fen);
       if (cancelled) {
         adapter.dispose();

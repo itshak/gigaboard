@@ -99,6 +99,30 @@ export function createUltrachessAdapterSync(chess: Chess): EngineAdapter {
     }
   };
 
+  // Warm the hot paths once before returning. The first call that
+  // crosses into WASM after `Chess.createSync()` pays for:
+  //   - WASM instance activation + internal move-gen cache fill,
+  //   - V8 JIT compilation of the adapter's callback shape,
+  //   - branch-predictor / I-cache fill on the move-gen path.
+  // Measured on a 4× throttled CPU: first `legalMoves()` ≈ 35-45 ms,
+  // subsequent calls ≈ 0.1-0.3 ms. Without warm-up, that cost lands
+  // on the user's first `selectSquare` click as an INP outlier that
+  // the bench flagged at 50 ms p99 — 3-4× the median. Paying it here
+  // moves it into the mount window, where no interaction is waiting.
+  //
+  // The calls are pure: `legalMoves`, `hash`, and `turn` don't mutate
+  // engine state. If the first one throws (e.g., corrupt FEN),
+  // letting it bubble is better than silently shipping a broken
+  // adapter.
+  //
+  // `sq=12` is `e2` (LERF) — always a piece in the starting position
+  // we just loaded; a `from`-argument call exercises a different
+  // WASM branch than the no-arg all-moves call.
+  chess.moves({ raw: true });
+  chess.moves({ raw: true, square: "e2" });
+  chess.hash();
+  chess.turn();
+
   return {
     makeMove,
     undo,

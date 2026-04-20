@@ -46,4 +46,10 @@ export default defineConfig({
     port: 5175,
     strictPort: true,
   },
+  preview: {
+    // Same port for `vite preview` so the Playwright config stays
+    // unchanged whether we're running against dev or a production build.
+    port: 5175,
+    strictPort: true,
+  },
 });

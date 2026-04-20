@@ -20,8 +20,10 @@ import type { Key } from "chessground/types";
 import { useEffect, useRef } from "react";
 import {
   type BenchMetrics,
+  installMutationFlash,
   installObservers,
   pointerDrag,
+  pointerDragPath,
   squareCentreByGrid,
   type UcrBench,
 } from "./harness/bench-harness.js";
@@ -100,6 +102,7 @@ export function CgApp() {
 
     const observers = installObservers();
     observers.start();
+    window.__ucrFlash__ = installMutationFlash(root);
 
     // Chessground uses a single `<cg-board>` element as the 8×8 layout —
     // the inner `cg-container` is the actual square grid we want to
@@ -123,6 +126,11 @@ export function CgApp() {
         const dst = getCentre(to);
         if (src === null || dst === null) return;
         await pointerDrag(src, dst, steps);
+      },
+      async dragPath(squares, stepsPerLeg = 32) {
+        const pts = squares.map((s) => getCentre(s)).filter((p) => p !== null);
+        if (pts.length < 2) return;
+        await pointerDragPath(pts, stepsPerLeg);
       },
       async reset() {
         chessRef.current = new Chess();
