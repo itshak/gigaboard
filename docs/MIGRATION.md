@@ -1,6 +1,6 @@
 # Migrating from `react-chessboard` to `@ultrachess/react`
 
-This is the full migration guide for teams currently shipping [`react-chessboard`](https://github.com/Clariity/react-chessboard) who are evaluating `@ultrachess/react`. It assumes you have a working `react-chessboard` integration and want the shortest path to feature parity — with the performance and accessibility wins the new library offers.
+This is the full migration guide for teams currently shipping [`react-chessboard`](https://github.com/Clariity/react-chessboard) who are evaluating `@ultrachess/react`. It assumes you have a working `react-chessboard` integration and want the shortest path to a more opinionated board: owned state, a built-in engine adapter, strict render boundaries, accessibility, SSR, and measured budgets.
 
 If you're starting greenfield, you don't need this document — read [`README.md`](../README.md) and copy the quick-tour snippet.
 
@@ -8,12 +8,13 @@ If you're starting greenfield, you don't need this document — read [`README.md
 
 ## 1. What you gain, what you give up
 
-**Gain (measured, in [`BENCH.md`](../BENCH.md)):**
+**Gain:**
 
-- **2.8× fewer React commits per move**, **30.6× faster render time per move** (Profiler, 40-ply Najdorf).
-- **1.87× faster move storm, 1.82× faster drag storm, 2.7× less heap at 100 boards** (real-browser Playwright bench, 4× CPU throttle).
+- **A different ownership model.** The board owns a `BoardModel`; your app drives it through a stable handle instead of rebuilding a position prop on every move.
+- **Tighter React boundaries.** Measured in [`BENCH.md`](../BENCH.md): 1.00 React commits per move for the 40-ply Najdorf, versus 2.83 for `react-chessboard`.
+- **Better sustained-session and multi-board behavior.** The Playwright bench shows lower heap growth during long play and materially lower heap/DOM cost at 100 boards.
 - **~55 % smaller bundle** for the typical "one piece set + one theme" app: `core` + `react` + pieces + theme ≈ **17.8 KB gzip** vs `react-chessboard` ~40 KB + `chess.js` ~12.9 KB.
-- **Built-in engine via `ultrachess` WASM**: `legalMoves` is **~2 906×** faster than `chess.js`. No more wiring `chess.js` alongside the board for analysis UIs.
+- **Built-in engine via `ultrachess` WASM.** No more wiring `chess.js` alongside the board for legal move decoration or analysis UI helpers.
 - Built-in drawable arrows with modifier-key channels, premoves, sound, keyboard navigation, WAI-ARIA grid, SSR static board.
 
 **Give up / trade-offs:**

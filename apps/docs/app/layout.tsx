@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s · Ultra Chess React",
   },
   description:
-    "High-performance React chessboard: ≤ 1 React commit per move, 0 re-renders per drag frame, < 16 KB gzip. Powered by the ultrachess WASM engine — 55–95× faster than chess.js.",
+    "Opinionated React chessboard with owned state, byte-scoped subscriptions, SSR static rendering, accessibility, and a measured < 16 KB interactive surface.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

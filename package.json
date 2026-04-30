@@ -2,7 +2,7 @@
   "name": "ultrachess-react-workspace",
   "version": "0.0.0",
   "private": true,
-  "description": "High-performance React chessboard — ≤ 1 React commit per move, 0 re-renders per drag frame, < 16 KB gzip. Powered by the ultrachess WASM engine.",
+  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, SSR static rendering, accessibility, and < 16 KB gzip.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",

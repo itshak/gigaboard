@@ -23,15 +23,16 @@
 >
 > Hardware: Apple-silicon MacBook, Node 25.7.0, Chromium shipped with
 > Playwright 1.50, lockfile committed in this repo. Absolute ns/op and
-> ms/op shift on slower hardware; relative speedups — the numbers that
-> matter — are stable.
+> ms/op shift on slower hardware; the useful signal is the shape of the
+> work: commit counts, heap growth, DOM footprint, and whether interaction
+> stays inside the frame budget.
 
 ---
 
 ## Real-browser head-to-head (Playwright + Chromium, 4× CPU throttle)
 
-This is the headline. All three libraries mount on the same Vite dev
-server and are driven through the same `window.__ucrBench__` harness
+This is the browser evidence. All three libraries mount through the same
+Vite production build and are driven through the same `window.__ucrBench__` harness
 so the scenario scripts are literally identical byte-for-byte between
 runs. CPU is throttled 4× via CDP `Emulation.setCPUThrottlingRate` to
 simulate a mid-range mobile device.
@@ -91,9 +92,9 @@ squares — 80 clicks per run, 40 plies. Under 4× CPU throttle.
 | Mean                              | **12.8 ms**  |   13.2 ms   |   13.5 ms   |
 | Slow interactions (> 200 ms)      |   **0**      |   **0**     |   **0**     |
 
-Ultra wins p50, p75, p90, p95, and mean — 0.4-1.2 ms ahead of rcb at
-each level, 0.3-1.8 ms ahead of cg. All three clear web.dev's
-"good" threshold (< 200 ms) by more than 10×; nothing here is
+Ultra is slightly ahead at p50, p75, p90, p95, and mean — 0.4-1.2 ms
+ahead of rcb at each level, 0.3-1.8 ms ahead of cg. All three clear
+web.dev's "good" threshold (< 200 ms) by more than 10×; nothing here is
 user-perceptible.
 
 The worst-case column is the exception: `rcb` lands its single worst
@@ -453,31 +454,28 @@ pure resource footprint.
 
 ### Reading all the tables together
 
-- **INP (the metric that matters):** Ultra wins p50/p75/p90/p95 —
-  median interaction 11.6 ms vs rcb 12.6 ms and cg 13.4 ms. rcb wins
-  worst-case (17.3 ms vs Ultra's 35.2 ms outlier on the first move).
-  All three clear web.dev's "good" threshold by 10×; the gaps are
-  not user-perceptible on modern hardware.
+- **INP:** Ultra is slightly ahead at p50/p75/p90/p95, while rcb wins
+  worst-case on the first interaction. All three clear web.dev's "good"
+  threshold by more than 10×; the gaps are not user-perceptible on
+  modern hardware.
 - **Heap stability (the most durable Ultra-vs-rcb advantage):** over
-  500 plies of play, Ultra retains **+1.81 MB**; rcb retains
-  **+13.79 MB** — 7.6× worse. Even on the 40-ply drag storm, rcb's
-  heap peaks at 19.2 MB against Ultra's 5.9 MB. This is the "the tab
-  feels sluggish after an hour" metric.
+  500 plies of play, Ultra retains **+1.18 MB**; rcb retains
+  **+2.97 MB** in this run and has shown higher variance across repeated
+  runs. Even on the 40-ply drag storm, rcb's heap peaks at 20.4 MB
+  against Ultra's 5.9 MB. This is the "the tab feels sluggish after an
+  hour" metric.
 - **Ultra vs `react-chessboard`, single interactive board:** tied on
-  wall-clock and p50 under a production build. Measurable wins show
-  up on *outliers* (Ultra drops 0 frames where rcb drops 1 per scenario),
-  on *commits per move* (1.00 vs 2.83 — the React Profiler
-  never-lies number), and on *heap*. If you saw older "2× faster"
-  numbers for Ultra, those came from a dev-server bench where React's
-  dev-mode bookkeeping dominated per-commit cost; the gap collapses
-  under `vite build`.
-- **Ultra vs `react-chessboard`, multi-board scaling:** Ultra wins
-  decisively. Grid paint at N = 100: **2.45× faster**, using **2.66×
-  less JS heap** and **3.32× fewer DOM nodes**. Per-board marginal
-  cost is 3.5 ms for Ultra vs 9.0 ms for rcb — Ultra's advantage
-  *widens* linearly with board count, because every extra rcb board
-  drags in another `chess.js` instance (~1.16 MB of heap) and ~533
-  more DOM nodes.
+  wall-clock under a production build. The meaningful differences are
+  *commits per move* (1.00 vs 2.83), heap stability, and dropped-frame
+  outliers. If you saw older "2× wall-clock gap" numbers for Ultra,
+  those came from a dev-server bench where React's dev-mode bookkeeping
+  dominated per-commit cost; the gap collapses under `vite build`.
+- **Ultra vs `react-chessboard`, multi-board scaling:** Ultra has the
+  stronger React scaling curve. Grid paint at N = 100 is lower, with
+  **2.66× less JS heap** and **3.32× fewer DOM nodes**. Per-board
+  marginal cost is 3.5 ms for Ultra vs 9.0 ms for rcb because every
+  extra rcb board drags in another `chess.js` instance (~1.16 MB of
+  heap) and ~533 more DOM nodes.
 - **Ultra vs `chessground`:** within 4 ms on single-board LCP and
   paint (both now use a static-piece-layer first commit; Ultra's
   path shipped as the `fallbackFen` prop). `cg` still wins the
@@ -485,11 +483,10 @@ pure resource footprint.
   We pay a ~250 ms
   WASM-init long task; they pay a GPL-3.0 licence and
   bring-your-own-rules engine. The engine itself — see the core
-  table below — is where Ultra pulls decisively ahead (≥117× faster
-  than `chess.js`), so anywhere the host app actually calls the
-  engine off the hot path (analysis book-walk,
-  puzzle next-move, cloud-eval batching) Ultra is the only option of
-  the three that scales.
+  table below — gives Ultra headroom in batch work, so anywhere the
+  host app actually calls the engine off the hot path (analysis
+  book-walk, puzzle next-move, cloud-eval batching) the engine choice
+  matters more than the board renderer.
 
 ---
 
@@ -504,17 +501,29 @@ like-for-like comparison.
 
 Source: [`apps/benchmarks/bench/render-budget.bench.tsx`](apps/benchmarks/bench/render-budget.bench.tsx).
 
+> ⚠️ **This bench runs against dev React.** Vitest defaults to
+> `NODE_ENV=test`, which makes `react/index.js` load
+> `react.development.js`. Forcing prod React in the vitest +
+> happy-dom + `@testing-library/react` stack hits a tooling cascade
+> (`node:` builtins get externalised, `React.act` resolution breaks).
+> The `commitsPerMove` number below is **architectural and exact** —
+> React fires one commit per model update regardless of build — and
+> is the one worth tracking. The `actualDuration` numbers are kept in
+> JSON for CI diff tracking but inflate 2-5× vs production React.
+> For wall-clock numbers you can ship against, see the Playwright
+> table above, which runs under a real `vite preview` build.
+
 | Metric                                  | `@ultrachess/react` | `react-chessboard` 5.10 | Result          |
 |-----------------------------------------|--------------------:|------------------------:|-----------------|
 | Commits on mount                        |           3         |              3          |   =             |
-| Render time on mount                    |       **25.19 ms**  |          43.03 ms       | **1.71× faster**|
 | **Commits per move**                    |       **1.00**      |              2.83       | **2.83× fewer** |
-| **Render time per move**                |     **0.173 ms**    |           5.50 ms       | **31.8× faster**|
-| 40-ply total React work                 |        **6.90 ms**  |         220.12 ms       | **31.9× faster**|
+| Render time on mount (dev React)        |       27.64 ms      |          43.17 ms       | ~1.6× lower     |
+| Render time per move (dev React)        |       0.208 ms      |           5.92 ms       | ~28× lower      |
+| 40-ply total React work (dev React)     |        8.33 ms      |         236.63 ms       | ~28× lower      |
 
-The commit count is the metric that best predicts perceived
-smoothness on a slow device: every extra React commit is work
-competing with the compositor for the main thread. Ultra holds at
+The commit count is the clearest React-layer contract: every extra
+React commit is work competing with the compositor for the main thread.
+Ultra holds at
 **exactly one commit per move**. A move only ever touches at most
 four squares (from, to, rook-from and rook-to on castling), each
 square subscribes to its own byte of the board's `Uint8Array(64)`
@@ -523,17 +532,22 @@ reconciliation entirely.
 
 `rcb` commits 2.83× per move because the natural React integration
 — re-setting the `position` prop after every move — re-renders the
-whole board plus each piece. The per-move jump from 0.173 ms to
-5.50 ms is where that cost lands.
+whole board plus each piece. Ultra's 1.00 commits per move is
+structural: each square subscribes to its own byte via
+`useSyncExternalStore`, and React's reconciliation short-circuits
+at the subscription boundary for every unchanged square.
 
-> Note the per-move number here (**0.173 ms**) is the React Profiler's
-> "actual duration" number, not wall-clock including layout/paint.
-> The browser bench above (16.5 ms per move under 4× CPU throttle) is
-> the number to quote for end-to-end interaction cost, and in that
-> bench Ultra, rcb, and cg land within noise of each other — React
-> work is no longer the bottleneck on a single board under a
-> production build. Where `rcb` still loses is the mount-time React
-> pass (43 ms vs Ultra's 25) and the grid scaling table above.
+> The dev-React `actualDuration` numbers in the table are kept for
+> historical comparison and CI diff-tracking but shouldn't be cited
+> as shipping-quality figures. Dev React's reconciler bookkeeping
+> amplifies work that isn't in the prod bundle. The ratio shows that
+> rcb is doing more per-commit work, but the absolute gap narrows
+> substantially under production React.
+> The Playwright bench (which runs under `vite preview`) shows
+> Ultra and rcb tied on per-move wall-clock at 16.5 ms; that's the
+> number a shipped app sees. Where rcb still loses in a production
+> build is commits per move (2.83×), heap stability, and the
+> multi-board scaling curve.
 
 ---
 
@@ -548,7 +562,7 @@ Source: [`apps/benchmarks/scripts/bench-core.mjs`](apps/benchmarks/scripts/bench
 three passes. Both engines run in the same Node process so CPU-frequency
 scaling and GC pauses hit both sides equally.
 
-| Scenario                         | `@ultrachess/core` | `chess.js`          | Speed-up   |
+| Scenario                         | `@ultrachess/core` | `chess.js`          | Ratio      |
 |----------------------------------|-------------------:|--------------------:|-----------:|
 | `tryMove` + `undo`               |    **278 ns/op**   |     32 909 ns/op    | **118×**   |
 | `legalMoves` (mid-game, verbose) |    **158 ns/op**   |    427 348 ns/op    | **2 712×** |
@@ -573,7 +587,7 @@ already below the frame budget on both engines, so on live play the
 win shows up in battery life and main-thread head-room rather than
 perceptible latency. The real gap is in batch work.
 
-**Why `legalMoves` is ~2 700× faster.** Ultra's generator returns a
+**Why the `legalMoves` ratio is ~2 700×.** Ultra's generator returns a
 packed `u16` per move and produces them bitboard-parallel in WASM.
 `chess.js` in `verbose` mode allocates a per-move object with `from`,
 `to`, `san`, `captured`, `flags`, `piece`, and `color` fields — that

@@ -1,16 +1,17 @@
 # Performance
 
-> Budgets, benchmarks, and how to profile. "Fast" is a number, not a vibe.
+> Budgets, benchmarks, and how to profile. Performance is a contract we measure, not the product story.
 
-## Headline claim
+## Performance Contract
 
-Ultra Chess React is a high-performance React chessboard. We prove the "high-performance" part with:
+Ultra Chess React is designed around strict React ownership boundaries. The public claim is not that every interaction is dramatically faster; it is that the board keeps expensive work scoped, measured, and regression-gated:
 
-- A WASM engine (`ultrachess`) that perfts at 336 Mnps on Node and 581 Mnps on Bun — 55–95× faster than `chess.js`.
-- A React layer that costs ≤ 4 component re-renders per move, 0 per hover, 0 per drag frame.
+- A `BoardModel` owns chess state outside the component tree.
+- A byte-level snapshot lets each square subscribe only to the data it renders.
+- Drag, arrows, and piece movement use refs, Canvas 2D, and WAAPI instead of per-frame React state.
 - Sub-6 KB core + sub-15 KB React-layer gzipped footprints.
 
-Every number above is committed as a benchmark in `apps/benchmarks` and enforced in CI.
+The numbers behind that contract are committed as benchmarks in `apps/benchmarks` and enforced in CI.
 
 ## Budgets
 
@@ -33,7 +34,7 @@ A PR that regresses any budget is blocked.
 
 ## Why each budget exists
 
-- **6 KB / 15 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget. `react-chessboard` ships ~40 KB gzipped today; we beat that by a wide margin.
+- **6 KB / 15 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget.
 - **Re-renders per move ≤ 4:** a move changes 2 squares (from, to) plus at most 2 highlight slots. Anything more means a component is subscribing too broadly.
 - **Re-renders per hover / drag / arrow:** these happen 60 times per second. Any React work per frame is a battery drain and a jank source.
 - **Legal-move cache hit rate ≥ 95 %:** caching by `hash()` is cheap; if we're missing, something is wrong with invalidation.

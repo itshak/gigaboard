@@ -1,6 +1,6 @@
 # @ultrachess/react
 
-High-performance React chessboard: **≤ 1 React commit per move**, **0 re-renders per drag frame**, and the whole interactive surface ships in **< 16 KB gzip**. Powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM) and [`@ultrachess/core`](../core).
+Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, WAAPI piece movement, Canvas arrows, SSR static rendering, WAI-ARIA keyboard parity, and a **< 16 KB gzip** interactive surface. Powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM) and [`@ultrachess/core`](../core).
 
 ## Status
 
