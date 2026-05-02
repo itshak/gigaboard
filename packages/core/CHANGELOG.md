@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/yahorbarkouski/ultrachess-react/compare/core-v1.1.1...core-v1.1.2) (2026-05-02)
+
+
+### Documentation
+
+* better benchmarking ([0943511](https://github.com/yahorbarkouski/ultrachess-react/commit/0943511ba7342a2f851d8f867840b5e1fe4ef2f8))
+
 ## [1.1.1](https://github.com/yahorbarkouski/ultrachess-react/compare/core-v1.1.0...core-v1.1.1) (2026-04-19)
 
 
