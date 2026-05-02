@@ -64,12 +64,10 @@ If this sounds like `chessground` — it is, but wrapped in idiomatic React with
 
 ```bash
 bun remove react-chessboard chess.js
-bun add @ultrachess/react ultrachess
-# pick one piece set + one theme — both tree-shake down to ~660 B / ~205 B
-bun add @ultrachess/pieces @ultrachess/themes
+bun add @ultrachess/react @ultrachess/pieces @ultrachess/themes ultrachess
 ```
 
-`ultrachess` is a peer dependency (shared across every board on the page). `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
+`ultrachess` is a peer dependency (shared across every board on the page). `@ultrachess/react` defaults to the green theme, Neo pieces, and bundled move sounds; `@ultrachess/pieces` and `@ultrachess/themes` remain separate tree-shakable packages for customisation. `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
 
 ---
 
@@ -113,8 +111,6 @@ export function Board() {
 ```tsx
 "use client";
 import { Chessboard, useChessGame } from "@ultrachess/react";
-import { green } from "@ultrachess/themes/green";
-import { neo }   from "@ultrachess/pieces/neo";
 
 export function Board() {
   const game = useChessGame();                         // BoardModel | null
@@ -124,8 +120,6 @@ export function Board() {
       game={game}
       fallbackFen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
       orientation="white"
-      theme={green}
-      pieces={neo}
       animation={{ durationMs: 60 }}
       onMove={(m) => { /* already committed — this is an ack */ }}
     />
@@ -133,7 +127,7 @@ export function Board() {
 }
 ```
 
-Things gone: `useState`, the `Chess` clone-on-every-move dance, the manual FEN plumbing, the `onPieceDrop → boolean` contract. Things new: `game` handle, `fallbackFen` to paint pieces during WASM init, a theme / piece set import.
+Things gone: `useState`, the `Chess` clone-on-every-move dance, the manual FEN plumbing, the `onPieceDrop → boolean` contract, and the need to wire a presentable board by hand. Things new: `game` handle and `fallbackFen` to paint pieces during WASM init.
 
 ---
 

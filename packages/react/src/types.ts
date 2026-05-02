@@ -137,13 +137,12 @@ export interface ChessboardProps {
 
   /**
    * Theme as a CSS custom-property record. Import from `@ultrachess/themes/*`.
-   * When omitted the default built-in theme (brown) is applied.
+   * When omitted the default green theme from `@ultrachess/themes` is applied.
    */
   readonly theme?: Theme;
 
   /**
-   * Piece renderer. Defaults to the bundled Unicode glyph set; callers
-   * typically swap in an SVG set from `@ultrachess/pieces`.
+   * Piece renderer. Defaults to the `neo` set from `@ultrachess/pieces`.
    */
   readonly pieces?: PieceRenderer;
 

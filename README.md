@@ -8,7 +8,7 @@ Highly opinionated React chessboard for teams that want the board to be an engin
 - State lives in a `BoardModel`, not in component props. The React surface receives a stable `game` handle and subscribes to exactly the slices it renders.
 - The board snapshot is a `Uint8Array(64)`. Each square subscribes to one byte; a normal move touches only the changed squares instead of reconciling the whole board.
 - Hot paths are kept out of React. Drag writes through refs, arrows draw on Canvas 2D, and piece glides run through WAAPI.
-- Product affordances ship as first-class behavior: premoves, ghost overlays, modifier-key arrow colors, bundled move sounds, themes, piece sets, and orientation changes.
+- Product affordances ship as first-class behavior: premoves, ghost overlays, modifier-key arrow colors, bundled move sounds, a polished green default theme, Neo pieces, and orientation changes.
 - Accessibility is part of the API: WAI-ARIA grid, roving tabindex, keyboard parity for pointer actions, `prefers-reduced-motion`, and axe-clean stories.
 - Server rendering is a real export. `@ultrachess/react/server` emits static board markup with zero client JS and the same DOM shape the interactive board hydrates over.
 - Budgets are explicit: **1 React commit per move**, **0 React work per drag frame**, **< 16 KB gzip** for the interactive surface, and CI gates for size, render count, and frame time.
@@ -20,13 +20,13 @@ Benchmarks are included because the architecture should be accountable, not beca
 ## Install
 
 ```bash
-bun  add @ultrachess/react ultrachess
-npm  install @ultrachess/react ultrachess
-pnpm add @ultrachess/react ultrachess
-yarn add @ultrachess/react ultrachess
+bun  add @ultrachess/react @ultrachess/themes @ultrachess/pieces ultrachess
+npm  install @ultrachess/react @ultrachess/themes @ultrachess/pieces ultrachess
+pnpm add @ultrachess/react @ultrachess/themes @ultrachess/pieces ultrachess
+yarn add @ultrachess/react @ultrachess/themes @ultrachess/pieces ultrachess
 ```
 
-`ultrachess` is a peer dependency — installed once, shared across every board on the page. React 18.3+ or 19 is required. The WASM module is lazy-loaded by `ultrachess` on first `Chess.create()`; SSR-only static boards ship zero client JS.
+`ultrachess` is a peer dependency — installed once, shared across every board on the page. `@ultrachess/themes` and `@ultrachess/pieces` stay separate, tree-shakable packages; `@ultrachess/react` uses the green theme and Neo pieces by default so a bare `<Chessboard/>` does not render as an unfinished placeholder. React 18.3+ or 19 is required. The WASM module is lazy-loaded by `ultrachess` on first `Chess.create()`; SSR-only static boards ship zero client JS.
 
 ---
 
@@ -113,27 +113,24 @@ The React layer needs verbose moves to decorate legal-target squares; this is wh
 
 | Import                                | Needs `"use client"` | Gzip       | Use when                                                             |
 |---------------------------------------|----------------------|-----------:|----------------------------------------------------------------------|
-| `@ultrachess/react`                   | yes                  |  **15.45 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, viewOnly. |
+| `@ultrachess/react`                   | yes                  |  **15.85 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, viewOnly. |
 | `@ultrachess/react/server`            | no (RSC)             |   **2.37 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
 | `@ultrachess/core`                    | no                   |   **3.74 KB** | framework-agnostic state + engine adapter; plug into RN, Jazz CRDT. |
-| `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one SVG piece set; the rest tree-shake. |
-| `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; swap live.                       |
+| `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one image-backed piece set; `neo` is the React default. |
+| `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; `green` is the React default.                       |
 
-A typical board-shipping app costs roughly **`core` + `react` + one piece set + one theme ≈ 17.8 KB gzipped**. Every export is `sideEffects: false`; unused pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
+A typical board-shipping app costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 17.8 KB gzipped**. Every export is `sideEffects: false`; unused alternate pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
 
 ---
 
 ## Quick tour
 
-One runnable example hitting every core capability.
+One runnable example hitting every core capability. With no `theme`, `pieces`, or `sound` props, the board renders the green theme, Neo pieces, and built-in move sounds.
 
 ```tsx
 "use client";
 
 import { Chessboard, useChessGame } from "@ultrachess/react";
-import { StaticChessboard }          from "@ultrachess/react/server";
-import { neo }                       from "@ultrachess/pieces/neo";
-import { green }                     from "@ultrachess/themes/green";
 import { decodePackedMove, moveToUci } from "@ultrachess/core";
 
 export default function Board() {
@@ -144,8 +141,6 @@ export default function Board() {
     <Chessboard
       game={game}
       fallbackFen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-      theme={green}
-      pieces={neo}
       orientation="white"
 
       // interaction
@@ -161,12 +156,18 @@ export default function Board() {
       showIllegalFlash
       showCoordinates
       animation={{ durationMs: 60, easing: "cubic-bezier(.22,.61,.36,1)" }}
-
-      // sound — seven cue set ships bundled as MP3s (chess.com-parity)
-      sound={{ enabled: true, volume: 0.6 }}
     />
   );
 }
+```
+
+When you want a different look, import one theme and one piece set from their sub-paths:
+
+```tsx
+import { cburnett } from "@ultrachess/pieces/cburnett";
+import { wood } from "@ultrachess/themes/wood";
+
+<Chessboard game={game} theme={wood} pieces={cburnett} />;
 ```
 
 Zero-JS static board for a React Server Component (an article, PGN viewer, opening-tree cell):
@@ -317,12 +318,12 @@ Full matrix in [`docs/TESTING.md`](./docs/TESTING.md).
 | Package                           | Budget | Measured       |
 |-----------------------------------|-------:|---------------:|
 | `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
-| `@ultrachess/react` (ESM)         |  16 KB | **15.45 KB**   |
+| `@ultrachess/react` (ESM)         |  16 KB | **15.85 KB**   |
 | `@ultrachess/react/server` (RSC)  |   4 KB |  **2.37 KB**   |
 | `@ultrachess/pieces/*` per set    |   2 KB |  **~660 B**    |
 | `@ultrachess/themes/*` per theme  |   1 KB |  **~205 B**    |
 
-A board-shipping app therefore costs roughly **`core` + `react` + one piece set + one theme ≈ 17.8 KB gzipped**. Comparables: `react-chessboard` ~40 KB gzip + `chess.js` ~12.9 KB gzip; `chessground` ~12.3 KB JS + ~4.3 KB CSS + `chess.js`. The 158 KB `.wasm` is lazy-loaded on first use and served separately — it does not count against first-paint JS.
+A board-shipping app therefore costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 17.8 KB gzipped**. Comparables: `react-chessboard` ~40 KB gzip + `chess.js` ~12.9 KB gzip; `chessground` ~12.3 KB JS + ~4.3 KB CSS + `chess.js`. The 158 KB `.wasm` is lazy-loaded on first use and served separately — it does not count against first-paint JS.
 
 ---
 

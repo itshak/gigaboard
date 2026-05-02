@@ -67,7 +67,7 @@ export interface ShowcaseConfig {
 }
 
 const DEFAULT_CONFIG: ShowcaseConfig = {
-  themeName: "brown",
+  themeName: "green",
   pieceSetName: "neo",
   orientation: "white",
   showCoordinates: true,

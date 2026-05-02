@@ -41,11 +41,10 @@ describe("<Chessboard/>", () => {
     expect(gridcell("h8")).toBeDefined();
   });
 
-  it("renders the starting position glyphs", () => {
+  it("renders the starting position pieces", () => {
     renderBoard(model);
-    // The piece layer is a sibling overlay, so query by its data attribute.
     const e2Piece = pieceAt("e2");
-    expect(e2Piece?.textContent).toContain("\u2659");
+    expect(e2Piece?.querySelector('img[alt="white pawn"]')).not.toBeNull();
   });
 
   it("click on own piece populates legal targets", () => {
@@ -63,8 +62,7 @@ describe("<Chessboard/>", () => {
     expect(snap.turn).toBe(Color.Black);
     expect(snap.historyPly).toBe(1);
     expect(snap.selected).toBeNull();
-    // The pawn's Unicode glyph has moved to e4.
-    expect(pieceAt("e4")?.textContent).toContain("\u2659");
+    expect(pieceAt("e4")?.querySelector('img[alt="white pawn"]')).not.toBeNull();
     expect(pieceAt("e2")).toBeNull();
   });
 

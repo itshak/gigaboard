@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s · Ultra Chess React",
   },
   description:
-    "Opinionated React chessboard with owned state, byte-scoped subscriptions, SSR static rendering, accessibility, and a measured < 16 KB interactive surface.",
+    "Opinionated React chessboard with owned state, byte-scoped subscriptions, polished default visuals and sounds, SSR static rendering, accessibility, and a measured < 16 KB interactive surface.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

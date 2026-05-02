@@ -2,7 +2,7 @@
   "name": "ultrachess-react-workspace",
   "version": "0.0.0",
   "private": true,
-  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, SSR static rendering, accessibility, and < 16 KB gzip.",
+  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, SSR static rendering, and accessibility.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",

@@ -1,7 +1,7 @@
 {
   "name": "@ultrachess/react",
   "version": "1.1.1",
-  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, WAI-ARIA keyboard parity, arrows, premoves, SSR static rendering, and < 16 KB gzip.",
+  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
   "license": "MIT",
   "author": "Yahor Barkouski",
   "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
@@ -93,7 +93,9 @@
     "ultrachess": "^1.1.4"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*"
+    "@ultrachess/core": "workspace:*",
+    "@ultrachess/pieces": "workspace:*",
+    "@ultrachess/themes": "workspace:*"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",

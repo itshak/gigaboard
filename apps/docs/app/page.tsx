@@ -18,8 +18,9 @@ export default function HomePage() {
     >
       <h1 style={{ fontSize: "1.75rem", marginBottom: "0.25rem" }}>Ultra Chess React</h1>
       <p style={{ color: "#555", margin: "0 0 1.5rem 0" }}>
-        Opinionated React chessboard with owned state, byte-scoped subscriptions, SSR static rendering,
-        accessibility, and a measured &lt; 16 KB interactive surface.
+        Opinionated React chessboard with owned state, byte-scoped subscriptions, polished default
+        visuals and sounds, SSR static rendering, accessibility, and a measured &lt; 16 KB
+        interactive surface.
       </p>
       <BoardDemo />
     </main>

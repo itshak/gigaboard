@@ -162,7 +162,7 @@ Anything exported from `src/index.ts` has:
 | Package | Gzip budget |
 |---|---|
 | `@ultrachess/core` | 6 KB |
-| `@ultrachess/react` | 15 KB |
+| `@ultrachess/react` | 16 KB |
 | `@ultrachess/pieces` (per set) | 2 KB |
 | `@ultrachess/themes` (per theme) | 1 KB |
 

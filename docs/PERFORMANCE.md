@@ -9,7 +9,7 @@ Ultra Chess React is designed around strict React ownership boundaries. The publ
 - A `BoardModel` owns chess state outside the component tree.
 - A byte-level snapshot lets each square subscribe only to the data it renders.
 - Drag, arrows, and piece movement use refs, Canvas 2D, and WAAPI instead of per-frame React state.
-- Sub-6 KB core + sub-15 KB React-layer gzipped footprints.
+- Sub-6 KB core + sub-16 KB React-layer gzipped footprints.
 
 The numbers behind that contract are committed as benchmarks in `apps/benchmarks` and enforced in CI.
 
@@ -18,7 +18,7 @@ The numbers behind that contract are committed as benchmarks in `apps/benchmarks
 | Metric | Budget | Enforcement |
 |---|---|---|
 | `@ultrachess/core` gzip | < 6 KB | `size-limit` |
-| `@ultrachess/react` gzip | < 15 KB | `size-limit` |
+| `@ultrachess/react` gzip | < 16 KB | `size-limit` |
 | `@ultrachess/pieces` gzip per set | < 2 KB | `size-limit` |
 | `@ultrachess/themes` gzip per theme | < 1 KB | `size-limit` |
 | Re-renders per move | ≤ 4 | React Profiler bench |
@@ -34,7 +34,7 @@ A PR that regresses any budget is blocked.
 
 ## Why each budget exists
 
-- **6 KB / 15 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget.
+- **6 KB / 16 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget.
 - **Re-renders per move ≤ 4:** a move changes 2 squares (from, to) plus at most 2 highlight slots. Anything more means a component is subscribing too broadly.
 - **Re-renders per hover / drag / arrow:** these happen 60 times per second. Any React work per frame is a battery drain and a jank source.
 - **Legal-move cache hit rate ≥ 95 %:** caching by `hash()` is cheap; if we're missing, something is wrong with invalidation.
@@ -46,7 +46,7 @@ A PR that regresses any budget is blocked.
 3. **Refs-only drag.** `pointerdown` sets a ref; `pointermove` writes `element.style.transform` directly. React never knows the drag is happening.
 4. **WAAPI animations.** `element.animate(...)` runs off-thread on the compositor. Zero React work during the 60 ms animation window.
 5. **`hash()`-keyed legal-move cache.** `ultrachess.hash()` is O(1) (measured at 0.34 ns); cache key is free.
-6. **Lazy piece-sprite paths.** Piece SVGs are imported per set; unused sets are tree-shaken. Each set is ~2 KB gzip.
+6. **Lazy piece image paths.** Piece sets are imported per set; unused sets are tree-shaken. Each set is ~2 KB gzip.
 7. **Server-only static board.** For docs, PGN viewers, embedded boards, the `@ultrachess/react/server` export produces zero client JS.
 
 ## How to profile locally

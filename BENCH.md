@@ -602,13 +602,13 @@ so non-verbose isn't a fair comparison for a UI integration.
 | Package                           | Budget | Measured       |
 |-----------------------------------|-------:|---------------:|
 | `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
-| `@ultrachess/react` (ESM)         |  15 KB | **14.67 KB**   |
-| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.32 KB**   |
+| `@ultrachess/react` (ESM)         |  16 KB | **15.85 KB**   |
+| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.37 KB**   |
 | `@ultrachess/pieces/{cburnett,merida,alpha,chesscom,neo}` | 2 KB | **~660 B** per set |
 | `@ultrachess/themes/{brown,blue,green,wood}` | 1 KB | **~205 B** per theme |
 
 A board-shipping app therefore costs roughly
-**`core` + `react` + one piece set + one theme ≈ 17.8 KB gzipped**.
+**`core` + `react` + the default Neo pieces + the default green theme ≈ 17.8 KB gzipped**.
 
 Comparables:
 

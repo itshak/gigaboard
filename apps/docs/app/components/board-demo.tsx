@@ -9,7 +9,6 @@
  */
 
 import { Chessboard, useChessGame } from "@ultrachess/react";
-import { brown } from "@ultrachess/themes/brown";
 import { useState } from "react";
 
 export function BoardDemo() {
@@ -24,7 +23,7 @@ export function BoardDemo() {
           margin: "0 auto 1rem auto",
         }}
       >
-        <Chessboard game={game} theme={brown} orientation={orientation} />
+        <Chessboard game={game} orientation={orientation} />
       </div>
       <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
         <button

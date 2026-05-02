@@ -4,8 +4,8 @@
  * Ships **zero** client JavaScript. No hooks, no state, no event handlers,
  * no imports of any client module. Imports only:
  *
- * - `default-theme.ts` (a frozen record of strings)
- * - `default-pieces.tsx` (a pure function returning a node)
+ * - `default-theme.ts`
+ * - `default-pieces.tsx`
  * - `types.ts` (types only)
  *
  * Perfect for PGN viewers, position diagrams in blog posts, shareable
@@ -58,10 +58,10 @@ export interface StaticChessboardProps {
   /** Board orientation. Defaults to `"white"`. */
   readonly orientation?: Orientation;
 
-  /** Theme — defaults to the built-in brown palette. */
+  /** Theme — defaults to the green palette from `@ultrachess/themes`. */
   readonly theme?: Theme;
 
-  /** Piece renderer — defaults to the bundled Unicode glyphs. */
+  /** Piece renderer — defaults to the `neo` set from `@ultrachess/pieces`. */
   readonly pieces?: PieceRenderer;
 
   /** Show algebraic coordinate labels on the edges. Default `true`. */
