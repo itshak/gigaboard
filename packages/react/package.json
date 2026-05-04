@@ -93,9 +93,9 @@
     "ultrachess": "^1.1.4"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*",
-    "@ultrachess/pieces": "workspace:*",
-    "@ultrachess/themes": "workspace:*"
+    "@ultrachess/core": "1.1.2",
+    "@ultrachess/pieces": "1.1.1",
+    "@ultrachess/themes": "1.1.1"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",
