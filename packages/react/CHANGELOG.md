@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.3...react-v1.1.4) (2026-05-04)
+
+
+### Bug Fixes
+
+* **react:** publish versioned internal dependencies ([c4c0334](https://github.com/yahorbarkouski/ultrachess-react/commit/c4c03343abdd14da8d720ba46b81096635687244))
+
 ## [1.1.3](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.2...react-v1.1.3) (2026-05-04)
 
 
