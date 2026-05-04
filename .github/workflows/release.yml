@@ -18,9 +18,10 @@ name: release
 # separate `release: published` workflow never fires. Colocating the
 # publish step sidesteps the limitation without needing a PAT.
 #
-# Because we use `linked-versions`, every release cuts all 4 packages
-# to the same version in lockstep. `paths_released` enumerates exactly
-# which package directories need `npm publish` — we iterate that set.
+# `paths_released` enumerates exactly which package directories need
+# `npm publish` on the automatic release path. The manual retry path
+# starts from the manifest and filters out versions that already exist
+# on npm.
 
 on:
   push:
@@ -135,24 +136,37 @@ jobs:
       #
       # - release-please path: `paths_released` is a JSON array of
       #   package dirs (e.g. ["packages/core","packages/react",...]).
-      # - workflow_dispatch path: no release-please output — publish
-      #   every package listed in the manifest. Intentional: a manual
-      #   dispatch is the retry/hotfix path and we assume the caller
-      #   wants everything at the given ref.
+      # - workflow_dispatch path: no release-please output — consider
+      #   every package listed in the manifest, then skip versions that
+      #   are already published. This keeps retries from failing on
+      #   unchanged packages.
       - name: Resolve packages to publish
         id: resolve
         run: |
           set -euo pipefail
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            paths=$(jq -c 'keys' .github/.release-please-manifest.json)
+            candidate_paths=$(jq -c 'keys' .github/.release-please-manifest.json)
           else
-            paths='${{ needs.release-please.outputs.paths_released }}'
+            candidate_paths='${{ needs.release-please.outputs.paths_released }}'
             # Defensive default — should always be non-empty when the
             # `if:` guard above lets us in, but guard anyway.
-            if [[ -z "$paths" || "$paths" == "null" ]]; then
-              paths='[]'
+            if [[ -z "$candidate_paths" || "$candidate_paths" == "null" ]]; then
+              candidate_paths='[]'
             fi
           fi
+
+          paths='[]'
+          while read -r dir; do
+            [[ -z "$dir" ]] && continue
+            name=$(jq -r '.name' "$dir/package.json")
+            version=$(jq -r '.version' "$dir/package.json")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "Already published: $name@$version"
+              continue
+            fi
+            paths=$(jq -c --arg dir "$dir" '. + [$dir]' <<< "$paths")
+          done < <(jq -r '.[]' <<< "$candidate_paths")
+
           echo "paths=$paths" >> "$GITHUB_OUTPUT"
           echo "Will publish: $paths"
 
