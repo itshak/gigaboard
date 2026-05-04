@@ -11,7 +11,7 @@
  */
 
 import type { SquareIndex } from "@ultrachess/core";
-import { type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useMemo } from "react";
 import type { Orientation, SquareContext } from "../types.js";
 import { Square } from "./square.js";
 
@@ -68,7 +68,7 @@ export interface BoardGridProps {
  * When `focusedSquare` flips, only the two affected `Square` children
  * re-render (old + new) thanks to `React.memo` on `Square`.
  */
-export function BoardGrid({
+export const BoardGrid = memo(function BoardGrid({
   orientation,
   onSquareClick,
   renderSquare,
@@ -106,4 +106,4 @@ export function BoardGrid({
       ))}
     </div>
   );
-}
+});

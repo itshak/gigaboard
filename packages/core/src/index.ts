@@ -17,7 +17,7 @@ export { animationInspect, decodePackedMove, planAnimations } from "./animation-
 export type { ArrowModel } from "./arrow-model.js";
 export { createArrowModel, makeArrow } from "./arrow-model.js";
 // ---- Board model ----
-export type { BoardModel, BoardModelOptions } from "./board-model.js";
+export type { BoardModel, BoardModelOptions, SyncPositionOptions } from "./board-model.js";
 export { createBoardModel } from "./board-model.js";
 // ---- Drag controller ----
 export type {

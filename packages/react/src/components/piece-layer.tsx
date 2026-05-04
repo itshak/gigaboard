@@ -123,7 +123,7 @@ export const CONTAINER_STYLE = Object.freeze({
  * has a stable identity across rerenders — necessary for M3's WAAPI
  * animation to find and animate the right DOM node.
  */
-export function PieceLayer({ model, orientation, pieces }: PieceLayerProps) {
+export const PieceLayer = memo(function PieceLayer({ model, orientation, pieces }: PieceLayerProps) {
   const slots: React.ReactNode[] = [];
   for (let i = 0; i < 64; i++) {
     slots.push(
@@ -141,4 +141,4 @@ export function PieceLayer({ model, orientation, pieces }: PieceLayerProps) {
       {slots}
     </div>
   );
-}
+});

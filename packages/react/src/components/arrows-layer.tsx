@@ -51,6 +51,7 @@
 import type { Arrow, BoardModel } from "@ultrachess/core";
 import {
   forwardRef,
+  memo,
   type ReactElement,
   type RefObject,
   useEffect,
@@ -242,140 +243,142 @@ function anchorPct(
 
 /* ====================================================== component */
 
-export const ArrowsLayer = forwardRef<ArrowsLayerHandle, ArrowsLayerProps>(function ArrowsLayer(
-  { model, orientation, palette, below = false },
-  handle,
-) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const previewRef = useRef<PreviewArrow | null>(null);
-  const allArrows = useBoardSlice(model, (s) => s.arrows);
-
-  // Filter by the `below` flag. A fresh reference is produced only
-  // when the subset changes — preserves `useLayoutEffect` dep
-  // stability across renders that don't affect this layer.
-  const arrows = useMemo(
-    () => allArrows.filter((a) => (a.below === true) === below),
-    [allArrows, below],
-  );
-
-  // Does any arrow in this subset carry a label/customSvg? If not,
-  // the SVG overlay isn't rendered at all — zero cost for the common
-  // "plain arrows only" case.
-  const hasDecorations = useMemo(
-    () => arrows.some((a) => a.label !== undefined || a.customSvg !== undefined),
-    [arrows],
-  );
-
-  // Preview is owned by the top layer only; the below layer ignores
-  // gesture previews (drawings always land on top during creation).
-  useImperativeHandle(
+export const ArrowsLayer = memo(
+  forwardRef<ArrowsLayerHandle, ArrowsLayerProps>(function ArrowsLayer(
+    { model, orientation, palette, below = false },
     handle,
-    () => ({
-      setPreview(preview: PreviewArrow | null): void {
-        if (below) return;
-        previewRef.current = preview;
-        const canvas = canvasRef.current;
-        if (canvas !== null) redraw(canvas, arrows, preview, orientation, palette);
-      },
-    }),
-    [arrows, orientation, palette, below],
-  );
+  ) {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const previewRef = useRef<PreviewArrow | null>(null);
+    const allArrows = useBoardSlice(model, (s) => s.arrows);
 
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas === null) return;
-    redraw(canvas, arrows, previewRef.current, orientation, palette);
-  }, [arrows, orientation, palette]);
+    // Filter by the `below` flag. A fresh reference is produced only
+    // when the subset changes — preserves `useLayoutEffect` dep
+    // stability across renders that don't affect this layer.
+    const arrows = useMemo(
+      () => allArrows.filter((a) => (a.below === true) === below),
+      [allArrows, below],
+    );
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas === null) return;
-    const parent = canvas.parentElement;
-    if (parent === null || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => {
+    // Does any arrow in this subset carry a label/customSvg? If not,
+    // the SVG overlay isn't rendered at all — zero cost for the common
+    // "plain arrows only" case.
+    const hasDecorations = useMemo(
+      () => arrows.some((a) => a.label !== undefined || a.customSvg !== undefined),
+      [arrows],
+    );
+
+    // Preview is owned by the top layer only; the below layer ignores
+    // gesture previews (drawings always land on top during creation).
+    useImperativeHandle(
+      handle,
+      () => ({
+        setPreview(preview: PreviewArrow | null): void {
+          if (below) return;
+          previewRef.current = preview;
+          const canvas = canvasRef.current;
+          if (canvas !== null) redraw(canvas, arrows, preview, orientation, palette);
+        },
+      }),
+      [arrows, orientation, palette, below],
+    );
+
+    useLayoutEffect(() => {
+      const canvas = canvasRef.current;
+      if (canvas === null) return;
       redraw(canvas, arrows, previewRef.current, orientation, palette);
-    });
-    observer.observe(parent);
-    return () => observer.disconnect();
-  }, [arrows, orientation, palette]);
+    }, [arrows, orientation, palette]);
 
-  const layerZIndex = below ? undefined : 15;
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (canvas === null) return;
+      const parent = canvas.parentElement;
+      if (parent === null || typeof ResizeObserver === "undefined") return;
+      const observer = new ResizeObserver(() => {
+        redraw(canvas, arrows, previewRef.current, orientation, palette);
+      });
+      observer.observe(parent);
+      return () => observer.disconnect();
+    }, [arrows, orientation, palette]);
 
-  return (
-    <>
-      <canvas
-        ref={canvasRef}
-        data-layer={below ? "arrows-below" : "arrows"}
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          ...(layerZIndex !== undefined ? { zIndex: layerZIndex } : {}),
-        }}
-      />
-      {hasDecorations ? (
-        <svg
-          data-layer={below ? "arrows-below-decor" : "arrows-decor"}
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
+    const layerZIndex = below ? undefined : 15;
+
+    return (
+      <>
+        <canvas
+          ref={canvasRef}
+          data-layer={below ? "arrows-below" : "arrows"}
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             pointerEvents: "none",
-            // Decorations share the z-plane of the canvas they annotate.
             ...(layerZIndex !== undefined ? { zIndex: layerZIndex } : {}),
           }}
-        >
-          {arrows.map((arrow) => {
-            const key = `${arrow.from}-${arrow.to}-${arrow.color}-${arrow.brush ?? ""}`;
-            const color = resolveColor(arrow, palette);
-            const nodes: ReactElement[] = [];
-            if (arrow.label !== undefined) {
-              const { cx, cy } = anchorPct(arrow.from, arrow.to, orientation, "label");
-              nodes.push(
-                <text
-                  key={`${key}-label`}
-                  x={cx}
-                  y={cy}
-                  fill={arrow.label.fill ?? color}
-                  fontSize="4"
-                  fontWeight="700"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  style={{ userSelect: "none" }}
-                >
-                  {arrow.label.text}
-                </text>,
-              );
-            }
-            if (arrow.customSvg !== undefined) {
-              const { cx, cy } = anchorPct(
-                arrow.from,
-                arrow.to,
-                orientation,
-                arrow.customSvg.center ?? "dest",
-              );
-              nodes.push(
-                <g
-                  key={`${key}-svg`}
-                  transform={`translate(${cx}, ${cy})`}
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted consumer-supplied SVG
-                  dangerouslySetInnerHTML={{ __html: arrow.customSvg.html }}
-                />,
-              );
-            }
-            return nodes.length === 0 ? null : <g key={key}>{nodes}</g>;
-          })}
-        </svg>
-      ) : null}
-    </>
-  );
-});
+        />
+        {hasDecorations ? (
+          <svg
+            data-layer={below ? "arrows-below-decor" : "arrows-decor"}
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              // Decorations share the z-plane of the canvas they annotate.
+              ...(layerZIndex !== undefined ? { zIndex: layerZIndex } : {}),
+            }}
+          >
+            {arrows.map((arrow) => {
+              const key = `${arrow.from}-${arrow.to}-${arrow.color}-${arrow.brush ?? ""}`;
+              const color = resolveColor(arrow, palette);
+              const nodes: ReactElement[] = [];
+              if (arrow.label !== undefined) {
+                const { cx, cy } = anchorPct(arrow.from, arrow.to, orientation, "label");
+                nodes.push(
+                  <text
+                    key={`${key}-label`}
+                    x={cx}
+                    y={cy}
+                    fill={arrow.label.fill ?? color}
+                    fontSize="4"
+                    fontWeight="700"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    style={{ userSelect: "none" }}
+                  >
+                    {arrow.label.text}
+                  </text>,
+                );
+              }
+              if (arrow.customSvg !== undefined) {
+                const { cx, cy } = anchorPct(
+                  arrow.from,
+                  arrow.to,
+                  orientation,
+                  arrow.customSvg.center ?? "dest",
+                );
+                nodes.push(
+                  <g
+                    key={`${key}-svg`}
+                    transform={`translate(${cx}, ${cy})`}
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted consumer-supplied SVG
+                    dangerouslySetInnerHTML={{ __html: arrow.customSvg.html }}
+                  />,
+                );
+              }
+              return nodes.length === 0 ? null : <g key={key}>{nodes}</g>;
+            })}
+          </svg>
+        ) : null}
+      </>
+    );
+  }),
+);
 
 /** Utility for external hooks: the singleton reference shape. */
 export type ArrowsLayerRef = RefObject<ArrowsLayerHandle | null>;

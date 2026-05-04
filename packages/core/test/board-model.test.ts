@@ -123,6 +123,53 @@ describe("createBoardModel — actions", () => {
     expect(s.premoves).toHaveLength(0);
   });
 
+  it("syncPosition loads FEN and managed arrows in one commit", () => {
+    model.addArrow(makeArrow(G1, F3, "blue"));
+    model.queuePremove(makePremove(E2, E4));
+    const fn = vi.fn();
+    model.subscribe(fn);
+
+    model.syncPosition({
+      fen: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+      managedArrows: [makeArrow(E7, E5, "red")],
+    });
+
+    const s = model.getSnapshot();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(s.turn).toBe(Color.Black);
+    expect(s.historyPly).toBe(0);
+    expect(s.premoves).toHaveLength(0);
+    expect(s.arrows).toHaveLength(1);
+    expect(s.arrows[0]).toMatchObject({ from: E7, to: E5, color: "red", managed: true });
+  });
+
+  it("syncPosition can preserve user arrows while replacing managed arrows", () => {
+    model.addArrow(makeArrow(G1, F3, "blue"));
+
+    model.syncPosition({
+      fen: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+      managedArrows: [makeArrow(E7, E5, "red")],
+      preserveUserArrows: true,
+    });
+
+    const arrows = model.getSnapshot().arrows;
+    expect(arrows).toHaveLength(2);
+    expect(arrows.some((arrow) => arrow.from === G1 && arrow.managed !== true)).toBe(true);
+    expect(arrows.some((arrow) => arrow.from === E7 && arrow.managed === true)).toBe(true);
+  });
+
+  it("syncPosition is a no-op when the FEN and managed arrows are unchanged", () => {
+    const fen = model.engine.fen();
+    const arrows = [makeArrow(E2, E4, "green")];
+    model.syncPosition({ fen, managedArrows: arrows });
+    const fn = vi.fn();
+    model.subscribe(fn);
+
+    model.syncPosition({ fen, managedArrows: arrows });
+
+    expect(fn).not.toHaveBeenCalled();
+  });
+
   it("reset restores startpos", () => {
     model.tryMove(E2, E4);
     model.reset();

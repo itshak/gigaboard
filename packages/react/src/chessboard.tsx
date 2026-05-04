@@ -200,13 +200,17 @@ function syncPositionFen(
   game: NonNullable<ChessboardProps["game"]>,
   targetFen: string,
   transition: PositionTransition | null | undefined,
+  managedArrows: ChessboardProps["managedArrows"],
+  preserveUserArrows: boolean | undefined,
   container: HTMLElement | null,
   animation: AnimationOptions | undefined,
   orientation: Orientation,
 ): void {
+  const positionChanged = game.engine.fen() !== targetFen;
   const durationMs = animation?.durationMs ?? DEFAULT_POSITION_SYNC_DURATION_MS;
   const easing = animation?.easing ?? DEFAULT_POSITION_SYNC_EASING;
   const shouldAnimate =
+    positionChanged &&
     transition !== null &&
     transition !== undefined &&
     container !== null &&
@@ -221,7 +225,16 @@ function syncPositionFen(
   }
 
   try {
-    game.load(targetFen);
+    if (managedArrows === undefined) {
+      if (!positionChanged) return;
+      game.load(targetFen);
+    } else {
+      game.syncPosition({
+        fen: targetFen,
+        managedArrows,
+        preserveUserArrows: preserveUserArrows === true,
+      });
+    }
   } catch {
     return;
   }
@@ -251,6 +264,8 @@ export function Chessboard(props: ChessboardProps) {
     fallbackFen,
     positionFen,
     positionTransition = null,
+    managedArrows,
+    preserveUserArrowsOnPositionSync,
     orientation = "white",
     theme = defaultTheme,
     pieces = defaultPieces,
@@ -348,16 +363,26 @@ export function Chessboard(props: ChessboardProps) {
 
   useLayoutEffect(() => {
     if (game === null || positionFen === undefined || positionFen === "") return;
-    if (game.engine.fen() === positionFen) return;
+    if (game.engine.fen() === positionFen && managedArrows === undefined) return;
     syncPositionFen(
       game,
       positionFen,
       positionTransition,
+      managedArrows,
+      preserveUserArrowsOnPositionSync,
       containerRef.current,
       animation,
       orientation,
     );
-  }, [game, positionFen, positionTransition, animation, orientation]);
+  }, [
+    game,
+    positionFen,
+    positionTransition,
+    managedArrows,
+    preserveUserArrowsOnPositionSync,
+    animation,
+    orientation,
+  ]);
 
   // Merge user-provided arrow colours with defaults. Memoised against
   // the whole `arrowColors` reference so consumers who pass a stable

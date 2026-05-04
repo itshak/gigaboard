@@ -6,7 +6,14 @@
  * their respective modules; this file is types-only.
  */
 
-import type { BoardCell, BoardModel, PackedMove, PieceType, SquareIndex } from "@ultrachess/core";
+import type {
+  Arrow,
+  BoardCell,
+  BoardModel,
+  PackedMove,
+  PieceType,
+  SquareIndex,
+} from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 
@@ -169,6 +176,23 @@ export interface ChessboardProps {
    * replay where the model is being loaded from external FEN snapshots.
    */
   readonly positionTransition?: PositionTransition | null;
+
+  /**
+   * Application-owned arrows to sync with {@link positionFen}. When supplied,
+   * the board applies the FEN and these managed arrows in one model commit,
+   * avoiding an intermediate "position loaded, arrows cleared" frame.
+   *
+   * Pass `[]` to explicitly clear managed arrows for the current position.
+   * User-drawn arrows remain governed by
+   * {@link preserveUserArrowsOnPositionSync}.
+   */
+  readonly managedArrows?: readonly Arrow[];
+
+  /**
+   * Preserve user-drawn arrows when a controlled {@link positionFen} changes.
+   * Defaults to `false`, matching the existing `load(fen)` behaviour.
+   */
+  readonly preserveUserArrowsOnPositionSync?: boolean;
 
   /** Board orientation (defaults to `"white"`). */
   readonly orientation?: Orientation;
@@ -393,6 +417,11 @@ export interface ChessboardProps {
 
 /** Options forwarded to {@link useChessGame} on first mount. */
 export interface UseChessGameOptions {
-  /** Starting FEN. Defaults to `ultrachess`'s standard starting position. */
+  /**
+   * Initial engine FEN. Defaults to `ultrachess`'s standard starting
+   * position. This is a lifecycle input: changing it disposes the current
+   * model and creates a fresh one. For replay/analysis viewers, keep the
+   * model stable and drive `<Chessboard positionFen={...} />` instead.
+   */
   readonly fen?: string;
 }

@@ -62,6 +62,23 @@ export interface BoardModelOptions {
   readonly freezeSnapshots?: boolean;
 }
 
+/** Options for one coherent controlled-position update. */
+export interface SyncPositionOptions {
+  /** FEN to load into the underlying engine. */
+  readonly fen: string;
+  /**
+   * Managed, application-owned arrows to install with the position. When
+   * omitted, managed arrows are left alone if the FEN is already current
+   * and cleared on a real position load, matching `load(fen)` semantics.
+   */
+  readonly managedArrows?: readonly Arrow[];
+  /**
+   * Preserve user-drawn arrows across a position load. Defaults to `false`
+   * because arrows usually describe the previous position.
+   */
+  readonly preserveUserArrows?: boolean;
+}
+
 /** The orchestrator API consumed by React. */
 export interface BoardModel {
   // ---- Store ----
@@ -85,6 +102,11 @@ export interface BoardModel {
   goto(ply: number): void;
   /** Load a FEN; clears history, redo, arrows, and premoves. */
   load(fen: string): void;
+  /**
+   * Controlled-position sync for analysis/replay viewers. Loads the FEN
+   * and replaces the managed arrow subset in the same snapshot commit.
+   */
+  syncPosition(options: SyncPositionOptions): void;
   /** Reset to the starting position; clears history, redo, arrows, premoves. */
   reset(): void;
 
@@ -381,6 +403,42 @@ export function createBoardModel(
     commitWith(null);
   };
 
+  const syncPosition = ({
+    fen,
+    managedArrows,
+    preserveUserArrows = false,
+  }: SyncPositionOptions): void => {
+    const positionChanged = engine.fen() !== fen;
+
+    if (positionChanged) {
+      engine.load(fen);
+      history.length = 0;
+      redoStack.length = 0;
+      premoveBuffer.clear();
+      if (preserveUserArrows) {
+        if (managedArrows !== undefined) {
+          arrowModel.setManaged(managedArrows);
+        }
+      } else {
+        arrowModel.clear();
+        if (managedArrows !== undefined) {
+          arrowModel.setManaged(managedArrows);
+        }
+      }
+      selected = null;
+      lastMove = null;
+      legalMoveIndex.clear();
+      commitWith(null);
+      return;
+    }
+
+    if (managedArrows === undefined) {
+      return;
+    }
+    arrowModel.setManaged(managedArrows);
+    if (arrowModel.lastChanged) commitWith(null);
+  };
+
   const reset = (): void => {
     engine.reset();
     history.length = 0;
@@ -504,6 +562,7 @@ export function createBoardModel(
     redo,
     goto,
     load,
+    syncPosition,
     reset,
 
     isLegal,
