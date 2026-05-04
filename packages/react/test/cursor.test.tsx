@@ -55,7 +55,7 @@ describe("cursor controller", () => {
     expect(boardContainer().dataset["ucrPremove"]).toBeUndefined();
   });
 
-  it("writes `data-ucr-premove=\"true\"` on the container when `allowPremove` is true", () => {
+  it('writes `data-ucr-premove="true"` on the container when `allowPremove` is true', () => {
     renderBoard(model, { allowPremove: true });
     expect(boardContainer().dataset["ucrTurn"]).toBe("white");
     expect(boardContainer().dataset["ucrPremove"]).toBe("true");

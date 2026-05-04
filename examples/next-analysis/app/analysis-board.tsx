@@ -109,6 +109,7 @@ function LiveAnalysisBoard({ game }: { readonly game: BoardModel }) {
   const historyPly = useBoardSlice(game, (s) => s.historyPly);
   const historyLength = useBoardSlice(game, (s) => s.historyLength);
   const inCheck = useBoardSlice(game, (s) => s.inCheck);
+  const lastAnalyzedHashRef = useRef<typeof positionHash | null>(null);
 
   const [evalCp, setEvalCp] = useState<number | null>(null);
   const [mateIn, setMateIn] = useState<string | null>(null);
@@ -161,9 +162,12 @@ function LiveAnalysisBoard({ game }: { readonly game: BoardModel }) {
     const engine = engineRef.current;
     if (!engine) return;
     if (isGameOver) {
+      lastAnalyzedHashRef.current = positionHash;
       engine.stop();
       return;
     }
+    if (lastAnalyzedHashRef.current === positionHash) return;
+    lastAnalyzedHashRef.current = positionHash;
     setBestLine("");
     setDepth(0);
     engine.evaluatePosition(game.engine.fen(), SEARCH_DEPTH);

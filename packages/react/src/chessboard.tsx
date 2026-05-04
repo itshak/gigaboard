@@ -14,7 +14,15 @@
  */
 
 import type { BoardCell, PieceType, SquareIndex } from "@ultrachess/core";
-import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ArrowsLayer, type ArrowsLayerHandle } from "./components/arrows-layer.js";
 import { BoardGrid } from "./components/board-grid.js";
 import { CheckLayer } from "./components/check-layer.js";
@@ -28,7 +36,6 @@ import { PromotionOverlay } from "./components/promotion-overlay.js";
 import { StaticPieceLayer } from "./components/static-piece-layer.js";
 import { defaultArrowColors, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
-import { getSquareAtPoint } from "./lib/geometry.js";
 import { AnimationRunner } from "./hooks/use-animation.js";
 import { useArrowGesture } from "./hooks/use-arrow-gesture.js";
 import { useClickToMove } from "./hooks/use-click-to-move.js";
@@ -39,8 +46,16 @@ import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
+import { getSquareAtPoint } from "./lib/geometry.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
-import type { ArrowColors, ChessboardProps, ResolvedArrowPalette } from "./types.js";
+import type {
+  AnimationOptions,
+  ArrowColors,
+  ChessboardProps,
+  Orientation,
+  PositionTransition,
+  ResolvedArrowPalette,
+} from "./types.js";
 
 /** Internal record describing a pending promotion. */
 interface PendingPromotion {
@@ -68,6 +83,154 @@ function movePromotesPawn(fromCell: number, to: SquareIndex): boolean {
 /** Flash duration — must outlive the WAAPI animation in IllegalFlashLayer. */
 const ILLEGAL_FLASH_HOLD_MS = 320;
 
+const DEFAULT_POSITION_SYNC_DURATION_MS = 60;
+const DEFAULT_POSITION_SYNC_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+const UCI_TRANSITION_RE = /^([a-h][1-8])([a-h][1-8])([nbrq])?$/i;
+
+interface SquareTransition {
+  readonly from: string;
+  readonly to: string;
+}
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function cancelElementAnimations(element: HTMLElement): void {
+  if (typeof element.getAnimations !== "function") return;
+  for (const anim of element.getAnimations()) anim.cancel();
+}
+
+function queryPieceAt(container: HTMLElement, square: string): HTMLElement | null {
+  return container.querySelector<HTMLElement>(`[data-piece-square="${square}"]`);
+}
+
+function squareIndexOfName(square: string): SquareIndex {
+  const file = square.charCodeAt(0) - 0x61;
+  const rank = Number(square[1]) - 1;
+  return ((rank << 3) | file) as SquareIndex;
+}
+
+function deltaFromSquareNames(
+  from: string,
+  to: string,
+  squareSize: number,
+  orientation: Orientation,
+): { dx: number; dy: number } {
+  const fromIndex = squareIndexOfName(from);
+  const toIndex = squareIndexOfName(to);
+  const fromFile = fromIndex & 7;
+  const fromRank = fromIndex >> 3;
+  const toFile = toIndex & 7;
+  const toRank = toIndex >> 3;
+  const fromCol = orientation === "white" ? fromFile : 7 - fromFile;
+  const fromRow = orientation === "white" ? 7 - fromRank : fromRank;
+  const toCol = orientation === "white" ? toFile : 7 - toFile;
+  const toRow = orientation === "white" ? 7 - toRank : toRank;
+  return {
+    dx: (fromCol - toCol) * squareSize,
+    dy: (fromRow - toRow) * squareSize,
+  };
+}
+
+function castleRookTransition(from: string, to: string): SquareTransition | null {
+  const fromFile = from.charCodeAt(0);
+  const toFile = to.charCodeAt(0);
+  if (fromFile !== 0x65 /* e */ || Math.abs(toFile - fromFile) !== 2) return null;
+  const rank = from[1];
+  if (rank !== "1" && rank !== "8") return null;
+  const kingSide = toFile > fromFile;
+  return {
+    from: `${kingSide ? "h" : "a"}${rank}`,
+    to: `${kingSide ? "f" : "d"}${rank}`,
+  };
+}
+
+function transitionSquares(transition: PositionTransition): SquareTransition[] {
+  const parsed = UCI_TRANSITION_RE.exec(transition.uci.trim().toLowerCase());
+  if (parsed === null) return [];
+
+  const moveFrom = parsed[1] ?? "";
+  const moveTo = parsed[2] ?? "";
+  const forward: SquareTransition[] = [{ from: moveFrom, to: moveTo }];
+  const rook = castleRookTransition(moveFrom, moveTo);
+  if (rook !== null) forward.push(rook);
+
+  return transition.direction === "forward"
+    ? forward
+    : forward.map((item) => ({ from: item.to, to: item.from }));
+}
+
+function schedulePositionAnimation(
+  container: HTMLElement,
+  transitions: readonly SquareTransition[],
+  options: Required<AnimationOptions>,
+  orientation: Orientation,
+): void {
+  const animate = (): void => {
+    const rect = container.getBoundingClientRect();
+    const squareSize = rect.width / 8;
+    if (squareSize <= 0) return;
+
+    for (const item of transitions) {
+      const piece = queryPieceAt(container, item.to);
+      if (piece === null || typeof piece.animate !== "function") continue;
+      const { dx, dy } = deltaFromSquareNames(item.from, item.to, squareSize, orientation);
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+
+      cancelElementAnimations(piece);
+      piece.animate(
+        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "translate(0, 0)" }],
+        { duration: options.durationMs, easing: options.easing, fill: "none" },
+      );
+    }
+  };
+
+  if (typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(animate);
+  } else {
+    window.setTimeout(animate, 0);
+  }
+}
+
+function syncPositionFen(
+  game: NonNullable<ChessboardProps["game"]>,
+  targetFen: string,
+  transition: PositionTransition | null | undefined,
+  container: HTMLElement | null,
+  animation: AnimationOptions | undefined,
+  orientation: Orientation,
+): void {
+  const durationMs = animation?.durationMs ?? DEFAULT_POSITION_SYNC_DURATION_MS;
+  const easing = animation?.easing ?? DEFAULT_POSITION_SYNC_EASING;
+  const shouldAnimate =
+    transition !== null &&
+    transition !== undefined &&
+    container !== null &&
+    durationMs > 0 &&
+    !prefersReducedMotion();
+
+  const transitions: SquareTransition[] = [];
+  if (shouldAnimate) {
+    for (const item of transitionSquares(transition)) {
+      if (queryPieceAt(container, item.from) !== null) transitions.push(item);
+    }
+  }
+
+  try {
+    game.load(targetFen);
+  } catch {
+    return;
+  }
+
+  if (transitions.length > 0 && container !== null) {
+    schedulePositionAnimation(container, transitions, { durationMs, easing }, orientation);
+  }
+}
+
 /**
  * Interactive chess board.
  *
@@ -86,6 +249,8 @@ export function Chessboard(props: ChessboardProps) {
   const {
     game,
     fallbackFen,
+    positionFen,
+    positionTransition = null,
     orientation = "white",
     theme = defaultTheme,
     pieces = defaultPieces,
@@ -180,6 +345,19 @@ export function Chessboard(props: ChessboardProps) {
     onMoveRef.current = onMove;
     onPromoteRef.current = onPromote;
   });
+
+  useLayoutEffect(() => {
+    if (game === null || positionFen === undefined || positionFen === "") return;
+    if (game.engine.fen() === positionFen) return;
+    syncPositionFen(
+      game,
+      positionFen,
+      positionTransition,
+      containerRef.current,
+      animation,
+      orientation,
+    );
+  }, [game, positionFen, positionTransition, animation, orientation]);
 
   // Merge user-provided arrow colours with defaults. Memoised against
   // the whole `arrowColors` reference so consumers who pass a stable
@@ -580,7 +758,6 @@ export function Chessboard(props: ChessboardProps) {
   // cursor (`grabbing`) is applied by the sibling `data-ucr-dragging`
   // attribute toggled from `onDragStart` / `onDragEnd`.
   useCursorController(game, containerRef, dragEnabled, allowPremove);
-
 
   // Memoised runtime so `<AnimationRunner/>`'s effect-deps stay stable
   // across `<Chessboard/>` prop changes unrelated to animation.

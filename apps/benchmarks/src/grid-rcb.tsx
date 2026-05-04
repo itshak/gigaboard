@@ -19,6 +19,7 @@ interface Props {
 
 export function RcbGridApp({ n }: Props) {
   const games = useMemo(() => Array.from({ length: n }, () => new Chess()), [n]);
+  const boardKeys = useMemo(() => Array.from({ length: n }, (_, index) => `rcb-${index}`), [n]);
 
   const readyRef = useRef<{ promise: Promise<void>; resolve: () => void } | null>(null);
   if (readyRef.current === null) {
@@ -47,7 +48,7 @@ export function RcbGridApp({ n }: Props) {
   return (
     <GridShell title={`react-chessboard — Grid ×${n}`} n={n}>
       {games.map((g, i) => (
-        <div key={i} className="grid-cell" data-grid-board="1">
+        <div key={boardKeys[i]} className="grid-cell" data-grid-board="1">
           <Chessboard options={{ position: g.fen(), showAnimations: false }} />
         </div>
       ))}

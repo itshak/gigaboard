@@ -17,8 +17,8 @@
  * given a seed.
  */
 
-import { Chess } from "chess.js";
 import { test } from "@playwright/test";
+import { Chess } from "chess.js";
 import { ALL_LIBRARIES, gotoBoard, type Library, recordScenario, throttleCpu } from "./lib.js";
 
 const TOTAL_PLIES = 500;
@@ -103,10 +103,7 @@ async function measureHeap(
     // Chromium's automatic GC usually runs between idle frames, so this
     // gives us a "stable" reading rather than a transient spike.
     await page.evaluate(
-      () =>
-        new Promise((r) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => r(null))),
-        ),
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))),
     );
     const bytes = await page.evaluate(() => {
       // biome-ignore lint/suspicious/noExplicitAny: non-standard Chromium API
@@ -122,10 +119,7 @@ async function measureHeap(
     const move = moves[i];
     if (move === undefined) break;
     const [from, to] = move;
-    await page.evaluate(
-      ([f, t]) => window.__ucrBench__?.playMove(f, t),
-      [from, to] as const,
-    );
+    await page.evaluate(([f, t]) => window.__ucrBench__?.playMove(f, t), [from, to] as const);
     // Reset the game when we hit a terminal position. Each library's
     // state machine will have rejected the next move if it was past
     // the end; we don't observe that, we just trust the chess.js-

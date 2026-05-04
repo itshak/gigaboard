@@ -31,7 +31,7 @@
  */
 
 import type { AnimDescriptor, BoardModel, SquareIndex } from "@ultrachess/core";
-import { type ReactNode, type RefObject, useLayoutEffect } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
 import type { AnimationOptions, Orientation } from "../types.js";
 import { useBoardSlice } from "./use-board-subscription.js";
 
@@ -234,8 +234,11 @@ export function AnimationRunner({
   // deps below so the effect re-fires on every move; without it, the
   // effect would run once on mount and sit there forever.
   const historyPly = useBoardSlice(model, (s) => s.historyPly);
+  const lastAnimatedPlyRef = useRef<number | null>(null);
 
   useLayoutEffect(() => {
+    if (lastAnimatedPlyRef.current === historyPly) return;
+    lastAnimatedPlyRef.current = historyPly;
     const container = containerRef.current;
     if (container === null) return;
     const descriptors = model.lastAnimations;
@@ -253,8 +256,6 @@ export function AnimationRunner({
     if (effectiveDuration <= 0) return;
 
     runAnimations(descriptors, container, orientation, effectiveDuration, easing);
-    // `historyPly` changes per move and is THE trigger; the rest are
-    // stable-across-renders props kept here for lint correctness.
   }, [historyPly, model, containerRef, orientation, duration, easing, skipNextRef]);
 
   return null;

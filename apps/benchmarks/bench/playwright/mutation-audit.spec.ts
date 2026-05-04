@@ -134,9 +134,7 @@ for (const library of ALL_LIBRARIES) {
       });
 
       await window.__ucrBench__?.playMove("e2", "e4");
-      await new Promise((r) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => r(null))),
-      );
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
       observer.disconnect();
       return { records, total: records.length };
     });
@@ -158,8 +156,5 @@ for (const library of ALL_LIBRARIES) {
 }
 
 test.afterAll(() => {
-  writeFileSync(
-    resolve(outDir, "mutation-audit.json"),
-    `${JSON.stringify(collected, null, 2)}\n`,
-  );
+  writeFileSync(resolve(outDir, "mutation-audit.json"), `${JSON.stringify(collected, null, 2)}\n`);
 });

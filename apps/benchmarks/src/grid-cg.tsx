@@ -11,7 +11,7 @@ import { Chess } from "chess.js";
 import { Chessground } from "chessground";
 import type { Api } from "chessground/api";
 import type { Key } from "chessground/types";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { GridShell } from "./grid-ours.js";
 import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 
@@ -71,6 +71,7 @@ function CgCell() {
 
 export function CgGridApp({ n }: Props) {
   const readyRef = useRef<{ promise: Promise<void>; resolve: () => void } | null>(null);
+  const boardKeys = useMemo(() => Array.from({ length: n }, (_, index) => `cg-${index}`), [n]);
   if (readyRef.current === null) {
     let resolve!: () => void;
     const promise = new Promise<void>((r) => {
@@ -96,8 +97,8 @@ export function CgGridApp({ n }: Props) {
 
   return (
     <GridShell title={`chessground (lichess) — Grid ×${n}`} n={n}>
-      {Array.from({ length: n }, (_, i) => (
-        <CgCell key={i} />
+      {boardKeys.map((key) => (
+        <CgCell key={key} />
       ))}
     </GridShell>
   );

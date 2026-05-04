@@ -9,6 +9,7 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { BoardModel, SquareIndex } from "@ultrachess/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Chessboard } from "../src/chessboard.js";
 import { installBoardGeometry, makeBoardModel, renderBoard } from "./helpers.js";
 
 /**
@@ -175,6 +176,55 @@ describe("useAnimation", () => {
     });
     const dst = document.querySelector<HTMLElement>('[data-piece-square="e4"]');
     expect(calls.find((c) => c.element === dst)).toBeDefined();
+  });
+
+  it("animates controlled positionFen replay transitions without firing onMove", async () => {
+    const afterE4Fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+    const onMove = vi.fn();
+    const { rerender } = renderBoard(model, {
+      positionFen: model.engine.fen(),
+      onMove,
+    });
+
+    calls.length = 0;
+    rerender(
+      <Chessboard
+        game={model}
+        onMove={onMove}
+        positionFen={afterE4Fen}
+        positionTransition={{ uci: "e2e4", direction: "forward", key: "0:1" }}
+      />,
+    );
+
+    await waitFor(() => {
+      const dst = document.querySelector<HTMLElement>('[data-piece-square="e4"]');
+      expect(dst).not.toBeNull();
+      expect(calls.find((c) => c.element === dst)).toBeDefined();
+    });
+    expect(model.engine.fen()).toBe(afterE4Fen);
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
+  it("animates controlled positionFen rewind transitions", async () => {
+    const startingFen = model.engine.fen();
+    const afterE4Fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+    model.load(afterE4Fen);
+    const { rerender } = renderBoard(model, { positionFen: afterE4Fen });
+
+    calls.length = 0;
+    rerender(
+      <Chessboard
+        game={model}
+        positionFen={startingFen}
+        positionTransition={{ uci: "e2e4", direction: "backward", key: "1:0" }}
+      />,
+    );
+
+    await waitFor(() => {
+      const dst = document.querySelector<HTMLElement>('[data-piece-square="e2"]');
+      expect(dst).not.toBeNull();
+      expect(calls.find((c) => c.element === dst)).toBeDefined();
+    });
   });
 });
 

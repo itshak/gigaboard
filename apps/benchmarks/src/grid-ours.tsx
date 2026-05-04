@@ -32,7 +32,7 @@ import {
 import { neo } from "@ultrachess/pieces/neo";
 import { Chessboard } from "@ultrachess/react";
 import { green } from "@ultrachess/themes/green";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 
 /** Local copy — see note in `app.tsx` for why we don't import from `ultrachess`. */
@@ -44,6 +44,7 @@ interface Props {
 
 export function GridApp({ n }: Props) {
   const [models, setModels] = useState<readonly BoardModel[] | null>(null);
+  const boardKeys = useMemo(() => Array.from({ length: n }, (_, index) => `ours-${index}`), [n]);
 
   // `ready` resolves once the interactive engines are wired up (and thus
   // the interactive piece layer has replaced the static fallback). Kept
@@ -118,8 +119,8 @@ export function GridApp({ n }: Props) {
 
   return (
     <GridShell title={`Ultra Chess React — Grid ×${n}`} n={n}>
-      {Array.from({ length: n }, (_, i) => (
-        <div key={i} className="grid-cell" data-grid-board="1">
+      {boardKeys.map((key, i) => (
+        <div key={key} className="grid-cell" data-grid-board="1">
           <Chessboard
             game={models?.[i] ?? null}
             fallbackFen={STARTING_FEN}

@@ -320,7 +320,6 @@ export function installObservers(): {
     snapshot(): BenchMetrics {
       const deltas: number[] = [];
       for (let i = 1; i < state.frameTimestamps.length; i++) {
-        // biome-ignore lint/style/noNonNullAssertion: bounds-checked above
         const delta = state.frameTimestamps[i]! - state.frameTimestamps[i - 1]!;
         deltas.push(delta);
       }

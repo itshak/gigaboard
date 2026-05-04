@@ -164,11 +164,12 @@ export function StaticChessboard(props: StaticChessboardProps): ReactNode {
           const cell = board[i] as BoardCell;
           if (cell === 0) return null;
           const idx = i as SquareIndex;
+          const square = algebraicOf(idx);
           const { x, y } = positionOf(idx, orientation);
           return (
             <div
-              key={i}
-              data-piece-square={algebraicOf(idx)}
+              key={square}
+              data-piece-square={square}
               data-piece-cell={cell}
               style={{
                 position: "absolute",

@@ -29,13 +29,7 @@
  */
 
 import { test } from "@playwright/test";
-import {
-  ALL_LIBRARIES,
-  gotoBoard,
-  type Library,
-  recordScenario,
-  throttleCpu,
-} from "./lib.js";
+import { ALL_LIBRARIES, gotoBoard, type Library, recordScenario, throttleCpu } from "./lib.js";
 import { GAME_40 } from "./tours.js";
 
 interface InpMetrics {
@@ -114,14 +108,8 @@ async function measureInp(
   await installInpProbe(page);
 
   for (const [from, to] of GAME_40) {
-    const src = await page.evaluate(
-      (sq) => window.__ucrBench__?.squareCentre(sq) ?? null,
-      from,
-    );
-    const dst = await page.evaluate(
-      (sq) => window.__ucrBench__?.squareCentre(sq) ?? null,
-      to,
-    );
+    const src = await page.evaluate((sq) => window.__ucrBench__?.squareCentre(sq) ?? null, from);
+    const dst = await page.evaluate((sq) => window.__ucrBench__?.squareCentre(sq) ?? null, to);
     if (src === null || dst === null) {
       throw new Error(`${library}: missing square centre for ${from}→${to}`);
     }

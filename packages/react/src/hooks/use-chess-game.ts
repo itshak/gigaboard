@@ -36,6 +36,7 @@ export function useChessGame(
   const { fen, ...modelOptions } = options;
 
   const [model, setModel] = useState<BoardModel | null>(null);
+  const [initialModelOptions] = useState<BoardModelOptions>(() => modelOptions);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,7 +51,7 @@ export function useChessGame(
         adapter.dispose();
         return;
       }
-      active = createBoardModel(adapter, modelOptions);
+      active = createBoardModel(adapter, initialModelOptions);
       setModel(active);
     })().catch((err) => {
       // Surface the init failure to a boundary — don't swallow.
@@ -65,18 +66,7 @@ export function useChessGame(
       // downstream memoisation keyed on `model` invalidates cleanly.
       setModel(null);
     };
-    // `fen` is the only field that should trigger a full re-init. Model
-    // options that change over a session are applied through the model's
-    // own methods, not by tearing it down.
-    //
-    // `modelOptions` is INTENTIONALLY omitted — rest-destructuring
-    // reallocates it every render, and including it would rebuild the
-    // engine on every render (infinite loop: setModel → re-render →
-    // fresh modelOptions identity → cleanup → setModel(null) → re-render
-    // → …). A biome `--unsafe` autofix briefly added it here in M7;
-    // that was a correctness regression, not an improvement.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: stable-by-contract
-  }, [fen]);
+  }, [fen, initialModelOptions]);
 
   return model;
 }

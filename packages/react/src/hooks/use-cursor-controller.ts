@@ -189,4 +189,3 @@ export function useCursorController(
     };
   }, [model, containerRef, allowDrag, allowPremove]);
 }
-

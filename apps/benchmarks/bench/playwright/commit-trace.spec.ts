@@ -94,7 +94,13 @@ async function installHud(page: Page, library: Library): Promise<void> {
     const mutEl = hud.querySelector<HTMLElement>("#hud-mut-n");
     if (libEl) libEl.textContent = lib.toUpperCase();
     w.__ucrCommitHud__ = {
-      set(patch: { move?: number; total?: number; from?: string; to?: string; mut?: number }): void {
+      set(patch: {
+        move?: number;
+        total?: number;
+        from?: string;
+        to?: string;
+        mut?: number;
+      }): void {
         if (moveEl && patch.move !== undefined && patch.total !== undefined) {
           moveEl.textContent = `MOVE ${patch.move} / ${patch.total}`;
         }

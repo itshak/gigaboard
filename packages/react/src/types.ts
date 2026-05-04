@@ -69,6 +69,24 @@ export interface AnimationOptions {
 }
 
 /**
+ * Hint for animating an externally-controlled FEN change.
+ *
+ * `uci` is the move that connects the old and new positions. `direction`
+ * says whether the board is replaying that move or rewinding it. `key`
+ * can be supplied by callers that replay the same UCI more than once in a
+ * line; when omitted, the current `positionFen` still participates in the
+ * effect identity.
+ */
+export interface PositionTransition {
+  /** UCI move such as `"e2e4"`, `"e7e8q"`, or castling as `"e1g1"`. */
+  readonly uci: string;
+  /** Direction of travel for replay controls. */
+  readonly direction: "forward" | "backward";
+  /** Optional stable identity for this specific transition. */
+  readonly key?: string;
+}
+
+/**
  * CSS colour strings for the four stock right-click-arrow channels
  * plus any number of user-defined brushes. Modifier keys still map to
  * the built-in channels at draw time:
@@ -131,6 +149,26 @@ export interface ChessboardProps {
    * streaming compile).
    */
   readonly fallbackFen?: string;
+
+  /**
+   * Declarative FEN for controlled boards and replay/analysis viewers.
+   *
+   * When supplied, `<Chessboard/>` keeps the provided {@link game} synced
+   * to this FEN by calling `game.load(positionFen)` internally. This is a
+   * programmatic position sync, so it does not call {@link onMove}; user
+   * moves still go through `tryMove` and fire `onMove` normally.
+   *
+   * For adjacent replay steps, pass {@link positionTransition} so the board
+   * can glide the moved piece instead of snapping between FENs.
+   */
+  readonly positionFen?: string;
+
+  /**
+   * Optional move hint used to animate a `positionFen` sync. Consumers should
+   * pass this for previous/next buttons, PGN scrubbing, and analysis-line
+   * replay where the model is being loaded from external FEN snapshots.
+   */
+  readonly positionTransition?: PositionTransition | null;
 
   /** Board orientation (defaults to `"white"`). */
   readonly orientation?: Orientation;

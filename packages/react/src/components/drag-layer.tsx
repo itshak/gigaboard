@@ -110,7 +110,6 @@ export const DragLayer = forwardRef<DragLayerHandle, DragLayerProps>(function Dr
       const child = pieces({ cell: cell as BoardCell, square: 0 as never });
       nodes.push(
         <div
-          // biome-ignore lint/suspicious/noArrayIndexKey: stable 1..12 mapping
           key={cell}
           ref={(el) => {
             slotRefs.current[cell] = el;

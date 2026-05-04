@@ -51,6 +51,7 @@ export type {
   LegalTargetStyle,
   Orientation,
   PieceRenderer,
+  PositionTransition,
   PromotionContext,
   RanksPosition,
   ResolvedArrowPalette,

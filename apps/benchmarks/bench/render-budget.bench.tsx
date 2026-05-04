@@ -271,9 +271,9 @@ describe("render-budget bench — UltraChessReact vs react-chessboard", () => {
     const outPath = resolve(resultsDir, "render.json");
     writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
 
-    // Surface a readable log in the test output.
-    console.log("\n\nrender-budget results (40-ply game replay):");
-    console.log(JSON.stringify(report, null, 2));
+    process.stdout.write(
+      `\n\nrender-budget results (40-ply game replay):\n${JSON.stringify(report, null, 2)}\n`,
+    );
 
     // Light assertions so CI fails loudly on regressions.
     expect(report.play.ultra.commitsPerMove).toBeLessThanOrEqual(8);
