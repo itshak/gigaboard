@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.2...react-v1.1.3) (2026-05-04)
+
+
+### Bug Fixes
+
+* added positionFen and positionTransition ([b8c2b96](https://github.com/yahorbarkouski/ultrachess-react/commit/b8c2b96c2ca23a58eab2aeb9ab04c9c293c1016d))
+
 ## [1.1.2](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.1...react-v1.1.2) (2026-05-02)
 
 

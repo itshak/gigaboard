@@ -1,6 +1,6 @@
 {
   "packages/core": "1.1.2",
-  "packages/react": "1.1.2",
+  "packages/react": "1.1.3",
   "packages/pieces": "1.1.1",
   "packages/themes": "1.1.1"
 }
