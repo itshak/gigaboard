@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/yahorbarkouski/ultrachess-react/compare/core-v1.1.2...core-v1.1.3) (2026-05-04)
+
+
+### Bug Fixes
+
+* optimize controlled analysis board updates ([cfb52bd](https://github.com/yahorbarkouski/ultrachess-react/commit/cfb52bd910104f0a45c00f9f350684d6e9642811))
+
 ## [1.1.2](https://github.com/yahorbarkouski/ultrachess-react/compare/core-v1.1.1...core-v1.1.2) (2026-05-02)
 
 
