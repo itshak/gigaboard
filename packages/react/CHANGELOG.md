@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.5](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.4...react-v1.1.5) (2026-05-04)
+
+
+### Bug Fixes
+
+* format controlled board memo wrapper ([9286bb0](https://github.com/yahorbarkouski/ultrachess-react/commit/9286bb01eae3eed5ad1dc9360055ebc190d69e85))
+* optimize controlled analysis board updates ([cfb52bd](https://github.com/yahorbarkouski/ultrachess-react/commit/cfb52bd910104f0a45c00f9f350684d6e9642811))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @ultrachess/core bumped from 1.1.2 to 1.1.3
+
 ## [1.1.4](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.3...react-v1.1.4) (2026-05-04)
 
 
