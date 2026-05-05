@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.5...react-v1.1.6) (2026-05-05)
+
+
+### Bug Fixes
+
+* render knight arrows as bent paths ([bc99efc](https://github.com/yahorbarkouski/ultrachess-react/commit/bc99efcc9a0ee0d3094ee195827c38cc4c720478))
+
 ## [1.1.5](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.4...react-v1.1.5) (2026-05-04)
 
 
