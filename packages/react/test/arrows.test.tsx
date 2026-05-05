@@ -9,8 +9,8 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type BoardModel, makeArrow, type SquareIndex } from "@ultrachess/core";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   installBoardGeometry,
   makeBoardModel,
@@ -21,6 +21,41 @@ import {
 
 function container(): HTMLElement {
   return screen.getByRole("grid").parentElement as HTMLElement;
+}
+
+interface CanvasCall {
+  readonly method: string;
+  readonly args: readonly number[];
+}
+
+function installCanvasRecorder(calls: CanvasCall[]): () => void {
+  const original = HTMLCanvasElement.prototype.getContext;
+  const context = {
+    setTransform: (...args: number[]) => calls.push({ method: "setTransform", args }),
+    clearRect: (...args: number[]) => calls.push({ method: "clearRect", args }),
+    beginPath: () => calls.push({ method: "beginPath", args: [] }),
+    moveTo: (x: number, y: number) => calls.push({ method: "moveTo", args: [x, y] }),
+    lineTo: (x: number, y: number) => calls.push({ method: "lineTo", args: [x, y] }),
+    stroke: () => calls.push({ method: "stroke", args: [] }),
+    arc: (...args: number[]) => calls.push({ method: "arc", args }),
+    closePath: () => calls.push({ method: "closePath", args: [] }),
+    fill: () => calls.push({ method: "fill", args: [] }),
+  } as unknown as CanvasRenderingContext2D;
+
+  HTMLCanvasElement.prototype.getContext = vi.fn(() => context) as unknown as typeof original;
+  return () => {
+    HTMLCanvasElement.prototype.getContext = original;
+  };
+}
+
+function firstStrokePath(calls: readonly CanvasCall[]): readonly CanvasCall[] {
+  const firstMove = calls.findIndex((call) => call.method === "moveTo");
+  const firstStroke = calls.findIndex(
+    (call, index) => index > firstMove && call.method === "stroke",
+  );
+  expect(firstMove).toBeGreaterThanOrEqual(0);
+  expect(firstStroke).toBeGreaterThan(firstMove);
+  return calls.slice(firstMove, firstStroke + 1);
 }
 
 describe("arrow gesture", () => {
@@ -170,6 +205,43 @@ describe("arrow gesture", () => {
     const layer = document.querySelector('[data-layer="arrows"]');
     expect(layer).not.toBeNull();
     expect(layer?.tagName).toBe("CANVAS");
+  });
+
+  it("renders knight arrows as a bent Russian-G path", () => {
+    const calls: CanvasCall[] = [];
+    const restoreCanvas = installCanvasRecorder(calls);
+    try {
+      model.addArrow(makeArrow(21 as SquareIndex, 36 as SquareIndex, "rgba(255, 120, 170, 0.62)"));
+
+      renderBoard(model);
+
+      expect(firstStrokePath(calls)).toEqual([
+        { method: "moveTo", args: [275, 261] },
+        { method: "lineTo", args: [275, 175] },
+        { method: "lineTo", args: [247, 175] },
+        { method: "stroke", args: [] },
+      ]);
+    } finally {
+      restoreCanvas();
+    }
+  });
+
+  it("stops straight arrow shafts at the arrowhead base", () => {
+    const calls: CanvasCall[] = [];
+    const restoreCanvas = installCanvasRecorder(calls);
+    try {
+      model.addArrow(makeArrow(0 as SquareIndex, 4 as SquareIndex, "rgba(120, 200, 235, 0.72)"));
+
+      renderBoard(model);
+
+      expect(firstStrokePath(calls)).toEqual([
+        { method: "moveTo", args: [39, 375] },
+        { method: "lineTo", args: [203, 375] },
+        { method: "stroke", args: [] },
+      ]);
+    } finally {
+      restoreCanvas();
+    }
   });
 
   it("a left-click on any square wipes existing arrows", () => {

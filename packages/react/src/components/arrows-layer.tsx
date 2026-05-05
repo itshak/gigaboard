@@ -41,11 +41,14 @@
  *
  * ### Arrow drawing
  *
- * A straight line from the source-square centre to just inside the
- * target square, followed by a filled triangular head. `from === to`
- * is a special case: rendered as a stroked circle at the centre of
- * the square — the convention the right-click gesture uses for
- * "mark this square".
+ * A normal move uses a straight shaft from the source-square centre to
+ * the target square. A knight move uses a bent, Russian Г-shaped shaft:
+ * first along the two-square axis, then along the one-square axis. In
+ * both cases the shaft stops at the arrowhead base so translucent
+ * arrows do not darken where the shaft and head meet. `from === to` is
+ * a special case: rendered as a stroked circle at the centre of the
+ * square — the convention the right-click gesture uses for "mark this
+ * square".
  */
 
 import type { Arrow, BoardModel } from "@ultrachess/core";
@@ -105,6 +108,75 @@ function squareCentrePct(index: number, orientation: Orientation): { cx: number;
   return { cx: col * 12.5 + 6.25, cy: row * 12.5 + 6.25 };
 }
 
+/** A point in board-local CSS-pixel coordinates. */
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** Geometry needed to paint a shaft and head without translucent self-overlap. */
+interface ArrowPath {
+  readonly start: Point;
+  readonly corner: Point | null;
+  readonly shaftEnd: Point;
+  readonly tip: Point;
+  readonly finalUnit: Point;
+}
+
+/** Does the square pair describe a knight's L-shaped move? */
+function isKnightMove(fromIndex: number, toIndex: number): boolean {
+  const fileDelta = Math.abs((toIndex & 7) - (fromIndex & 7));
+  const rankDelta = Math.abs((toIndex >> 3) - (fromIndex >> 3));
+  return (fileDelta === 1 && rankDelta === 2) || (fileDelta === 2 && rankDelta === 1);
+}
+
+function unitVector(from: Point, to: Point): Point | null {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy);
+  if (len === 0) return null;
+  return { x: dx / len, y: dy / len };
+}
+
+function arrowPath(
+  fromIndex: number,
+  toIndex: number,
+  start: Point,
+  end: Point,
+  startOffset: number,
+  tipOffset: number,
+  headLength: number,
+): ArrowPath | null {
+  if (!isKnightMove(fromIndex, toIndex)) {
+    const unit = unitVector(start, end);
+    if (unit === null) return null;
+    const tip = { x: end.x - unit.x * tipOffset, y: end.y - unit.y * tipOffset };
+    return {
+      start: { x: start.x + unit.x * startOffset, y: start.y + unit.y * startOffset },
+      corner: null,
+      shaftEnd: { x: tip.x - unit.x * headLength, y: tip.y - unit.y * headLength },
+      tip,
+      finalUnit: unit,
+    };
+  }
+
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const corner = Math.abs(dx) > Math.abs(dy) ? { x: end.x, y: start.y } : { x: start.x, y: end.y };
+  const firstUnit = unitVector(start, corner);
+  const finalUnit = unitVector(corner, end);
+  if (firstUnit === null || finalUnit === null) return null;
+
+  const tip = { x: end.x - finalUnit.x * tipOffset, y: end.y - finalUnit.y * tipOffset };
+  return {
+    start: { x: start.x + firstUnit.x * startOffset, y: start.y + firstUnit.y * startOffset },
+    corner,
+    shaftEnd: { x: tip.x - finalUnit.x * headLength, y: tip.y - finalUnit.y * headLength },
+    tip,
+    finalUnit,
+  };
+}
+
 /* ======================================================= draw primitives */
 
 /** Resolve the final colour for an arrow given an optional palette. */
@@ -129,60 +201,46 @@ function drawArrow(
   const a = squareCentrePct(fromIndex, orientation);
   const b = squareCentrePct(toIndex, orientation);
   const boardSize = sqSize * 8;
-  const x1 = (a.cx / 100) * boardSize;
-  const y1 = (a.cy / 100) * boardSize;
-  const x2 = (b.cx / 100) * boardSize;
-  const y2 = (b.cy / 100) * boardSize;
+  const start = { x: (a.cx / 100) * boardSize, y: (a.cy / 100) * boardSize };
+  const end = { x: (b.cx / 100) * boardSize, y: (b.cy / 100) * boardSize };
 
   if (fromIndex === toIndex) {
     ctx.strokeStyle = color;
     ctx.lineWidth = sqSize * 0.08;
     ctx.globalAlpha = preview ? 0.65 : 1;
     ctx.beginPath();
-    ctx.arc(x1, y1, sqSize * 0.44, 0, Math.PI * 2);
+    ctx.arc(start.x, start.y, sqSize * 0.44, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha = 1;
     return;
   }
 
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.hypot(dx, dy);
-  if (len === 0) return;
-  const ux = dx / len;
-  const uy = dy / len;
   const startOffset = sqSize * 0.28;
   const tipOffset = sqSize * 0.08;
-  const xStart = x1 + ux * startOffset;
-  const yStart = y1 + uy * startOffset;
-  const xTip = x2 - ux * tipOffset;
-  const yTip = y2 - uy * tipOffset;
-
   const headLength = sqSize * 0.36;
   const headHalfWidth = sqSize * 0.28;
   const shaftWidth = sqSize * 0.18;
-
-  const xe = xTip - ux * headLength * 0.85;
-  const ye = yTip - uy * headLength * 0.85;
+  const path = arrowPath(fromIndex, toIndex, start, end, startOffset, tipOffset, headLength);
+  if (path === null) return;
 
   ctx.globalAlpha = preview ? 0.65 : 1;
   ctx.strokeStyle = color;
   ctx.lineWidth = shaftWidth;
   ctx.lineCap = "butt";
+  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(xStart, yStart);
-  ctx.lineTo(xe, ye);
+  ctx.moveTo(path.start.x, path.start.y);
+  if (path.corner !== null) ctx.lineTo(path.corner.x, path.corner.y);
+  ctx.lineTo(path.shaftEnd.x, path.shaftEnd.y);
   ctx.stroke();
 
-  const perpX = -uy;
-  const perpY = ux;
-  const baseX = xTip - ux * headLength;
-  const baseY = yTip - uy * headLength;
+  const perpX = -path.finalUnit.y;
+  const perpY = path.finalUnit.x;
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(xTip, yTip);
-  ctx.lineTo(baseX + perpX * headHalfWidth, baseY + perpY * headHalfWidth);
-  ctx.lineTo(baseX - perpX * headHalfWidth, baseY - perpY * headHalfWidth);
+  ctx.moveTo(path.tip.x, path.tip.y);
+  ctx.lineTo(path.shaftEnd.x + perpX * headHalfWidth, path.shaftEnd.y + perpY * headHalfWidth);
+  ctx.lineTo(path.shaftEnd.x - perpX * headHalfWidth, path.shaftEnd.y - perpY * headHalfWidth);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
