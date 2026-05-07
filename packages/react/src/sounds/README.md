@@ -27,10 +27,12 @@ just a URL map plus a pool.
 
 ## Build plumbing
 
-- `tsup.config.ts` sets `loader: { ".mp3": "file" }` so esbuild copies each
-  referenced MP3 into `dist/` with a hashed name and replaces the
-  `import x from "./sounds/...mp3"` call with the emitted URL string.
-- `assets.d.ts` gives TypeScript a `string` type for those imports.
+- `useMoveSound` references these files with static
+  `new URL("./sounds/<key>.mp3", import.meta.url)` expressions. Consumer
+  bundlers can then rebase or emit the assets into the app build instead of
+  leaving page-relative URLs behind.
+- The package `build` script copies `src/sounds/*.mp3` into `dist/sounds/`
+  so direct ESM consumers can resolve the same URLs without a CDN.
 - `useMoveSound` creates the `Audio` pool lazily on first playback, so merely
   mounting a board with sound enabled does not create audio elements or start
   audio preloading.

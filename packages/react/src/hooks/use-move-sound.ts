@@ -30,13 +30,6 @@
 import type { BoardModel } from "@ultrachess/core";
 import { useCallback, useEffect, useRef } from "react";
 import { classifyMoveFeedback, type MoveFeedbackKey } from "../lib/move-feedback.js";
-import captureUrl from "../sounds/capture.mp3";
-import castleUrl from "../sounds/castle.mp3";
-import gameEndUrl from "../sounds/game-end.mp3";
-import moveCheckUrl from "../sounds/move-check.mp3";
-import moveOpponentUrl from "../sounds/move-opponent.mp3";
-import moveSelfUrl from "../sounds/move-self.mp3";
-import promoteUrl from "../sounds/promote.mp3";
 
 /** The seven categories of move cue, mirroring chess.com's default set. */
 export type MoveSoundKey = MoveFeedbackKey;
@@ -47,16 +40,42 @@ export type TriggerMoveSound = (key: MoveSoundKey) => void;
 
 /**
  * Default URL map. Points at the MP3 files shipped with this package; the
- * tsup `file` loader rewrites these imports to hashed URLs at build time.
+ * package build copies them next to the emitted JS under `dist/sounds/`.
+ * Keeping these as static `new URL(..., import.meta.url)` expressions lets
+ * consumer bundlers such as Vite and Next.js rebase/copy the files correctly.
+ *
+ * The `typeof import.meta.url` guard keeps the CommonJS build importable in
+ * Node; browser ESM consumers get the fully resolved asset URLs.
  */
 export const DEFAULT_MOVE_SOUND_SOURCES: Readonly<Record<MoveSoundKey, string>> = Object.freeze({
-  moveSelf: moveSelfUrl,
-  moveOpponent: moveOpponentUrl,
-  capture: captureUrl,
-  castle: castleUrl,
-  moveCheck: moveCheckUrl,
-  promote: promoteUrl,
-  gameEnd: gameEndUrl,
+  moveSelf:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/move-self.mp3", import.meta.url).href
+      : "./sounds/move-self.mp3",
+  moveOpponent:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/move-opponent.mp3", import.meta.url).href
+      : "./sounds/move-opponent.mp3",
+  capture:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/capture.mp3", import.meta.url).href
+      : "./sounds/capture.mp3",
+  castle:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/castle.mp3", import.meta.url).href
+      : "./sounds/castle.mp3",
+  moveCheck:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/move-check.mp3", import.meta.url).href
+      : "./sounds/move-check.mp3",
+  promote:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/promote.mp3", import.meta.url).href
+      : "./sounds/promote.mp3",
+  gameEnd:
+    typeof import.meta.url === "string"
+      ? new URL("./sounds/game-end.mp3", import.meta.url).href
+      : "./sounds/game-end.mp3",
 });
 
 /** Public configuration for the hook (and the `<Chessboard sound/>` prop). */

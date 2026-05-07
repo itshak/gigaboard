@@ -78,7 +78,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && mkdir -p dist/sounds && cp src/sounds/*.mp3 dist/sounds/",
     "dev": "tsup --watch",
     "lint": "biome check src test",
     "typecheck": "tsc --noEmit",
