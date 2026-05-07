@@ -15,6 +15,7 @@ import type {
   SquareIndex,
 } from "@ultrachess/core";
 import type { CSSProperties, ReactNode } from "react";
+import type { MoveHapticOptions } from "./hooks/use-move-haptics.js";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 
 /** Which way the board is facing. */
@@ -413,6 +414,16 @@ export interface ChessboardProps {
    * after which playback is immediate.
    */
   readonly sound?: boolean | MoveSoundOptions;
+
+  /**
+   * Move haptic feedback. Pass `true` to enable mobile-only haptics, `false`
+   * (default) to disable, or a {@link MoveHapticOptions} object to configure
+   * per-cue patterns, intensity, viewer perspective, and mobile-only gating.
+   *
+   * Haptics are independent from sound, so consumers can keep `sound={false}`
+   * while still providing tactile feedback on mobile devices.
+   */
+  readonly haptics?: boolean | MoveHapticOptions;
 }
 
 /** Options forwarded to {@link useChessGame} on first mount. */

@@ -8,7 +8,7 @@ Highly opinionated React chessboard for teams that want the board to be an engin
 - State lives in a `BoardModel`, not in component props. The React surface receives a stable `game` handle and subscribes to exactly the slices it renders.
 - The board snapshot is a `Uint8Array(64)`. Each square subscribes to one byte; a normal move touches only the changed squares instead of reconciling the whole board.
 - Hot paths are kept out of React. Drag writes through refs, arrows draw on Canvas 2D, and piece glides run through WAAPI.
-- Product affordances ship as first-class behavior: premoves, ghost overlays, modifier-key arrow colors, bundled move sounds, a polished green default theme, Neo pieces, and orientation changes.
+- Product affordances ship as first-class behavior: premoves, ghost overlays, modifier-key arrow colors, bundled move sounds, optional mobile haptics, a polished green default theme, Neo pieces, and orientation changes.
 - Accessibility is part of the API: WAI-ARIA grid, roving tabindex, keyboard parity for pointer actions, `prefers-reduced-motion`, and axe-clean stories.
 - Server rendering is a real export. `@ultrachess/react/server` emits static board markup with zero client JS and the same DOM shape the interactive board hydrates over.
 - Budgets are explicit: **1 React commit per move**, **0 React work per drag frame**, **< 16 KB gzip** for the interactive surface, and CI gates for size, render count, and frame time.
@@ -113,19 +113,19 @@ The React layer needs verbose moves to decorate legal-target squares; this is wh
 
 | Import                                | Needs `"use client"` | Gzip       | Use when                                                             |
 |---------------------------------------|----------------------|-----------:|----------------------------------------------------------------------|
-| `@ultrachess/react`                   | yes                  |  **15.85 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, viewOnly. |
+| `@ultrachess/react`                   | yes                  |  **19.93 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, haptics, viewOnly. |
 | `@ultrachess/react/server`            | no (RSC)             |   **2.37 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
 | `@ultrachess/core`                    | no                   |   **3.74 KB** | framework-agnostic state + engine adapter; plug into RN, Jazz CRDT. |
 | `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one image-backed piece set; `neo` is the React default. |
 | `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; `green` is the React default.                       |
 
-A typical board-shipping app costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 17.8 KB gzipped**. Every export is `sideEffects: false`; unused alternate pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
+A typical board-shipping app costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 21.9 KB gzipped**. Every export is `sideEffects: false`; unused alternate pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
 
 ---
 
 ## Quick tour
 
-One runnable example hitting every core capability. With no `theme`, `pieces`, or `sound` props, the board renders the green theme, Neo pieces, and built-in move sounds.
+One runnable example hitting every core capability. With no `theme`, `pieces`, or `sound` props, the board renders the green theme, Neo pieces, and built-in move sounds. Sound pools are created lazily on the first move that needs audio; pass `sound={false}` to keep audio fully disabled, and `haptics` to enable mobile-only tactile move feedback independently from audio.
 
 ```tsx
 "use client";
@@ -242,7 +242,8 @@ Signatures are TypeScript. Everything below is exported from `@ultrachess/react`
 | `useClickToMove(game)`                                               | Click-to-select / click-to-drop flow, composable with `useDrag`. |
 | `useKeyboardNav(game)`                                               | Arrow-key focus movement, Enter to pick/drop, Escape to cancel, `P` for promotion. |
 | `useArrowGesture(game, opts)`                                        | Right-click drag → arrow; four modifier-keyed colour channels (default / shift / alt / ctrl). |
-| `useMoveSound(game, opts)`                                           | Wires the seven-cue bank; usable standalone without `<Chessboard/>`. |
+| `useMoveSound(game, opts)`                                           | Wires the seven-cue bank lazily; usable standalone without `<Chessboard/>`. |
+| `useMoveHaptics(game, opts)`                                         | Wires mobile-only tactile feedback for the same move cues, independent from sound. |
 | `AnimationRunner`                                                    | Low-level WAAPI scheduler used by the board; exposed for custom piece layers. |
 
 ### Configuration types
@@ -256,7 +257,8 @@ Signatures are TypeScript. Everything below is exported from `@ultrachess/react`
 | `Orientation`            | `"white" \| "black"`.                                                            |
 | `AnimationOptions`       | `{ durationMs?: number; easing?: string }`.                                      |
 | `ArrowColors`            | Per-channel overrides: `{ default?, shift?, alt?, ctrl? }`.                      |
-| `MoveSoundOptions`       | `{ enabled, volume, sources, viewer }` — the seven cues are `moveSelf`, `moveOpponent`, `capture`, `castle`, `moveCheck`, `promote`, `gameEnd`. |
+| `MoveSoundOptions`       | `{ enabled, volume, preload, sources, perspective }` — the seven cues are `moveSelf`, `moveOpponent`, `capture`, `castle`, `moveCheck`, `promote`, `gameEnd`. |
+| `MoveHapticOptions`      | `{ enabled, patterns, intensity, mobileOnly, perspective }` — uses the same seven cues as sound and defaults to mobile/coarse-pointer devices. |
 
 ### Core (framework-agnostic, `@ultrachess/core`)
 

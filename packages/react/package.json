@@ -95,7 +95,8 @@
   "dependencies": {
     "@ultrachess/core": "1.1.3",
     "@ultrachess/pieces": "1.1.1",
-    "@ultrachess/themes": "1.1.1"
+    "@ultrachess/themes": "1.1.1",
+    "web-haptics": "^0.0.6"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",

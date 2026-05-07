@@ -30,6 +30,12 @@ export { useDrag } from "./hooks/use-drag.js";
 export { type HoverSquareContext, useHoverSquare } from "./hooks/use-hover-square.js";
 export { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 export type {
+  MoveHapticKey,
+  MoveHapticOptions,
+  MoveHapticPatterns,
+} from "./hooks/use-move-haptics.js";
+export { triggerMoveHaptic, useMoveHaptics } from "./hooks/use-move-haptics.js";
+export type {
   MoveSoundKey,
   MoveSoundOptions,
   MoveSoundSources,
@@ -40,6 +46,10 @@ export {
 } from "./hooks/use-move-sound.js";
 // ---- Geometry helpers ----
 export { getPointAtSquareCentre, getSquareAtPoint } from "./lib/geometry.js";
+export type { HapticFeedbackOptions, HapticInput, TriggerOptions } from "./lib/haptics.js";
+export { triggerHaptic, warmupHaptics } from "./lib/haptics.js";
+export type { MoveFeedbackKey } from "./lib/move-feedback.js";
+export { classifyMoveFeedback, DEFAULT_MOVE_HAPTIC_PATTERNS } from "./lib/move-feedback.js";
 // ---- Defaults ----
 export { defaultPieces } from "./pieces/default-pieces.js";
 

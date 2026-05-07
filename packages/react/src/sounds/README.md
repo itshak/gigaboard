@@ -31,6 +31,6 @@ just a URL map plus a pool.
   referenced MP3 into `dist/` with a hashed name and replaces the
   `import x from "./sounds/...mp3"` call with the emitted URL string.
 - `assets.d.ts` gives TypeScript a `string` type for those imports.
-- Modern bundlers (Next.js, Vite, Webpack 5) re-resolve the emitted URL via
-  their own static-asset handling, so the files land in the consumer app's
-  public directory automatically.
+- `useMoveSound` creates the `Audio` pool lazily on first playback, so merely
+  mounting a board with sound enabled does not create audio elements or start
+  audio preloading.

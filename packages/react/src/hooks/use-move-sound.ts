@@ -29,6 +29,7 @@
 
 import type { BoardModel } from "@ultrachess/core";
 import { useEffect, useRef } from "react";
+import { classifyMoveFeedback, type MoveFeedbackKey } from "../lib/move-feedback.js";
 import captureUrl from "../sounds/capture.mp3";
 import castleUrl from "../sounds/castle.mp3";
 import gameEndUrl from "../sounds/game-end.mp3";
@@ -38,14 +39,7 @@ import moveSelfUrl from "../sounds/move-self.mp3";
 import promoteUrl from "../sounds/promote.mp3";
 
 /** The seven categories of move cue, mirroring chess.com's default set. */
-export type MoveSoundKey =
-  | "moveSelf"
-  | "moveOpponent"
-  | "capture"
-  | "castle"
-  | "moveCheck"
-  | "promote"
-  | "gameEnd";
+export type MoveSoundKey = MoveFeedbackKey;
 
 /** Sparse URL map — any key omitted falls back to the built-in local asset. */
 export type MoveSoundSources = Partial<Readonly<Record<MoveSoundKey, string>>>;
@@ -70,6 +64,8 @@ export interface MoveSoundOptions {
   readonly enabled?: boolean;
   /** Output volume, `0`–`1`. Default `1`. */
   readonly volume?: number;
+  /** Audio preload mode used when the lazy pool is first created. Default `"none"`. */
+  readonly preload?: "none" | "metadata" | "auto";
   /** Per-key URL overrides. Missing keys fall back to {@link DEFAULT_MOVE_SOUND_SOURCES}. */
   readonly sources?: MoveSoundSources;
   /**
@@ -83,51 +79,29 @@ export interface MoveSoundOptions {
 /** How many audio elements per category. Four is enough for spam-clicking. */
 const POOL_SIZE = 4;
 
-/**
- * Classify the cue that should play for the given commit.
- *
- * Priority (highest wins):
- *   1. `gameEnd` if the engine reports `isGameOver`.
- *   2. `promote` / `castle` — structural moves always get their own cue
- *      even if they also deliver check, mirroring chess.com.
- *   3. `moveCheck` if the side-to-move is now in check.
- *   4. `capture` if any descriptor is a capture.
- *   5. `moveSelf` / `moveOpponent` otherwise.
- */
-function classify(
-  animations: ReadonlyArray<{ readonly kind: string }>,
-  snapshot: { readonly isGameOver: boolean; readonly inCheck: boolean; readonly turn: 0 | 1 },
-  perspective: 0 | 1 | undefined,
-): MoveSoundKey {
-  if (snapshot.isGameOver) return "gameEnd";
-
-  let sawPromotion = false;
-  let sawCastle = false;
-  let sawCapture = false;
-  for (const d of animations) {
-    if (d.kind === "promotion") sawPromotion = true;
-    else if (d.kind === "castle") sawCastle = true;
-    else if (d.kind === "capture" || d.kind === "en-passant") sawCapture = true;
-  }
-
-  if (sawPromotion) return "promote";
-  if (sawCastle) return "castle";
-  if (snapshot.inCheck) return "moveCheck";
-  if (sawCapture) return "capture";
-
-  // The side that JUST moved is the opposite of the new side-to-move.
-  if (perspective !== undefined) {
-    const moverWasMe = snapshot.turn !== perspective;
-    return moverWasMe ? "moveSelf" : "moveOpponent";
-  }
-  return "moveSelf";
-}
-
 /** Internal per-category pool record. */
 type Pool = {
   readonly elements: HTMLAudioElement[];
   cursor: number;
 };
+
+function createPools(
+  sources: Readonly<Record<MoveSoundKey, string>>,
+  preload: MoveSoundOptions["preload"],
+): Record<MoveSoundKey, Pool> {
+  const pools = {} as Record<MoveSoundKey, Pool>;
+  for (const key of Object.keys(sources) as MoveSoundKey[]) {
+    const url = sources[key];
+    const elements: HTMLAudioElement[] = [];
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const audio = new Audio(url);
+      audio.preload = preload ?? "none";
+      elements.push(audio);
+    }
+    pools[key] = { elements, cursor: 0 };
+  }
+  return pools;
+}
 
 /**
  * Drop-in hook. Mount inside a React tree that has a `BoardModel`. Pass
@@ -140,9 +114,11 @@ type Pool = {
  * ```
  */
 export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions = {}): void {
-  const { enabled = true, volume = 1, sources, perspective } = options;
+  const { enabled = true, volume = 1, preload = "none", sources, perspective } = options;
 
   const poolsRef = useRef<Record<MoveSoundKey, Pool> | null>(null);
+  const sourcesRef = useRef<Readonly<Record<MoveSoundKey, string>>>(DEFAULT_MOVE_SOUND_SOURCES);
+  const preloadRef = useRef(preload);
 
   // Keep a latest-value ref for volume so the pool doesn't tear down
   // every time the slider moves — we just update each element's volume
@@ -157,36 +133,24 @@ export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions
     perspectiveRef.current = perspective;
   });
 
-  // Build / rebuild the pool whenever the URL set changes. A shallow
-  // identity check on `sources` is enough — callers following the latest-
-  // ref pattern or supplying a stable object will not thrash.
   useEffect(() => {
-    if (!enabled) return;
-    if (typeof window === "undefined") return; // SSR guard.
-    if (typeof Audio === "undefined") return; // happy-dom lacks Audio.
-
-    const resolved: Record<MoveSoundKey, string> = {
+    sourcesRef.current = {
       ...DEFAULT_MOVE_SOUND_SOURCES,
       ...(sources ?? {}),
     };
+    poolsRef.current = null;
+  }, [sources]);
 
-    const pools = {} as Record<MoveSoundKey, Pool>;
-    for (const key of Object.keys(resolved) as MoveSoundKey[]) {
-      const url = resolved[key];
-      const elements: HTMLAudioElement[] = [];
-      for (let i = 0; i < POOL_SIZE; i++) {
-        const a = new Audio(url);
-        a.preload = "auto";
-        elements.push(a);
-      }
-      pools[key] = { elements, cursor: 0 };
-    }
-    poolsRef.current = pools;
+  useEffect(() => {
+    preloadRef.current = preload;
+    poolsRef.current = null;
+  }, [preload]);
 
-    return () => {
+  useEffect(() => {
+    if (!enabled) {
       poolsRef.current = null;
-    };
-  }, [enabled, sources]);
+    }
+  }, [enabled]);
 
   // Subscribe to the model. Fire the chosen cue on every commit that
   // increments `historyPly` (forward moves only — undo is silent, matching
@@ -198,9 +162,6 @@ export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions
     let prevPly = model.getSnapshot().historyPly;
 
     return model.subscribe(() => {
-      const pools = poolsRef.current;
-      if (pools === null) return;
-
       const snap = model.getSnapshot();
       if (snap.historyPly <= prevPly) {
         prevPly = snap.historyPly;
@@ -208,7 +169,13 @@ export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions
       }
       prevPly = snap.historyPly;
 
-      const key = classify(model.lastAnimations, snap, perspectiveRef.current);
+      if (typeof window === "undefined") return; // SSR guard.
+      if (typeof Audio === "undefined") return; // happy-dom lacks Audio.
+
+      const pools = poolsRef.current ?? createPools(sourcesRef.current, preloadRef.current);
+      poolsRef.current = pools;
+
+      const key = classifyMoveFeedback(model.lastAnimations, snap, perspectiveRef.current);
       const pool = pools[key];
       if (pool === undefined) return;
 

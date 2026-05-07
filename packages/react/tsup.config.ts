@@ -14,7 +14,7 @@ export default defineConfig({
   target: "es2022",
   treeshake: true,
   minify: false,
-  external: ["react", "react-dom", "ultrachess"],
+  external: ["react", "react-dom", "ultrachess", "web-haptics"],
   // Emit MP3 move-sound assets as files in `dist/` and rewrite imports to
   // their runtime URLs. This keeps sound assets bundler-friendly — Next.js,
   // Vite, and any modern ESM bundler will re-resolve the emitted URL via

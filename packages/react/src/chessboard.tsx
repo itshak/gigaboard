@@ -44,6 +44,7 @@ import { useDrag } from "./hooks/use-drag.js";
 import { useHoverSquare } from "./hooks/use-hover-square.js";
 import { useKeyboardNav } from "./hooks/use-keyboard-nav.js";
 import { useLastMoveController } from "./hooks/use-last-move-controller.js";
+import { type MoveHapticOptions, useMoveHaptics } from "./hooks/use-move-haptics.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { getSquareAtPoint } from "./lib/geometry.js";
@@ -290,6 +291,7 @@ export function Chessboard(props: ChessboardProps) {
     showCheckHighlight = true,
     showIllegalFlash = true,
     sound = true,
+    haptics = false,
     viewOnly = false,
     canDragPiece,
     onSquareMouseEnter,
@@ -332,6 +334,12 @@ export function Chessboard(props: ChessboardProps) {
     if (sound === false || sound === undefined) return { enabled: false };
     return sound;
   }, [sound]);
+
+  const hapticOptions = useMemo<MoveHapticOptions>(() => {
+    if (haptics === true) return { enabled: true };
+    if (haptics === false || haptics === undefined) return { enabled: false };
+    return haptics;
+  }, [haptics]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragLayerRef = useRef<DragLayerHandle | null>(null);
@@ -760,6 +768,7 @@ export function Chessboard(props: ChessboardProps) {
   // Move-sound effects. Runs even when `game` is null — the hook no-ops
   // until the model exists.
   useMoveSound(game, soundOptions);
+  useMoveHaptics(game, hapticOptions);
 
   // Imperative selection + legal-target highlighter. Writes
   // `data-ucr-selection` on the 64 square refs above; no React state,

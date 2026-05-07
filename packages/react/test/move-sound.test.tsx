@@ -72,10 +72,14 @@ describe("useMoveSound", () => {
     vi.unstubAllGlobals();
   });
 
-  it("allocates a pool on mount when enabled", async () => {
+  it("allocates the pool lazily on first played cue", async () => {
     const model = await makeBoardModel();
     try {
       render(<SoundProbe model={model} />);
+      expect(AudioStub.instances.length).toBe(0);
+      act(() => {
+        model.tryMove(12 as never, 28 as never); // e2 → e4
+      });
       // 7 keys × 4 pool size = 28 instances.
       expect(AudioStub.instances.length).toBe(28);
     } finally {
