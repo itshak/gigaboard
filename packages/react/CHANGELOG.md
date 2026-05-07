@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.1...react-v1.2.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* **react:** resolve packaged sound asset URLs ([4eb2d66](https://github.com/yahorbarkouski/ultrachess-react/commit/4eb2d66d75d80c7c602291d500ccde86d3750d1a))
+
 ## [1.2.1](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.0...react-v1.2.1) (2026-05-07)
 
 
