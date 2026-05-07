@@ -125,7 +125,7 @@ A typical board-shipping app costs roughly **`core` + `react` + the default Neo 
 
 ## Quick tour
 
-One runnable example hitting every core capability. With no `theme`, `pieces`, or `sound` props, the board renders the green theme, Neo pieces, and built-in move sounds. Sound pools are created lazily on the first move that needs audio; pass `sound={false}` to keep audio fully disabled, and `haptics` to enable mobile-only tactile move feedback independently from audio.
+One runnable example hitting every core capability. With no `theme`, `pieces`, or `sound` props, the board renders the green theme, Neo pieces, and built-in move sounds. Sound pools are created lazily on the first move cue, including controlled `positionFen` transitions after the initial sync; pass `sound={false}` to keep audio fully disabled, and `haptics` to enable mobile-only tactile move feedback independently from audio.
 
 ```tsx
 "use client";
@@ -242,8 +242,8 @@ Signatures are TypeScript. Everything below is exported from `@ultrachess/react`
 | `useClickToMove(game)`                                               | Click-to-select / click-to-drop flow, composable with `useDrag`. |
 | `useKeyboardNav(game)`                                               | Arrow-key focus movement, Enter to pick/drop, Escape to cancel, `P` for promotion. |
 | `useArrowGesture(game, opts)`                                        | Right-click drag → arrow; four modifier-keyed colour channels (default / shift / alt / ctrl). |
-| `useMoveSound(game, opts)`                                           | Wires the seven-cue bank lazily; usable standalone without `<Chessboard/>`. |
-| `useMoveHaptics(game, opts)`                                         | Wires mobile-only tactile feedback for the same move cues, independent from sound. |
+| `useMoveSound(game, opts)`                                           | Wires the seven-cue bank lazily and returns a direct cue trigger; usable standalone without `<Chessboard/>`. |
+| `useMoveHaptics(game, opts)`                                         | Wires mobile-only tactile feedback for the same move cues and returns a direct cue trigger, independent from sound. |
 | `AnimationRunner`                                                    | Low-level WAAPI scheduler used by the board; exposed for custom piece layers. |
 
 ### Configuration types

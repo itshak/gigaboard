@@ -48,6 +48,7 @@ import { type MoveHapticOptions, useMoveHaptics } from "./hooks/use-move-haptics
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { getSquareAtPoint } from "./lib/geometry.js";
+import { classifyMoveFeedback } from "./lib/move-feedback.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type {
   AnimationOptions,
@@ -206,7 +207,7 @@ function syncPositionFen(
   container: HTMLElement | null,
   animation: AnimationOptions | undefined,
   orientation: Orientation,
-): void {
+): boolean {
   const positionChanged = game.engine.fen() !== targetFen;
   const durationMs = animation?.durationMs ?? DEFAULT_POSITION_SYNC_DURATION_MS;
   const easing = animation?.easing ?? DEFAULT_POSITION_SYNC_EASING;
@@ -227,7 +228,7 @@ function syncPositionFen(
 
   try {
     if (managedArrows === undefined) {
-      if (!positionChanged) return;
+      if (!positionChanged) return false;
       game.load(targetFen);
     } else {
       game.syncPosition({
@@ -237,12 +238,13 @@ function syncPositionFen(
       });
     }
   } catch {
-    return;
+    return false;
   }
 
   if (transitions.length > 0 && container !== null) {
     schedulePositionAnimation(container, transitions, { durationMs, easing }, orientation);
   }
+  return positionChanged;
 }
 
 /**
@@ -344,6 +346,7 @@ export function Chessboard(props: ChessboardProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragLayerRef = useRef<DragLayerHandle | null>(null);
   const arrowsLayerRef = useRef<ArrowsLayerHandle | null>(null);
+  const lastControlledFeedbackFenRef = useRef<string | null>(null);
 
   // 64-slot refs array populated by each `<Square/>` on mount. The
   // selection controller reads this to paint highlights imperatively.
@@ -369,10 +372,19 @@ export function Chessboard(props: ChessboardProps) {
     onPromoteRef.current = onPromote;
   });
 
+  // Move feedback effects. The hooks subscribe to normal model moves and
+  // also expose direct triggers for controlled `positionFen` syncs below.
+  const triggerMoveSound = useMoveSound(game, soundOptions);
+  const triggerMoveHaptic = useMoveHaptics(game, hapticOptions);
+
   useLayoutEffect(() => {
     if (game === null || positionFen === undefined || positionFen === "") return;
-    if (game.engine.fen() === positionFen && managedArrows === undefined) return;
-    syncPositionFen(
+    const previousFeedbackFen = lastControlledFeedbackFenRef.current;
+    if (game.engine.fen() === positionFen && managedArrows === undefined) {
+      lastControlledFeedbackFenRef.current = positionFen;
+      return;
+    }
+    const positionChanged = syncPositionFen(
       game,
       positionFen,
       positionTransition,
@@ -382,14 +394,29 @@ export function Chessboard(props: ChessboardProps) {
       animation,
       orientation,
     );
+    lastControlledFeedbackFenRef.current = positionFen;
+
+    if (!positionChanged || previousFeedbackFen === null || previousFeedbackFen === positionFen) {
+      return;
+    }
+
+    const snapshot = game.getSnapshot();
+    triggerMoveSound(classifyMoveFeedback(game.lastAnimations, snapshot, soundOptions.perspective));
+    triggerMoveHaptic(
+      classifyMoveFeedback(game.lastAnimations, snapshot, hapticOptions.perspective),
+    );
   }, [
+    animation,
     game,
+    hapticOptions.perspective,
     positionFen,
     positionTransition,
     managedArrows,
     preserveUserArrowsOnPositionSync,
-    animation,
     orientation,
+    soundOptions.perspective,
+    triggerMoveHaptic,
+    triggerMoveSound,
   ]);
 
   // Merge user-provided arrow colours with defaults. Memoised against
@@ -764,11 +791,6 @@ export function Chessboard(props: ChessboardProps) {
     palette,
     snapToValidMove: snapArrowsToValidMove,
   });
-
-  // Move-sound effects. Runs even when `game` is null — the hook no-ops
-  // until the model exists.
-  useMoveSound(game, soundOptions);
-  useMoveHaptics(game, hapticOptions);
 
   // Imperative selection + legal-target highlighter. Writes
   // `data-ucr-selection` on the 64 square refs above; no React state,

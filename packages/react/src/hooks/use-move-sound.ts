@@ -28,7 +28,7 @@
  */
 
 import type { BoardModel } from "@ultrachess/core";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { classifyMoveFeedback, type MoveFeedbackKey } from "../lib/move-feedback.js";
 import captureUrl from "../sounds/capture.mp3";
 import castleUrl from "../sounds/castle.mp3";
@@ -43,6 +43,7 @@ export type MoveSoundKey = MoveFeedbackKey;
 
 /** Sparse URL map — any key omitted falls back to the built-in local asset. */
 export type MoveSoundSources = Partial<Readonly<Record<MoveSoundKey, string>>>;
+export type TriggerMoveSound = (key: MoveSoundKey) => void;
 
 /**
  * Default URL map. Points at the MP3 files shipped with this package; the
@@ -113,7 +114,10 @@ function createPools(
  * useMoveSound(game, { enabled: soundOn, volume: 0.6 });
  * ```
  */
-export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions = {}): void {
+export function useMoveSound(
+  model: BoardModel | null,
+  options: MoveSoundOptions = {},
+): TriggerMoveSound {
   const { enabled = true, volume = 1, preload = "none", sources, perspective } = options;
 
   const poolsRef = useRef<Record<MoveSoundKey, Pool> | null>(null);
@@ -152,6 +156,32 @@ export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions
     }
   }, [enabled]);
 
+  const triggerMoveSound = useCallback<TriggerMoveSound>(
+    (key) => {
+      if (!enabled) return;
+      if (typeof window === "undefined") return; // SSR guard.
+      if (typeof Audio === "undefined") return; // happy-dom lacks Audio.
+
+      const pools = poolsRef.current ?? createPools(sourcesRef.current, preloadRef.current);
+      poolsRef.current = pools;
+
+      const pool = pools[key];
+      if (pool === undefined) return;
+
+      pool.cursor = (pool.cursor + 1) % pool.elements.length;
+      const el = pool.elements[pool.cursor];
+      if (el === undefined) return;
+      el.volume = Math.max(0, Math.min(1, volumeRef.current));
+      el.currentTime = 0;
+      // Some browsers reject autoplay before a user gesture. Swallow the
+      // rejection — once the user interacts, subsequent plays succeed.
+      void el.play().catch(() => {
+        /* autoplay blocked — will resolve after the first user gesture. */
+      });
+    },
+    [enabled],
+  );
+
   // Subscribe to the model. Fire the chosen cue on every commit that
   // increments `historyPly` (forward moves only — undo is silent, matching
   // chess.com). The subscription is cheap: one `subscribe` per enabled
@@ -169,26 +199,10 @@ export function useMoveSound(model: BoardModel | null, options: MoveSoundOptions
       }
       prevPly = snap.historyPly;
 
-      if (typeof window === "undefined") return; // SSR guard.
-      if (typeof Audio === "undefined") return; // happy-dom lacks Audio.
-
-      const pools = poolsRef.current ?? createPools(sourcesRef.current, preloadRef.current);
-      poolsRef.current = pools;
-
       const key = classifyMoveFeedback(model.lastAnimations, snap, perspectiveRef.current);
-      const pool = pools[key];
-      if (pool === undefined) return;
-
-      pool.cursor = (pool.cursor + 1) % pool.elements.length;
-      const el = pool.elements[pool.cursor];
-      if (el === undefined) return;
-      el.volume = Math.max(0, Math.min(1, volumeRef.current));
-      el.currentTime = 0;
-      // Some browsers reject autoplay before a user gesture. Swallow the
-      // rejection — once the user interacts, subsequent plays succeed.
-      void el.play().catch(() => {
-        /* autoplay blocked — will resolve after the first user gesture. */
-      });
+      triggerMoveSound(key);
     });
-  }, [enabled, model]);
+  }, [enabled, model, triggerMoveSound]);
+
+  return triggerMoveSound;
 }

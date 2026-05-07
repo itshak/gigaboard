@@ -4,14 +4,14 @@ Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-o
 
 ## Status
 
-`1.1.x` — interactive board, drag, animations, arrows, premoves, sounds, mobile haptics, themes, piece sets, and SSR static rendering are shipped.
+`1.2.x` — interactive board, drag, controlled analysis positions, animations, arrows, premoves, sounds, mobile haptics, themes, piece sets, and SSR static rendering are shipped.
 
 ## Move feedback
 
 - `sound={false}` keeps audio fully disabled.
-- `sound` / `useMoveSound` allocate audio pools lazily on the first forward move that needs a cue.
+- `sound` / `useMoveSound` allocate audio pools lazily on the first move cue.
 - `haptics` / `useMoveHaptics` provide mobile-only tactile feedback using the same move-cue classifier as sound.
-- `triggerMoveHaptic` is available for controlled-FEN analysis boards that need to emit feedback outside the board model history.
+- Controlled `positionFen` changes emit the same feedback after the initial sync, so analysis/replay boards can keep desktop sounds and mobile haptics without a second integration.
 
 ## Entry points
 

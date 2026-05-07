@@ -1,7 +1,7 @@
 "use client";
 
 import type { BoardModel } from "@ultrachess/core";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   type HapticFeedbackOptions,
   type HapticInput,
@@ -16,6 +16,7 @@ import {
 
 export type MoveHapticKey = MoveFeedbackKey;
 export type MoveHapticPatterns = Partial<Readonly<Record<MoveHapticKey, HapticInput>>>;
+export type TriggerMoveHaptic = (key: MoveHapticKey) => void;
 
 export interface MoveHapticOptions {
   /** Master switch. Default `true`. */
@@ -59,7 +60,10 @@ export function triggerMoveHaptic(
   });
 }
 
-export function useMoveHaptics(model: BoardModel | null, options: MoveHapticOptions = {}): void {
+export function useMoveHaptics(
+  model: BoardModel | null,
+  options: MoveHapticOptions = {},
+): TriggerMoveHaptic {
   const {
     enabled = true,
     patterns,
@@ -91,6 +95,18 @@ export function useMoveHaptics(model: BoardModel | null, options: MoveHapticOpti
   });
 
   const lastTriggerAtRef = useRef(0);
+
+  const trigger = useCallback<TriggerMoveHaptic>(
+    (key) => {
+      triggerMoveHaptic(key, {
+        enabled,
+        ...(patternsRef.current !== undefined ? { patterns: patternsRef.current } : {}),
+        mobileOnly: mobileOnlyRef.current,
+        ...(intensityRef.current !== undefined ? { intensity: intensityRef.current } : {}),
+      });
+    },
+    [enabled],
+  );
 
   useEffect(() => {
     if (!enabled || !warmupOnFirstInteraction) {
@@ -140,11 +156,9 @@ export function useMoveHaptics(model: BoardModel | null, options: MoveHapticOpti
       lastTriggerAtRef.current = nowMs;
 
       const key = classifyMoveFeedback(model.lastAnimations, snap, perspectiveRef.current);
-      triggerMoveHaptic(key, {
-        ...(patternsRef.current !== undefined ? { patterns: patternsRef.current } : {}),
-        mobileOnly: mobileOnlyRef.current,
-        ...(intensityRef.current !== undefined ? { intensity: intensityRef.current } : {}),
-      });
+      trigger(key);
     });
-  }, [enabled, minIntervalMs, model]);
+  }, [enabled, minIntervalMs, model, trigger]);
+
+  return trigger;
 }

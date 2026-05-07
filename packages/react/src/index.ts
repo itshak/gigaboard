@@ -33,12 +33,14 @@ export type {
   MoveHapticKey,
   MoveHapticOptions,
   MoveHapticPatterns,
+  TriggerMoveHaptic,
 } from "./hooks/use-move-haptics.js";
 export { triggerMoveHaptic, useMoveHaptics } from "./hooks/use-move-haptics.js";
 export type {
   MoveSoundKey,
   MoveSoundOptions,
   MoveSoundSources,
+  TriggerMoveSound,
 } from "./hooks/use-move-sound.js";
 export {
   DEFAULT_MOVE_SOUND_SOURCES,
