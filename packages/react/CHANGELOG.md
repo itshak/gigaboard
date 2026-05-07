@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.6...react-v1.2.0) (2026-05-07)
+
+
+### Features
+
+* **react:** add mobile move haptics ([a6ca8e2](https://github.com/yahorbarkouski/ultrachess-react/commit/a6ca8e20e01fd6bc5f284761b582074d9f10e4a0))
+
 ## [1.1.6](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.5...react-v1.1.6) (2026-05-05)
 
 
