@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.0...react-v1.2.1) (2026-05-07)
+
+
+### Bug Fixes
+
+* **react:** emit feedback for controlled positions ([29439e9](https://github.com/yahorbarkouski/ultrachess-react/commit/29439e90b005e6f33fb75802a57690b7256e7cb3))
+
 ## [1.2.0](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.1.6...react-v1.2.0) (2026-05-07)
 
 
