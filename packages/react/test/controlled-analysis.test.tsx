@@ -19,6 +19,8 @@ const E4 = 28 as SquareIndex;
 const E7 = 52 as SquareIndex;
 const E5 = 36 as SquareIndex;
 const AFTER_E4_FEN = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
+const BEFORE_CAPTURE_FEN = "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2";
+const AFTER_CAPTURE_FEN = "rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2";
 
 class AudioStub {
   static instances: AudioStub[] = [];
@@ -41,6 +43,16 @@ class AudioStub {
     AudioStub.instances = [];
     AudioStub.plays = [];
   }
+
+  static lastUrl(): string | undefined {
+    return AudioStub.plays.at(-1);
+  }
+}
+
+function cueOf(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined;
+  const match = url.match(/([a-z-]+)(?:-[A-Z0-9]+)?\.mp3/i);
+  return match?.[1];
 }
 
 describe("controlled analysis board", () => {
@@ -132,6 +144,44 @@ describe("controlled analysis board", () => {
       expect(AudioStub.instances).toHaveLength(28);
       expect(AudioStub.plays).toHaveLength(1);
       expect(hapticMocks.triggerHaptic).toHaveBeenLastCalledWith("selection", {
+        enabled: true,
+        intensity: undefined,
+        mobileOnly: false,
+      });
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("emits capture feedback for controlled one-move captures", async () => {
+    const model = await makeBoardModel();
+    vi.stubGlobal("Audio", AudioStub);
+
+    try {
+      const { rerender } = render(
+        <Chessboard
+          game={model}
+          haptics={{ enabled: true, mobileOnly: false }}
+          positionFen={BEFORE_CAPTURE_FEN}
+          sound
+        />,
+      );
+
+      expect(AudioStub.instances).toHaveLength(0);
+      expect(hapticMocks.triggerHaptic).not.toHaveBeenCalled();
+
+      rerender(
+        <Chessboard
+          game={model}
+          haptics={{ enabled: true, mobileOnly: false }}
+          positionFen={AFTER_CAPTURE_FEN}
+          positionTransition={{ uci: "e4d5", direction: "forward", key: "2:3:e4d5" }}
+          sound
+        />,
+      );
+
+      expect(cueOf(AudioStub.lastUrl())).toBe("capture");
+      expect(hapticMocks.triggerHaptic).toHaveBeenLastCalledWith("medium", {
         enabled: true,
         intensity: undefined,
         mobileOnly: false,

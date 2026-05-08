@@ -113,13 +113,13 @@ The React layer needs verbose moves to decorate legal-target squares; this is wh
 
 | Import                                | Needs `"use client"` | Gzip       | Use when                                                             |
 |---------------------------------------|----------------------|-----------:|----------------------------------------------------------------------|
-| `@ultrachess/react`                   | yes                  |  **20.01 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, haptics, viewOnly. |
+| `@ultrachess/react`                   | yes                  |  **20.35 KB** | the interactive board — hooks, drag, animation, drawable arrows, premoves, haptics, viewOnly. |
 | `@ultrachess/react/server`            | no (RSC)             |   **2.37 KB** | diagrams, PGN viewers, shareable position URLs; zero client JS.   |
 | `@ultrachess/core`                    | no                   |   **3.74 KB** | framework-agnostic state + engine adapter; plug into RN, Jazz CRDT. |
 | `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}` | yes | **~660 B** / set | one image-backed piece set; `neo` is the React default. |
 | `@ultrachess/themes/{blue,brown,green,wood}` | yes       | **~205 B** / theme | one CSS-variable record; `green` is the React default.                       |
 
-A typical board-shipping app costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 22.0 KB gzipped**. Every export is `sideEffects: false`; unused alternate pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
+A typical board-shipping app costs roughly **`core` + `react` + the default Neo pieces + the default green theme ≈ 22.3 KB gzipped**. Every export is `sideEffects: false`; unused alternate pieces/themes are pruned by any modern bundler. Budgets are enforced per-package by `size-limit` in CI.
 
 ---
 

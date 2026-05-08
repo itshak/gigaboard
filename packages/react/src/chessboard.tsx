@@ -13,7 +13,14 @@
  * (zero client JS), import from `@ultrachess/react/server` (M5).
  */
 
-import type { BoardCell, PieceType, SquareIndex } from "@ultrachess/core";
+import {
+  type BoardCell,
+  colorOf,
+  isEmptyCell,
+  type PieceType,
+  pieceTypeOf,
+  type SquareIndex,
+} from "@ultrachess/core";
 import {
   type CSSProperties,
   useCallback,
@@ -94,6 +101,16 @@ interface SquareTransition {
   readonly to: string;
 }
 
+interface ParsedTransitionMove {
+  readonly from: SquareIndex;
+  readonly to: SquareIndex;
+  readonly promotion: string | null;
+}
+
+interface FeedbackDescriptor {
+  readonly kind: string;
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
     return false;
@@ -164,6 +181,80 @@ function transitionSquares(transition: PositionTransition): SquareTransition[] {
   return transition.direction === "forward"
     ? forward
     : forward.map((item) => ({ from: item.to, to: item.from }));
+}
+
+function parseTransitionMove(transition: PositionTransition): ParsedTransitionMove | null {
+  const parsed = UCI_TRANSITION_RE.exec(transition.uci.trim().toLowerCase());
+  if (parsed === null) return null;
+  const from = parsed[1];
+  const to = parsed[2];
+  if (from === undefined || to === undefined) return null;
+  return {
+    from: squareIndexOfName(from),
+    to: squareIndexOfName(to),
+    promotion: parsed[3] ?? null,
+  };
+}
+
+function isPawn(cell: BoardCell): boolean {
+  return !isEmptyCell(cell) && pieceTypeOf(cell) === 0;
+}
+
+function controlledFeedbackDescriptors(
+  transition: PositionTransition | null | undefined,
+  previousBoard: Readonly<Uint8Array>,
+  nextBoard: Readonly<Uint8Array>,
+): FeedbackDescriptor[] | null {
+  if (transition === null || transition === undefined) return null;
+
+  const parsed = parseTransitionMove(transition);
+  if (parsed === null) return null;
+
+  // Classify the original chess move even while replaying backward. The
+  // post-sync snapshot is "before" the move in that case, so swap the board
+  // pair back into original move order before inspecting capture/promotion.
+  const before = transition.direction === "forward" ? previousBoard : nextBoard;
+  const after = transition.direction === "forward" ? nextBoard : previousBoard;
+  const movingPiece = (before[parsed.from] ?? 0) as BoardCell;
+  if (isEmptyCell(movingPiece)) return null;
+
+  const fromFile = parsed.from & 7;
+  const toFile = parsed.to & 7;
+  const targetBefore = (before[parsed.to] ?? 0) as BoardCell;
+  const targetAfter = (after[parsed.to] ?? 0) as BoardCell;
+
+  if (pieceTypeOf(movingPiece) === 5 && Math.abs(toFile - fromFile) === 2) {
+    return [{ kind: "castle" }];
+  }
+
+  if (
+    parsed.promotion !== null ||
+    (isPawn(movingPiece) &&
+      (parsed.to >> 3 === 0 || parsed.to >> 3 === 7) &&
+      !isEmptyCell(targetAfter) &&
+      pieceTypeOf(targetAfter) !== 0)
+  ) {
+    return [{ kind: "promotion" }];
+  }
+
+  if (!isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece)) {
+    return [{ kind: "capture" }];
+  }
+
+  if (isPawn(movingPiece) && fromFile !== toFile && isEmptyCell(targetBefore)) {
+    const capturedSquare = ((parsed.from & ~7) | toFile) as SquareIndex;
+    const capturedBefore = (before[capturedSquare] ?? 0) as BoardCell;
+    const capturedAfter = (after[capturedSquare] ?? 0) as BoardCell;
+    if (
+      !isEmptyCell(capturedBefore) &&
+      colorOf(capturedBefore) !== colorOf(movingPiece) &&
+      isEmptyCell(capturedAfter)
+    ) {
+      return [{ kind: "en-passant" }];
+    }
+  }
+
+  return [{ kind: "move" }];
 }
 
 function schedulePositionAnimation(
@@ -380,6 +471,7 @@ export function Chessboard(props: ChessboardProps) {
   useLayoutEffect(() => {
     if (game === null || positionFen === undefined || positionFen === "") return;
     const previousFeedbackFen = lastControlledFeedbackFenRef.current;
+    const previousSnapshot = game.getSnapshot();
     if (game.engine.fen() === positionFen && managedArrows === undefined) {
       lastControlledFeedbackFenRef.current = positionFen;
       return;
@@ -401,9 +493,16 @@ export function Chessboard(props: ChessboardProps) {
     }
 
     const snapshot = game.getSnapshot();
-    triggerMoveSound(classifyMoveFeedback(game.lastAnimations, snapshot, soundOptions.perspective));
+    const feedbackDescriptors =
+      controlledFeedbackDescriptors(positionTransition, previousSnapshot.board, snapshot.board) ??
+      game.lastAnimations;
+    const feedbackSnapshot =
+      positionTransition?.direction === "backward" ? previousSnapshot : snapshot;
+    triggerMoveSound(
+      classifyMoveFeedback(feedbackDescriptors, feedbackSnapshot, soundOptions.perspective),
+    );
     triggerMoveHaptic(
-      classifyMoveFeedback(game.lastAnimations, snapshot, hapticOptions.perspective),
+      classifyMoveFeedback(feedbackDescriptors, feedbackSnapshot, hapticOptions.perspective),
     );
   }, [
     animation,
