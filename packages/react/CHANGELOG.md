@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.2...react-v1.2.3) (2026-05-08)
+
+
+### Bug Fixes
+
+* **react:** classify controlled capture feedback ([f47ff00](https://github.com/yahorbarkouski/ultrachess-react/commit/f47ff0077d3ceeab8c2320235b35675d50ecf1ec))
+
 ## [1.2.2](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.1...react-v1.2.2) (2026-05-07)
 
 
