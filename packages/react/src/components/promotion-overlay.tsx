@@ -26,7 +26,7 @@ import {
   encodeBoardCell,
   PieceType,
   type SquareIndex,
-} from "@gigaboard/core";
+} from "../core/index.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { Orientation, PieceRenderer } from "../types.js";

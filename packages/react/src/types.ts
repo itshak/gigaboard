@@ -14,7 +14,7 @@ import type {
   PackedMove,
   PieceType,
   SquareIndex,
-} from "@gigaboard/core";
+} from "./core/index.js";
 import type { CSSProperties, ReactNode } from "react";
 import type { MoveHapticOptions } from "./hooks/use-move-haptics.js";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
@@ -200,13 +200,13 @@ export interface ChessboardProps {
   readonly orientation?: Orientation;
 
   /**
-   * Theme as a CSS custom-property record. Import from `@gigaboard/themes/*`.
-   * When omitted the default green theme from `@gigaboard/themes` is applied.
+   * Theme as a CSS custom-property record. Import from `gigaboard/themes/*`.
+   * When omitted the default green theme from `gigaboard/themes` is applied.
    */
   readonly theme?: Theme;
 
   /**
-   * Piece renderer. Defaults to the `neo` set from `@gigaboard/pieces`.
+   * Piece renderer. Defaults to the `neo` set from `gigaboard/pieces`.
    */
   readonly pieces?: PieceRenderer;
 

@@ -15,9 +15,6 @@
     "clean": "rm -rf .next .turbo playwright-report test-results"
   },
   "dependencies": {
-    "@gigaboard/core": "workspace:*",
-    "@gigaboard/pieces": "workspace:*",
-    "@gigaboard/themes": "workspace:*",
     "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",

@@ -1,6 +1,6 @@
 "use client";
 
-import type { BoardModel } from "@gigaboard/core";
+import type { BoardModel } from "../core/index.js";
 import { useCallback, useEffect, useRef } from "react";
 import {
   type HapticFeedbackOptions,

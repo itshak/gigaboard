@@ -1,12 +1,12 @@
 "use client";
 
-import type { PackedMove } from "@gigaboard/core";
-import { alpha, cburnett, merida, neo } from "@gigaboard/pieces";
-import { chesscom } from "@gigaboard/pieces/chesscom";
+import type { PackedMove } from "gigaboard/core";
+import { alpha, cburnett, merida, neo } from "gigaboard/pieces";
+import { chesscom } from "gigaboard/pieces/chesscom";
 import type { LegalTargetStyle, MoveSoundOptions, Orientation } from "gigaboard";
 import { Chessboard, useChessGame } from "gigaboard";
-import type { Theme } from "@gigaboard/themes";
-import { blue, brown, green, wood } from "@gigaboard/themes";
+import type { Theme } from "gigaboard/themes";
+import { blue, brown, green, wood } from "gigaboard/themes";
 import { useCallback, useMemo, useState } from "react";
 import { Controls } from "./controls";
 import { MoveLog } from "./move-log";

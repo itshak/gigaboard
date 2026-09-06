@@ -45,7 +45,7 @@
  *   ≈ 98 % reduction in cursor-system DOM mutations per move.
  */
 
-import type { BoardModel } from "@gigaboard/core";
+import type { BoardModel } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
 
 /** Singleton id used to dedupe the injected `<style>` element. */

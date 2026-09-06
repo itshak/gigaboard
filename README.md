@@ -1,6 +1,8 @@
 <p align="center">
-  <h1 align="center">Gigaboard</h1>
+  <img src="./assets/logo.png" width="220" alt="Gigaboard Logo" />
 </p>
+
+<h1 align="center">Gigaboard</h1>
 
 <p align="center">
   <strong>The fastest, cleanest React chessboard UI on Earth.</strong><br>
@@ -39,17 +41,19 @@
 
 ```bash
 # npm
-npm install gigaboard gigachess @gigaboard/pieces @gigaboard/themes
+npm install gigaboard
 
 # bun
-bun add gigaboard gigachess @gigaboard/pieces @gigaboard/themes
+bun add gigaboard
 
 # pnpm
-pnpm add gigaboard gigachess @gigaboard/pieces @gigaboard/themes
+pnpm add gigaboard
 
 # yarn
-yarn add gigaboard gigachess @gigaboard/pieces @gigaboard/themes
+yarn add gigaboard
 ```
+
+> Single-package distribution — `gigaboard` includes the interactive board (`gigaboard`), headless core (`gigaboard/core`), static SSR board (`gigaboard/server`), piece sets (`gigaboard/pieces/*`), and themes (`gigaboard/themes/*`) via subpath exports. The `gigachess` engine ships as a bundled dependency.
 
 ---
 
@@ -127,8 +131,8 @@ Mix and match tree-shakable piece sets and CSS-variable themes without bundle bl
 
 ```tsx
 import { Chessboard, useChessGame } from "gigaboard";
-import { cburnett } from "@gigaboard/pieces/cburnett";
-import { wood } from "@gigaboard/themes/wood";
+import { cburnett } from "gigaboard/pieces/cburnett";
+import { wood } from "gigaboard/themes/wood";
 
 export function CustomBoard() {
   const game = useChessGame();
@@ -136,14 +140,14 @@ export function CustomBoard() {
 }
 ```
 
-Available piece sets (`@gigaboard/pieces/*`):
+Available piece sets (`gigaboard/pieces/*`):
 * `neo` (default, crisp chess.com vector style)
 * `cburnett` (traditional Lichess silhouette)
 * `merida` (wood-tinted tournament set)
 * `alpha` (minimalist mobile silhouettes)
 * `chesscom` (explicit alias for neo)
 
-Available themes (`@gigaboard/themes/*`):
+Available themes (`gigaboard/themes/*`):
 * `green` (default chess.com palette)
 * `brown` (classic tournament wood)
 * `blue` (modern cool contrast)
@@ -235,12 +239,17 @@ export default function Page() {
 
 ## 🏛️ Monorepo Architecture
 
-| Package | Role | Description |
+Single `gigaboard` package (`packages/react`) with subpath exports — strict isolation, zero bundle pollution:
+
+| Subpath | Role | Description |
 |---|---|---|
-| **[`gigaboard`](file:///Users/ais/Projects/gigaboard/packages/react)** | Primary UI | High-performance React chessboard component, hooks, WAAPI animations, and canvas arrows. |
-| **[`@gigaboard/core`](file:///Users/ais/Projects/gigaboard/packages/core)** | Headless State | Zero-DOM `BoardModel`, per-byte `Uint8Array(64)` subscription store, and `gigachess` adapter. |
-| **[`@gigaboard/pieces`](file:///Users/ais/Projects/gigaboard/packages/pieces)** | Piece Renderers | Ultra-compact URL-based piece renderers (~660 B/set). |
-| **[`@gigaboard/themes`](file:///Users/ais/Projects/gigaboard/packages/themes)** | Visual Themes | Zero-runtime CSS custom-property palettes (`--gb-*`, ~205 B/theme). |
+| `gigaboard` | Primary UI | High-performance React chessboard component, hooks, WAAPI animations, and canvas arrows. |
+| `gigaboard/core` | Headless State | Zero-DOM `BoardModel`, per-byte `Uint8Array(64)` subscription store, and `gigachess` adapter. No React/DOM. |
+| `gigaboard/server` | Static SSR | Zero-JS `<StaticChessboard />` for RSC with hydration parity. |
+| `gigaboard/pieces/*` | Piece Renderers | Ultra-compact URL-based piece renderers (~660 B/set). |
+| `gigaboard/themes/*` | Visual Themes | Zero-runtime CSS custom-property palettes (`--gb-*`, ~205 B/theme). |
+
+Migration from split packages: `@gigaboard/core` → `gigaboard/core`, `@gigaboard/pieces/*` → `gigaboard/pieces/*`, `@gigaboard/themes/*` → `gigaboard/themes/*`. Runtime APIs (`<Chessboard>`, `createGigachessAdapter`, `BoardModel`) are unchanged.
 
 ---
 

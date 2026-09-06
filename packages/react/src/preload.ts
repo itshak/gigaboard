@@ -1,12 +1,12 @@
 /**
  * `preloadEngine` — warm the default `gigachess` tables ahead of first use.
  *
- * A thin alias over `@gigaboard/core`'s `preloadGigachessAdapter()`, exposed
+ * A thin alias over `gigaboard/core`'s `preloadGigachessAdapter()`, exposed
  * here so consumers of the React package don't have to reach into `core` for
  * what is logically a one-liner in an app's entry module.
  */
 
-import { preloadGigachessAdapter } from "@gigaboard/core";
+import { preloadGigachessAdapter } from "./core/index.js";
 
 /**
  * Preload gigachess attack and Zobrist tables ahead of time.

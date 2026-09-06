@@ -15,9 +15,6 @@
       "name": "@gigaboard/benchmarks",
       "version": "0.0.0",
       "dependencies": {
-        "@gigaboard/core": "workspace:*",
-        "@gigaboard/pieces": "workspace:*",
-        "@gigaboard/themes": "workspace:*",
         "chess.js": "^1.4.0",
         "chessground": "^9.2.0",
         "gigaboard": "workspace:*",
@@ -40,9 +37,6 @@
       "name": "@gigaboard/docs",
       "version": "0.0.0",
       "dependencies": {
-        "@gigaboard/core": "workspace:*",
-        "@gigaboard/pieces": "workspace:*",
-        "@gigaboard/themes": "workspace:*",
         "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
@@ -59,9 +53,6 @@
       "name": "@gigaboard/example-next-analysis",
       "version": "0.0.0",
       "dependencies": {
-        "@gigaboard/core": "workspace:*",
-        "@gigaboard/pieces": "workspace:*",
-        "@gigaboard/themes": "workspace:*",
         "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
@@ -77,9 +68,6 @@
       "name": "@gigaboard/example-next-showcase",
       "version": "0.0.0",
       "dependencies": {
-        "@gigaboard/core": "workspace:*",
-        "@gigaboard/pieces": "workspace:*",
-        "@gigaboard/themes": "workspace:*",
         "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
@@ -104,49 +92,18 @@
         "@types/react-dom": "^19.0.0",
       },
     },
-    "packages/core": {
-      "name": "@gigaboard/core",
-      "version": "1.1.3",
-      "dependencies": {
-        "gigachess": "^0.4.1",
-      },
-      "devDependencies": {
-        "@size-limit/preset-small-lib": "^11.1.6",
-        "@vitest/coverage-v8": "^3.0.0",
-        "fast-check": "^3.23.2",
-        "size-limit": "^11.1.6",
-        "tsup": "^8.5.1",
-        "vitest": "^3.0.0",
-      },
-    },
-    "packages/pieces": {
-      "name": "@gigaboard/pieces",
-      "version": "1.1.1",
-      "devDependencies": {
-        "@size-limit/preset-small-lib": "^11.1.6",
-        "@types/react": "^19.0.0",
-        "react": "^19.0.0",
-        "size-limit": "^11.1.6",
-        "tsup": "^8.5.1",
-        "vitest": "^3.0.0",
-      },
-      "peerDependencies": {
-        "react": "^18.3.0 || ^19.0.0",
-      },
-    },
     "packages/react": {
       "name": "gigaboard",
       "version": "1.2.3",
       "dependencies": {
-        "@gigaboard/core": "1.1.3",
-        "@gigaboard/pieces": "1.1.1",
-        "@gigaboard/themes": "1.1.1",
+        "gigachess": "^0.4.1",
         "web-haptics": "^0.0.6",
       },
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
         "@testing-library/react": "^16.1.0",
         "@testing-library/user-event": "^14.5.2",
+        "@types/node": "^22.10.0",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "@vitest/coverage-v8": "^3.0.0",
@@ -160,16 +117,6 @@
       "peerDependencies": {
         "react": "^18.3.0 || ^19.0.0",
         "react-dom": "^18.3.0 || ^19.0.0",
-      },
-    },
-    "packages/themes": {
-      "name": "@gigaboard/themes",
-      "version": "1.1.1",
-      "devDependencies": {
-        "@size-limit/preset-small-lib": "^11.1.6",
-        "size-limit": "^11.1.6",
-        "tsup": "^8.5.1",
-        "vitest": "^3.0.0",
       },
     },
   },
@@ -302,8 +249,6 @@
 
     "@gigaboard/benchmarks": ["@gigaboard/benchmarks@workspace:apps/benchmarks"],
 
-    "@gigaboard/core": ["@gigaboard/core@workspace:packages/core"],
-
     "@gigaboard/docs": ["@gigaboard/docs@workspace:apps/docs"],
 
     "@gigaboard/example-next-analysis": ["@gigaboard/example-next-analysis@workspace:examples/next-analysis"],
@@ -311,10 +256,6 @@
     "@gigaboard/example-next-showcase": ["@gigaboard/example-next-showcase@workspace:examples/next-showcase"],
 
     "@gigaboard/example-puzzle-trainer": ["@gigaboard/example-puzzle-trainer@workspace:examples/puzzle-trainer"],
-
-    "@gigaboard/pieces": ["@gigaboard/pieces@workspace:packages/pieces"],
-
-    "@gigaboard/themes": ["@gigaboard/themes@workspace:packages/themes"],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
@@ -612,8 +553,6 @@
 
     "expect-type": ["expect-type@1.3.0", "", {}, "sha512-knvyeauYhqjOYvQ66MznSMs83wmHrCycNEN6Ao+2AeYEfxUIkuiVxdEa1qlGEPK+We3n0THiDciYSsCcgW/DoA=="],
 
-    "fast-check": ["fast-check@3.23.2", "", { "dependencies": { "pure-rand": "^6.1.0" } }, "sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A=="],
-
     "fdir": ["fdir@6.5.0", "", { "peerDependencies": { "picomatch": "^3 || ^4" }, "optionalPeers": ["picomatch"] }, "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg=="],
 
     "fix-dts-default-cjs-exports": ["fix-dts-default-cjs-exports@1.0.1", "", { "dependencies": { "magic-string": "^0.30.17", "mlly": "^1.7.4", "rollup": "^4.34.8" } }, "sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg=="],
@@ -725,8 +664,6 @@
     "postcss-load-config": ["postcss-load-config@6.0.1", "", { "dependencies": { "lilconfig": "^3.1.1" }, "peerDependencies": { "jiti": ">=1.21.0", "postcss": ">=8.0.9", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["jiti", "postcss", "tsx", "yaml"] }, "sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g=="],
 
     "pretty-format": ["pretty-format@27.5.1", "", { "dependencies": { "ansi-regex": "^5.0.1", "ansi-styles": "^5.0.0", "react-is": "^17.0.1" } }, "sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ=="],
-
-    "pure-rand": ["pure-rand@6.1.0", "", {}, "sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA=="],
 
     "react": ["react@19.2.5", "", {}, "sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA=="],
 

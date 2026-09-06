@@ -10,7 +10,7 @@
  * intercepts clicks; the piece on top remains fully interactive.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { CSS_VARS } from "../default-theme.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 import type { Orientation } from "../types.js";

@@ -15,24 +15,9 @@
     }
   ],
   "packages": {
-    "packages/core": {
-      "package-name": "@gigaboard/core",
-      "component": "core",
-      "changelog-path": "CHANGELOG.md"
-    },
     "packages/react": {
       "package-name": "gigaboard",
-      "component": "react",
-      "changelog-path": "CHANGELOG.md"
-    },
-    "packages/pieces": {
-      "package-name": "@gigaboard/pieces",
-      "component": "pieces",
-      "changelog-path": "CHANGELOG.md"
-    },
-    "packages/themes": {
-      "package-name": "@gigaboard/themes",
-      "component": "themes",
+      "component": "gigaboard",
       "changelog-path": "CHANGELOG.md"
     }
   },

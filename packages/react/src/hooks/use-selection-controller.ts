@@ -32,7 +32,7 @@
  * no layout. Matches chessground's class-toggle strategy.
  */
 
-import type { BoardModel, SquareIndex } from "@gigaboard/core";
+import type { BoardModel, SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
 import type { LegalTargetStyle } from "../types.js";
 

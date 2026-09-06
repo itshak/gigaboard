@@ -8,9 +8,9 @@ name: release
 #     pushes the git tags, and creates the GitHub Releases.
 #
 #  2. `publish` job — gated on `needs.release-please.outputs.releases_created`.
-#     Only fires when step 1 actually cut one or more releases this run.
-#     Runs the full test gate and publishes every released package to npm
-#     with provenance via Trusted Publishing (OIDC).
+#     Only fires when step 1 actually cut a release this run.
+#     Runs the full test gate and publishes the single `gigaboard` package
+#     to npm with provenance via Trusted Publishing (OIDC).
 #
 # Why both live in one workflow: events emitted by `GITHUB_TOKEN`
 # (including release-please's "release published" event) do NOT trigger
@@ -18,8 +18,9 @@ name: release
 # separate `release: published` workflow never fires. Colocating the
 # publish step sidesteps the limitation without needing a PAT.
 #
-# `paths_released` enumerates exactly which package directories need
-# `npm publish` on the automatic release path. The manual retry path
+# `paths_released` enumerates the single package directory needing
+# `npm publish` on the automatic release path (always `["packages/react"]`
+# for the consolidated `gigaboard` package). The manual retry path
 # starts from the manifest and filters out versions that already exist
 # on npm.
 
@@ -137,7 +138,8 @@ jobs:
       # Determine which package directories to publish.
       #
       # - release-please path: `paths_released` is a JSON array of
-      #   package dirs (e.g. ["packages/core","packages/react",...]).
+      #   package dirs (always `["packages/react"]` for the single
+      #   `gigaboard` package).
       # - workflow_dispatch path: no release-please output — consider
       #   every package listed in the manifest, then skip versions that
       #   are already published. This keeps retries from failing on

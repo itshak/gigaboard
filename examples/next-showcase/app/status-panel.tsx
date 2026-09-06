@@ -1,6 +1,6 @@
 "use client";
 
-import type { BoardModel } from "@gigaboard/core";
+import type { BoardModel } from "gigaboard/core";
 import { useBoardSnapshot } from "gigaboard";
 import { buttonGhostStyle, buttonPrimaryStyle } from "./showcase";
 

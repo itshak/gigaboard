@@ -6,7 +6,7 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@gigaboard/core";
+import type { BoardModel } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 

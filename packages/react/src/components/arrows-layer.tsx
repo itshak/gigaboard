@@ -51,7 +51,7 @@
  * square".
  */
 
-import type { Arrow, BoardModel } from "@gigaboard/core";
+import type { Arrow, BoardModel } from "../core/index.js";
 import {
   forwardRef,
   memo,

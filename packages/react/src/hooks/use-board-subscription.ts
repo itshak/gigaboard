@@ -14,7 +14,7 @@
  * that byte.
  */
 
-import type { BoardModel, BoardSnapshot, SquareIndex } from "@gigaboard/core";
+import type { BoardModel, BoardSnapshot, SquareIndex } from "../core/index.js";
 import { useCallback, useSyncExternalStore } from "react";
 
 /** Subscribe to the entire board snapshot. Wakes up on every commit. */

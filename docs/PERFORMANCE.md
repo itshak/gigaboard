@@ -17,10 +17,10 @@ The numbers behind that contract are committed as benchmarks in `apps/benchmarks
 
 | Metric | Budget | Enforcement |
 |---|---|---|
-| `@gigaboard/core` gzip | < 10 KB | `size-limit` |
+| `gigaboard/core` gzip | < 10 KB | `size-limit` |
 | `gigaboard` gzip | < 24 KB | `size-limit` |
-| `@gigaboard/pieces` gzip per set | < 2 KB | `size-limit` |
-| `@gigaboard/themes` gzip per theme | < 1 KB | `size-limit` |
+| `gigaboard/pieces` gzip per set | < 2 KB | `size-limit` |
+| `gigaboard/themes` gzip per theme | < 1 KB | `size-limit` |
 | Re-renders per move | ≤ 4 | React Profiler bench |
 | Re-renders per hover | 0 | React Profiler bench |
 | Re-renders per drag frame | 0 | React Profiler bench |

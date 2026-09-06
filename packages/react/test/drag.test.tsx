@@ -7,8 +7,8 @@
  */
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { BoardModel } from "@gigaboard/core";
-import { Color } from "@gigaboard/core";
+import type { BoardModel } from "../src/core/index.js";
+import { Color } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   squareCentre as centreOf,

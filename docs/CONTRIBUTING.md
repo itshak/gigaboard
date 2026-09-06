@@ -23,7 +23,7 @@ Requirements: Bun ≥ 1.3, Node ≥ 20. Node is used only for Playwright and a f
 
 ```bash
 bun run turbo dev              # start docs + watch builds
-bun -F @gigaboard/core test --watch
+bun -F gigaboard test --watch
 bun run turbo lint             # format + lint
 bun run turbo typecheck
 bun run turbo test:visual      # Playwright + Loki

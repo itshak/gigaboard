@@ -10,7 +10,7 @@
  * layers inside the board container.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { memo, type ReactNode, useMemo } from "react";
 import type { Orientation, SquareContext } from "../types.js";
 import { Square } from "./square.js";

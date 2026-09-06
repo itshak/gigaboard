@@ -11,11 +11,11 @@
  * hint survives the next move-start commit instead of flickering.
  */
 
-import type { Arrow, BoardModel, SquareIndex } from "@gigaboard/core";
-import { chesscom } from "@gigaboard/pieces";
+import type { Arrow, BoardModel, SquareIndex } from "gigaboard/core";
+import { chesscom } from "gigaboard/pieces";
 import type { MoveSoundOptions } from "gigaboard";
 import { Chessboard, useBoardSlice, useChessGame } from "gigaboard";
-import { wood } from "@gigaboard/themes";
+import { wood } from "gigaboard/themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StockfishEngine, type StockfishMessage } from "./stockfish-engine";
 

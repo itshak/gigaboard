@@ -21,7 +21,7 @@ import { defineConfig } from "vite";
  */
 export default defineConfig({
   plugins: [react()],
-  // `@gigaboard/core` dev-only assertions read `process.env["NODE_ENV"]`
+  // `gigaboard/core` dev-only assertions read `process.env["NODE_ENV"]`
   // with bracket access, which Vite's built-in `process.env.NODE_ENV`
   // replacement does NOT rewrite. Stub `process.env` here so the browser
   // bundle doesn't throw `process is not defined` on first eval.

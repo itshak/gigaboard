@@ -63,10 +63,10 @@ If this sounds like `chessground` — it is, but wrapped in idiomatic React with
 
 ```bash
 bun remove react-chessboard chess.js
-bun add gigaboard @gigaboard/pieces @gigaboard/themes
+bun add gigaboard
 ```
 
-`gigaboard` defaults to the green theme, Neo pieces, and bundled move sounds; `@gigaboard/pieces` and `@gigaboard/themes` remain separate tree-shakable packages for customisation. `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
+`gigaboard` defaults to the green theme, Neo pieces, and bundled move sounds; `gigaboard/pieces/*` and `gigaboard/themes/*` remain tree-shakable subpath exports for customisation. `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
 
 ---
 
@@ -135,7 +135,7 @@ Things gone: `useState`, the `Chess` clone-on-every-move dance, the manual FEN p
 `react-chessboard` gives you string coordinates in callbacks (`from: "e2"`, `to: "e4"`). `gigaboard` emits a `PackedMove` — a branded `u16` that encodes `from | to | promotion | kind`. Decode only when you need to:
 
 ```ts
-import { decodePackedMove, moveToUci } from "@gigaboard/core";
+import { decodePackedMove, moveToUci } from "gigaboard/core";
 
 onMove={(m) => {
   const { from, to, promotion, kind } = decodePackedMove(m);
@@ -170,7 +170,7 @@ const algebraic = `${"abcdefgh"[file]}${rank + 1}`;
 | `isDraggablePiece({ piece, sourceSquare })`     | `canDragPiece({ square, cell })`. `cell` is a `BoardCell` byte — use `pieceTypeOf(cell)` / `colorOf(cell)`.  |
 | `boardWidth`                                    | Removed. The board fills its container; set CSS `width` / `height` on the wrapper. See §10.                  |
 | `customBoardStyle`                              | `style` + `className` on `<Chessboard/>`.                                                                    |
-| `customDarkSquareStyle` / `customLightSquareStyle` | Use a `Theme` (`@gigaboard/themes/*`) or author your own `Record<string, string>` of CSS vars — see §11.   |
+| `customDarkSquareStyle` / `customLightSquareStyle` | Use a `Theme` (`gigaboard/themes/*`) or author your own `Record<string, string>` of CSS vars — see §11.   |
 | `customSquareStyles`                            | `renderSquare(ctx) => ReactNode` — absolute-positioned overlay per square.                                    |
 | `customPieces`                                  | `pieces: PieceRenderer` — a `(args: { cell, square }) => ReactNode`. See §12.                                 |
 | `customArrows`                                  | `game.setManagedArrows([...])` (engine-owned) or `game.addArrow(...)` (ad-hoc). See §14.                      |
@@ -280,8 +280,8 @@ Two paths, depending on how much you're customising.
 **Pre-built themes.** Import a palette and pass it:
 
 ```tsx
-import { green } from "@gigaboard/themes/green";
-import { brown } from "@gigaboard/themes/brown";
+import { green } from "gigaboard/themes/green";
+import { brown } from "gigaboard/themes/brown";
 // …blue, wood
 <Chessboard game={game} theme={green} />
 ```
@@ -320,7 +320,7 @@ The callback returns React nodes that render absolute-positioned inside each squ
 
 ```tsx
 import type { PieceRenderer } from "gigaboard";
-import { pieceTypeOf, colorOf, Color, PieceType } from "@gigaboard/core";
+import { pieceTypeOf, colorOf, Color, PieceType } from "gigaboard/core";
 
 const myPieces: PieceRenderer = ({ cell, square }) => {
   const color = colorOf(cell);
@@ -332,7 +332,7 @@ const myPieces: PieceRenderer = ({ cell, square }) => {
 <Chessboard game={game} pieces={myPieces} />
 ```
 
-Or import a full pre-built set from `@gigaboard/pieces/{alpha,cburnett,chesscom,merida,neo}`. Each is a tree-shakable sub-path at ~660 B gzip.
+Or import a full pre-built set from `gigaboard/pieces/{alpha,cburnett,chesscom,merida,neo}`. Each is a tree-shakable sub-path at ~660 B gzip.
 
 **Stability matters.** Return referentially-stable React nodes — ideally stateless SVG. A renderer that allocates new closures per call forces per-commit re-rendering and you'll lose the commit-count win.
 
@@ -386,7 +386,7 @@ Because `chess.js` plays no part in the hot drag / render path, its 33 µs `tryM
 **Programmatic** (engine hints, coach annotations). Managed arrows survive user click-to-dismiss:
 
 ```ts
-import { makeArrow } from "@gigaboard/core";
+import { makeArrow } from "gigaboard/core";
 
 useEffect(() => {
   if (!game || !bestMove) return;
@@ -481,7 +481,7 @@ export default function RootLayout({ children }) { return <html><body>{children}
 
 Paste into your tracking tool, tick as you go.
 
-- [ ] Swap `react-chessboard` + `chess.js` for `gigaboard` + `@gigaboard/pieces` + `@gigaboard/themes`.
+- [ ] Swap `react-chessboard` + `chess.js` for `gigaboard` (including `gigaboard/pieces/*` + `gigaboard/themes/*`).
 - [ ] Delete the `useState<Chess>` and `setGame(new Chess(...))` plumbing.
 - [ ] Replace `position={fen}` with `game={useChessGame()}` + `fallbackFen`.
 - [ ] Rewrite `onPieceDrop` as `onMove` + (if needed) `canDragPiece`.

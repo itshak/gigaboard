@@ -34,7 +34,7 @@
  * semi-transparent rgba tints.
  */
 
-import type { BoardModel, SquareIndex } from "@gigaboard/core";
+import type { BoardModel, SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
 
 /** Values written to `data-gb-last-move`. */

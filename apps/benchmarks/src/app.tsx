@@ -21,10 +21,10 @@ import {
   createBoardModel,
   createGigachessAdapter,
   type SquareIndex,
-} from "@gigaboard/core";
-import { neo } from "@gigaboard/pieces/neo";
+} from "gigaboard/core";
+import { neo } from "gigaboard/pieces/neo";
 import { Chessboard } from "gigaboard";
-import { green } from "@gigaboard/themes/green";
+import { green } from "gigaboard/themes/green";
 import { useEffect, useRef, useState } from "react";
 import {
   type BenchMetrics,

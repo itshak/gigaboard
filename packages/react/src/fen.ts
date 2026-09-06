@@ -18,7 +18,7 @@
  * rather than silently producing a blank board.
  */
 
-import type { BoardCell } from "@gigaboard/core";
+import type { BoardCell } from "./core/index.js";
 
 /** FEN piece letter → our 1..12 `BoardCell` code, or 0 for unknown. */
 function pieceCellFromFenChar(ch: string): BoardCell {

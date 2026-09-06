@@ -25,7 +25,7 @@
  * ```
  */
 
-import type { BoardCell, SquareIndex } from "@gigaboard/core";
+import type { BoardCell, SquareIndex } from "./core/index.js";
 import type { CSSProperties, ReactNode } from "react";
 import { CSS_VARS, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
@@ -58,10 +58,10 @@ export interface StaticChessboardProps {
   /** Board orientation. Defaults to `"white"`. */
   readonly orientation?: Orientation;
 
-  /** Theme — defaults to the green palette from `@gigaboard/themes`. */
+  /** Theme — defaults to the green palette from `gigaboard/themes`. */
   readonly theme?: Theme;
 
-  /** Piece renderer — defaults to the `neo` set from `@gigaboard/pieces`. */
+  /** Piece renderer — defaults to the `neo` set from `gigaboard/pieces`. */
   readonly pieces?: PieceRenderer;
 
   /** Show algebraic coordinate labels on the edges. Default `true`. */

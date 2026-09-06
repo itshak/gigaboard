@@ -153,7 +153,7 @@ bun install
 bun run turbo test                   # unit + integration, all packages
 bun run turbo test:visual            # Playwright + Loki
 bun run turbo bench                  # perf regression harness
-bun -F @gigaboard/core test --watch
+bun -F gigaboard test --watch
 ```
 
 Visual baselines update: `bun run turbo test:visual -- --update-snapshots`. Always include the updated snapshots in your PR and explain why they changed.

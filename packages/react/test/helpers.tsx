@@ -7,7 +7,7 @@
  */
 
 import { type RenderResult, render } from "@testing-library/react";
-import { type BoardModel, createBoardModel, createGigachessAdapter } from "@gigaboard/core";
+import { type BoardModel, createBoardModel, createGigachessAdapter } from "../src/core/index.js";
 import { afterAll, beforeAll } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import type { ChessboardProps } from "../src/types.js";

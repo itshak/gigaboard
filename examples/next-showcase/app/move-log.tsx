@@ -1,6 +1,6 @@
 "use client";
 
-import type { PackedMove, SquareIndex } from "@gigaboard/core";
+import type { PackedMove, SquareIndex } from "gigaboard/core";
 
 interface Props {
   readonly moves: readonly PackedMove[];
@@ -80,7 +80,7 @@ function pairUp(moves: readonly PackedMove[]): Array<[string, string | null]> {
  * Fallback "long algebraic" formatter (e2-e4). The engine doesn't expose SAN
  * here, so we show from→to squares; enough to verify moves in the log.
  *
- * PackedMove layout (from @gigaboard/core): bits 0–5 = from, bits 6–11 = to.
+ * PackedMove layout (from gigaboard/core): bits 0–5 = from, bits 6–11 = to.
  */
 function formatMove(move: PackedMove): string {
   const from = (move & 0x3f) as SquareIndex;

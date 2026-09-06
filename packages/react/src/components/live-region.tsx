@@ -17,7 +17,7 @@
  * snapshot so no extra engine call is required.
  */
 
-import { type BoardModel, decodePackedMove, type PackedMove } from "@gigaboard/core";
+import { type BoardModel, decodePackedMove, type PackedMove } from "../core/index.js";
 import { useMemo } from "react";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 

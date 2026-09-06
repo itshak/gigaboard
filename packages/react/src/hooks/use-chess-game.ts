@@ -14,7 +14,7 @@ import {
   type BoardModelOptions,
   createBoardModel,
   createGigachessAdapter,
-} from "@gigaboard/core";
+} from "../core/index.js";
 import { useEffect, useRef, useState } from "react";
 import type { UseChessGameOptions } from "../types.js";
 

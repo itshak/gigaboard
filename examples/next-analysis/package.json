@@ -2,7 +2,7 @@
   "name": "@gigaboard/example-next-analysis",
   "version": "0.0.0",
   "private": true,
-  "description": "Analysis board example (history navigation, arrows, premoves) — lands in M4.",
+  "description": "Analysis board example (history navigation, arrows, premoves) \u2014 lands in M4.",
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 3002",
@@ -16,9 +16,6 @@
     "postinstall": "node scripts/copy-sounds.mjs && node scripts/copy-stockfish.mjs"
   },
   "dependencies": {
-    "@gigaboard/core": "workspace:*",
-    "@gigaboard/pieces": "workspace:*",
-    "@gigaboard/themes": "workspace:*",
     "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",

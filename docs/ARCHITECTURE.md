@@ -4,15 +4,15 @@
 
 ## The one-sentence version
 
-A framework-agnostic state core (`@gigaboard/core`) owns a `gigachess` engine handle and exposes a `useSyncExternalStore`-compatible byte-level snapshot; a layered React renderer (`gigaboard`) subscribes per square, animates via WAAPI, and paints arrows on a Canvas overlay — so a single move costs ≤ 4 component re-renders, hover costs 0, and drag costs 0 re-renders per frame.
+A framework-agnostic state core (`gigaboard/core`) owns a `gigachess` engine handle and exposes a `useSyncExternalStore`-compatible byte-level snapshot; a layered React renderer (`gigaboard`) subscribes per square, animates via WAAPI, and paints arrows on a Canvas overlay — so a single move costs ≤ 4 component re-renders, hover costs 0, and drag costs 0 re-renders per frame.
 
 ## Packages
 
 ```
-@gigaboard/core     zero React, zero DOM. State machine + engine adapter.
+gigaboard/core     zero React, zero DOM. State machine + engine adapter.
 gigaboard           components, hooks, renderers (DOM default, Canvas opt-in).
-@gigaboard/pieces   SVG piece sets, tree-shakeable per set.
-@gigaboard/themes   CSS variables per theme.
+gigaboard/pieces   SVG piece sets, tree-shakeable per set.
+gigaboard/themes   CSS variables per theme.
 ```
 
 Each package ships ESM + CJS + `.d.ts` via `tsup`, `sideEffects: false`, sub-path exports for anything optional.
@@ -71,7 +71,7 @@ Full-Canvas renderer (post-1.0) is a plug-in alternative, not the default.
 
 ## Engine adapter protocol
 
-`@gigaboard/core` speaks to the engine through a single interface:
+`gigaboard/core` speaks to the engine through a single interface:
 
 ```ts
 interface EngineAdapter {
@@ -118,5 +118,5 @@ The default adapter is `createGigachessAdapter()` — wraps `gigachess`. Users c
 
 ## Future targets
 
-- **React Native** (`@gigaboard/react-native`, M8+): shares `@gigaboard/core` verbatim; a new renderer package substitutes `react-native-svg` for DOM.
+- **React Native** (`@gigaboard/react-native`, M8+): shares `gigaboard/core` verbatim; a new renderer package substitutes `react-native-svg` for DOM.
 - **Jazz CRDT** (`@gigaboard/jazz`, post-1.0): collaborative adapter maps `board-model` state into a `CoMap` for real-time multiplayer.

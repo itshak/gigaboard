@@ -21,7 +21,7 @@ import {
   createBoardModel,
   createGigachessAdapter,
   type SquareIndex,
-} from "@gigaboard/core";
+} from "gigaboard/core";
 import { Chessboard } from "gigaboard";
 import { Chess } from "chess.js";
 import {

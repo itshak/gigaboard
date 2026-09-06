@@ -22,7 +22,7 @@
  * same DOM and the shared constants dedupe in the minified bundle.
  */
 
-import type { BoardCell, SquareIndex } from "@gigaboard/core";
+import type { BoardCell, SquareIndex } from "../core/index.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 import { algebraicOf, CONTAINER_STYLE, gridCoord, SLOT_BASE_STYLE } from "./piece-layer.js";
 

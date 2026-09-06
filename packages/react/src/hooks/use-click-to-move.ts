@@ -34,7 +34,7 @@ import {
   type PackedMove,
   PieceType,
   type SquareIndex,
-} from "@gigaboard/core";
+} from "../core/index.js";
 import { useCallback } from "react";
 
 /** Pawn = piece-type 0; rank 7 / rank 0 is the last rank for white / black. */

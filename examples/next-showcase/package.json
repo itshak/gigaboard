@@ -2,7 +2,7 @@
   "name": "@gigaboard/example-next-showcase",
   "version": "0.0.0",
   "private": true,
-  "description": "Comprehensive Next.js 15 + Gigaboard showcase — themes, piece sets, sounds, and every configurable knob.",
+  "description": "Comprehensive Next.js 15 + Gigaboard showcase \u2014 themes, piece sets, sounds, and every configurable knob.",
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
@@ -16,9 +16,6 @@
     "postinstall": "node scripts/copy-sounds.mjs"
   },
   "dependencies": {
-    "@gigaboard/core": "workspace:*",
-    "@gigaboard/pieces": "workspace:*",
-    "@gigaboard/themes": "workspace:*",
     "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",

@@ -20,7 +20,7 @@ import {
   type PieceType,
   pieceTypeOf,
   type SquareIndex,
-} from "@gigaboard/core";
+} from "./core/index.js";
 import {
   type CSSProperties,
   useCallback,

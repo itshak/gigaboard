@@ -28,10 +28,10 @@ import {
   createBoardModel,
   createGigachessAdapter,
   type EngineAdapter,
-} from "@gigaboard/core";
-import { neo } from "@gigaboard/pieces/neo";
+} from "gigaboard/core";
+import { neo } from "gigaboard/pieces/neo";
 import { Chessboard } from "gigaboard";
-import { green } from "@gigaboard/themes/green";
+import { green } from "gigaboard/themes/green";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 

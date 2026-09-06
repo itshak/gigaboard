@@ -7,7 +7,7 @@
  * errors tend to land.
  */
 
-import type { SquareIndex } from "@gigaboard/core";
+import type { SquareIndex } from "../src/core/index.js";
 import { describe, expect, it } from "vitest";
 import { algebraicOf, getPointAtSquareCentre, getSquareAtPoint } from "../src/lib/geometry.js";
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Node-side microbenchmarks — `@gigaboard/core` (gigachess) vs
+ * Node-side microbenchmarks — `gigaboard/core` (gigachess) vs
  * `chess.js` (pure JS, the engine `react-chessboard` uses internally).
  *
  * Each scenario runs a warmup + a measurement pass, emits ns/op and
@@ -25,7 +25,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
-import { createGigachessAdapter } from "@gigaboard/core";
+import { createGigachessAdapter } from "gigaboard/core";
 import { Chess } from "chess.js";
 
 const here = dirname(fileURLToPath(import.meta.url));

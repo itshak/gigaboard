@@ -1,4 +1,4 @@
-import { green } from "@gigaboard/themes/green";
+import { green } from "./themes/green.js";
 import type { Theme } from "./types.js";
 
 /** Keys every Gigaboard board understands. */

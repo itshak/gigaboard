@@ -16,7 +16,7 @@ export {
   unpackMove,
   PieceType,
   Color,
-} from "@gigaboard/core";
+} from "./core/index.js";
 export type {
   BoardModel,
   BoardSnapshot,
@@ -25,7 +25,7 @@ export type {
   PackedMove,
   SquareIndex,
   ZobristKey,
-} from "@gigaboard/core";
+} from "./core/index.js";
 
 // ---- Components ----
 export { Chessboard } from "./chessboard.js";

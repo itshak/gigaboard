@@ -50,6 +50,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./core": {
+      "import": {
+        "types": "./dist/core.d.ts",
+        "default": "./dist/core.js"
+      },
+      "require": {
+        "types": "./dist/core.d.cts",
+        "default": "./dist/core.cjs"
+      }
+    },
     "./server": {
       "import": {
         "types": "./dist/server.d.ts",
@@ -68,6 +78,46 @@
       "require": {
         "types": "./dist/canvas.d.cts",
         "default": "./dist/canvas.cjs"
+      }
+    },
+    "./pieces": {
+      "import": {
+        "types": "./dist/pieces.d.ts",
+        "default": "./dist/pieces.js"
+      },
+      "require": {
+        "types": "./dist/pieces.d.cts",
+        "default": "./dist/pieces.cjs"
+      }
+    },
+    "./pieces/*": {
+      "import": {
+        "types": "./dist/pieces/*.d.ts",
+        "default": "./dist/pieces/*.js"
+      },
+      "require": {
+        "types": "./dist/pieces/*.d.cts",
+        "default": "./dist/pieces/*.cjs"
+      }
+    },
+    "./themes": {
+      "import": {
+        "types": "./dist/themes.d.ts",
+        "default": "./dist/themes.js"
+      },
+      "require": {
+        "types": "./dist/themes.d.cts",
+        "default": "./dist/themes.cjs"
+      }
+    },
+    "./themes/*": {
+      "import": {
+        "types": "./dist/themes/*.d.ts",
+        "default": "./dist/themes/*.js"
+      },
+      "require": {
+        "types": "./dist/themes/*.d.cts",
+        "default": "./dist/themes/*.cjs"
       }
     },
     "./package.json": "./package.json"
@@ -92,15 +142,14 @@
     "react-dom": "^18.3.0 || ^19.0.0"
   },
   "dependencies": {
-    "@gigaboard/core": "1.1.3",
-    "@gigaboard/pieces": "1.1.1",
-    "@gigaboard/themes": "1.1.1",
+    "gigachess": "^0.4.1",
     "web-haptics": "^0.0.6"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitest/coverage-v8": "^3.0.0",
@@ -132,6 +181,30 @@
         "react",
         "react-dom"
       ]
+    },
+    {
+      "name": "gigaboard/core (ESM)",
+      "path": "dist/core.js",
+      "limit": "10 KB",
+      "gzip": true,
+      "ignore": [
+        "gigachess"
+      ]
+    },
+    {
+      "name": "gigaboard/pieces/neo",
+      "path": "dist/pieces/neo.js",
+      "limit": "2 KB",
+      "gzip": true,
+      "ignore": [
+        "react"
+      ]
+    },
+    {
+      "name": "gigaboard/themes/brown",
+      "path": "dist/themes/brown.js",
+      "limit": "1 KB",
+      "gzip": true
     }
   ]
 }

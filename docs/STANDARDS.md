@@ -89,7 +89,7 @@ Anything exported from `src/index.ts` has:
 
 ### 2.2 State lives in stores, not Context
 
-- Engine state and board state live in `@gigaboard/core` stores, subscribed via `useSyncExternalStore`.
+- Engine state and board state live in `gigaboard/core` stores, subscribed via `useSyncExternalStore`.
 - Context is for **services** (the store instance, config) — never for state that changes. A Context whose value changes is a silent re-render grenade.
 - Each `Square` subscribes only to its byte in the `Uint8Array(64)` snapshot. Equality compares a byte, not an object; React skips untouched squares.
 
@@ -161,10 +161,10 @@ Anything exported from `src/index.ts` has:
 
 | Package | Gzip budget |
 |---|---|
-| `@gigaboard/core` | 10 KB |
+| `gigaboard/core` | 10 KB |
 | `gigaboard` | 24 KB |
-| `@gigaboard/pieces` (per set) | 2 KB |
-| `@gigaboard/themes` (per theme) | 1 KB |
+| `gigaboard/pieces` (per set) | 2 KB |
+| `gigaboard/themes` (per theme) | 1 KB |
 
 CI blocks any PR that pushes over budget. A budget increase requires a Changeset + an ADR justifying it.
 
@@ -181,7 +181,7 @@ Enforced by `apps/benchmarks` + React Profiler assertions in CI.
 
 - `"sideEffects": false` in every package `package.json`.
 - Barrels only at `src/index.ts`, hand-curated. No `export * from "./x"` unless the whole module is genuinely part of the public API.
-- Separate sub-paths for optional features: `@gigaboard/pieces/cburnett`, `@gigaboard/themes/wood`.
+- Separate sub-paths for optional features: `gigaboard/pieces/cburnett`, `gigaboard/themes/wood`.
 
 ### 4.4 Measure, don't guess
 
@@ -204,7 +204,7 @@ Enforced by `apps/benchmarks` + React Profiler assertions in CI.
 ## 6. Imports & dependencies
 
 - Relative imports only within a package (no path aliases).
-- Cross-package imports by package name (`@gigaboard/core`) with `workspace:*` version ranges in `package.json`.
+- Cross-package imports by package name (`gigaboard/core`) with `workspace:*` version ranges in `package.json`.
 - `import type` for type-only imports (enforced).
 - External dependencies: minimize ruthlessly. A new dep needs a Changeset line justifying it. "It would be convenient" is not a justification.
 
