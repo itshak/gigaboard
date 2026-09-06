@@ -159,10 +159,15 @@ for (const library of ALL_LIBRARIES) {
       // Direct state mutation — the fair comparison. No drag UI, no
       // pointer-event pacing. Each library updates its state and
       // reconciles on its own terms.
-      await page.evaluate(([f, t]) => (window.__gbBench__ ?? window.__ucrBench__)?.playMove(f, t), [from, to] as const);
+      await page.evaluate(([f, t]) => (window.__gbBench__ ?? window.__ucrBench__)?.playMove(f, t), [
+        from,
+        to,
+      ] as const);
       // Let the mutation batch settle and reflect it on the HUD so the
       // viewer can watch the cumulative count climb.
-      const mut = await page.evaluate(() => (window.__gbFlash__ ?? window.__ucrFlash__)?.getCount() ?? 0);
+      const mut = await page.evaluate(
+        () => (window.__gbFlash__ ?? window.__ucrFlash__)?.getCount() ?? 0,
+      );
       await updateHud(page, { mut });
       await page.waitForTimeout(MOVE_GAP_MS);
     }

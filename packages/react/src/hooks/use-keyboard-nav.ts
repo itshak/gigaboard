@@ -21,8 +21,8 @@
  * board-level state (selection, drag, promotion dialog).
  */
 
-import type { SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
+import type { SquareIndex } from "../core/index.js";
 import type { Orientation } from "../types.js";
 
 /**

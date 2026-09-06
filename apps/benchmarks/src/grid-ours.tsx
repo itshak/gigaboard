@@ -23,6 +23,7 @@
  * swap is a no-reflow, no-shift transition.
  */
 
+import { Chessboard } from "gigaboard";
 import {
   type BoardModel,
   createBoardModel,
@@ -30,7 +31,6 @@ import {
   type EngineAdapter,
 } from "gigaboard/core";
 import { neo } from "gigaboard/pieces/neo";
-import { Chessboard } from "gigaboard";
 import { green } from "gigaboard/themes/green";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";

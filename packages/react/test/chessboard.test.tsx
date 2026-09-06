@@ -7,9 +7,9 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BoardModel } from "../src/core/index.js";
 import { Color } from "../src/core/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
 function gridcell(label: string): HTMLElement {

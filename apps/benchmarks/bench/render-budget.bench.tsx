@@ -16,14 +16,14 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { act, render } from "@testing-library/react";
+import { Chess } from "chess.js";
+import { Chessboard } from "gigaboard";
 import {
   type BoardModel,
   createBoardModel,
   createGigachessAdapter,
   type SquareIndex,
 } from "gigaboard/core";
-import { Chessboard } from "gigaboard";
-import { Chess } from "chess.js";
 import {
   Profiler,
   type ProfilerOnRenderCallback,

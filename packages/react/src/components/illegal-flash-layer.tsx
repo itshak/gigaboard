@@ -12,8 +12,8 @@
  * a pulse.
  */
 
-import type { SquareIndex } from "../core/index.js";
 import { useLayoutEffect, useRef } from "react";
+import type { SquareIndex } from "../core/index.js";
 import { DEFAULT_ILLEGAL_FLASH_TINT } from "../default-theme.js";
 import type { Orientation } from "../types.js";
 

@@ -45,8 +45,8 @@
  *   ≈ 98 % reduction in cursor-system DOM mutations per move.
  */
 
-import type { BoardModel } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
+import type { BoardModel } from "../core/index.js";
 
 /** Singleton id used to dedupe the injected `<style>` element. */
 const STYLE_ID = "gb-cursor-styles";

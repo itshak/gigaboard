@@ -14,9 +14,9 @@
  * OS menu.
  */
 
-import type { BoardModel, SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
 import type { ArrowsLayerHandle } from "../components/arrows-layer.js";
+import type { BoardModel, SquareIndex } from "../core/index.js";
 import { getSquareAtPoint } from "../lib/geometry.js";
 import type { Orientation, ResolvedArrowPalette } from "../types.js";
 

@@ -6,8 +6,8 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { BoardModel } from "../src/core/index.js";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
 /** Find the cell that currently holds the roving tabindex. */

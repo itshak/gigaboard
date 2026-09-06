@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { type BoardSnapshot, Color, createBoardStore, type SquareIndex } from "../../src/core/index.js";
+import {
+  type BoardSnapshot,
+  Color,
+  createBoardStore,
+  type SquareIndex,
+} from "../../src/core/index.js";
 
 function makeSnapshot(board: Uint8Array, overrides: Partial<BoardSnapshot> = {}): BoardSnapshot {
   return Object.freeze({

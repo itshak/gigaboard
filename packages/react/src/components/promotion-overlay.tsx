@@ -20,6 +20,7 @@
  * piece glyphs) are in scope.
  */
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type BoardCell,
   type Color,
@@ -27,7 +28,6 @@ import {
   PieceType,
   type SquareIndex,
 } from "../core/index.js";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 

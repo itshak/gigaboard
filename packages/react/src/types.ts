@@ -6,6 +6,7 @@
  * their respective modules; this file is types-only.
  */
 
+import type { CSSProperties, ReactNode } from "react";
 import type {
   Arrow,
   BoardCell,
@@ -15,7 +16,6 @@ import type {
   PieceType,
   SquareIndex,
 } from "./core/index.js";
-import type { CSSProperties, ReactNode } from "react";
 import type { MoveHapticOptions } from "./hooks/use-move-haptics.js";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 

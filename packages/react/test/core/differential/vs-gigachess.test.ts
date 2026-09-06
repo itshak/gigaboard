@@ -14,8 +14,8 @@ import { describe, expect, it } from "vitest";
 import {
   Color,
   encodeBoardCell,
-  packMove,
   PieceType,
+  packMove,
   planAnimations,
   type SquareIndex,
 } from "../../../src/core/index.js";
@@ -41,13 +41,20 @@ function squareIndexOf(alg: string): SquareIndex {
 
 function roleOfChar(char: string): PieceType {
   switch (char.toLowerCase()) {
-    case "p": return PieceType.Pawn;
-    case "n": return PieceType.Knight;
-    case "b": return PieceType.Bishop;
-    case "r": return PieceType.Rook;
-    case "q": return PieceType.Queen;
-    case "k": return PieceType.King;
-    default: return PieceType.Pawn;
+    case "p":
+      return PieceType.Pawn;
+    case "n":
+      return PieceType.Knight;
+    case "b":
+      return PieceType.Bishop;
+    case "r":
+      return PieceType.Rook;
+    case "q":
+      return PieceType.Queen;
+    case "k":
+      return PieceType.King;
+    default:
+      return PieceType.Pawn;
   }
 }
 

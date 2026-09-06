@@ -9,8 +9,8 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import { type BoardModel, makeArrow, type SquareIndex } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type BoardModel, makeArrow, type SquareIndex } from "../src/core/index.js";
 import {
   installBoardGeometry,
   makeBoardModel,

@@ -18,8 +18,8 @@
  * board grid beneath owns pointer events.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { memo } from "react";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { useSquareCell } from "../hooks/use-board-subscription.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 

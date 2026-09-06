@@ -7,8 +7,8 @@
  */
 
 import { act, render } from "@testing-library/react";
-import type { BoardModel } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { BoardModel } from "../src/core/index.js";
 import { useMoveSound } from "../src/hooks/use-move-sound.js";
 import { makeBoardModel } from "./helpers.js";
 

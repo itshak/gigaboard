@@ -19,8 +19,8 @@
  * the work. `handle.hide()` on drag-end.
  */
 
-import type { BoardCell } from "../core/index.js";
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import type { BoardCell } from "../core/index.js";
 import type { PieceRenderer } from "../types.js";
 
 /**

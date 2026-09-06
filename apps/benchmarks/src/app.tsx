@@ -16,6 +16,7 @@
  * The board paints pieces on the very first commit with zero WASM compile latency.
  */
 
+import { Chessboard } from "gigaboard";
 import {
   type BoardModel,
   createBoardModel,
@@ -23,7 +24,6 @@ import {
   type SquareIndex,
 } from "gigaboard/core";
 import { neo } from "gigaboard/pieces/neo";
-import { Chessboard } from "gigaboard";
 import { green } from "gigaboard/themes/green";
 import { useEffect, useRef, useState } from "react";
 import {

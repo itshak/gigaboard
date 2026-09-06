@@ -80,7 +80,9 @@ async function measureGrid(page: Page, library: Library, n: GridN): Promise<Grid
   // for `ready` to resolve, which means engines have been hydrated and
   // every board is playable. For libraries without a deferred-engine
   // mount strategy this number is effectively equal to `paintMs`.
-  await page.waitForFunction(() => (window.__gbGrid__ ?? window.__ucrGrid__) !== undefined, null, { timeout: 60_000 });
+  await page.waitForFunction(() => (window.__gbGrid__ ?? window.__ucrGrid__) !== undefined, null, {
+    timeout: 60_000,
+  });
   await page.evaluate(() => (window.__gbGrid__ ?? window.__ucrGrid__)?.ready);
   const interactiveMs = Date.now() - t0;
 
@@ -88,9 +90,9 @@ async function measureGrid(page: Page, library: Library, n: GridN): Promise<Grid
   // have landed before we snapshot.
   await page.waitForTimeout(500);
 
-  const harnessMetrics = (await page.evaluate(() => (window.__gbGrid__ ?? window.__ucrGrid__)?.metrics())) as
-    | BenchMetrics
-    | undefined;
+  const harnessMetrics = (await page.evaluate(() =>
+    (window.__gbGrid__ ?? window.__ucrGrid__)?.metrics(),
+  )) as BenchMetrics | undefined;
 
   // CDP side: force GC first so the heap number reflects live state,
   // not leftover allocator noise. Then read DOM node count + JS heap.
@@ -135,7 +137,9 @@ test.beforeAll(async ({ browser }) => {
   for (const library of ALL_LIBRARIES) {
     await page.goto(`${GRID_ROUTES[library]}?grid=1`, { waitUntil: "domcontentloaded" });
     await page
-      .waitForFunction(() => (window.__gbGrid__ ?? window.__ucrGrid__) !== undefined, null, { timeout: 60_000 })
+      .waitForFunction(() => (window.__gbGrid__ ?? window.__ucrGrid__) !== undefined, null, {
+        timeout: 60_000,
+      })
       .catch(() => {
         /* best-effort warmup — fall through if the page didn't install
            the harness (e.g. a transient dev-server hiccup). */

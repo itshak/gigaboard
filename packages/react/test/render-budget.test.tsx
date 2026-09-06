@@ -11,10 +11,10 @@
  */
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "../src/core/index.js";
 import { Profiler, type ProfilerOnRenderCallback } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
+import type { BoardModel, SquareIndex } from "../src/core/index.js";
 import { makeBoardModel } from "./helpers.js";
 
 function countingRender(model: BoardModel): {

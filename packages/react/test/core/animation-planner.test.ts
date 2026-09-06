@@ -10,22 +10,15 @@ import {
   BOARD_CELL_WR,
   type BoardCell,
   decodePackedMove,
+  MOVE2_PROMO_QUEEN,
   type PackedMove,
   PieceType,
+  packMove,
   planAnimations,
 } from "../../src/core/index.js";
 
-import {
-  packMove,
-  MOVE2_PROMO_QUEEN,
-} from "../../src/core/index.js";
-
 /** Pack a move conforming to the 16-bit Move2 wire format. */
-function pack(opts: {
-  from: number;
-  to: number;
-  promotion?: number;
-}): PackedMove {
+function pack(opts: { from: number; to: number; promotion?: number }): PackedMove {
   return packMove(opts.from, opts.to, opts.promotion ?? 0);
 }
 

@@ -27,8 +27,8 @@
  * it does not need `san()`, and it will not re-render the component.
  */
 
-import type { BoardModel } from "../core/index.js";
 import { useCallback, useEffect, useRef } from "react";
+import type { BoardModel } from "../core/index.js";
 import { classifyMoveFeedback, type MoveFeedbackKey } from "../lib/move-feedback.js";
 
 /** The seven categories of move cue, mirroring chess.com's default set. */

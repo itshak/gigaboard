@@ -51,7 +51,6 @@
  * square".
  */
 
-import type { Arrow, BoardModel } from "../core/index.js";
 import {
   forwardRef,
   memo,
@@ -63,6 +62,7 @@ import {
   useMemo,
   useRef,
 } from "react";
+import type { Arrow, BoardModel } from "../core/index.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 import type { Orientation, ResolvedArrowPalette } from "../types.js";
 

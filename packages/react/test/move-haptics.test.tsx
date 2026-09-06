@@ -1,6 +1,6 @@
 import { act, render } from "@testing-library/react";
-import type { BoardModel } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { BoardModel } from "../src/core/index.js";
 import { useMoveHaptics } from "../src/hooks/use-move-haptics.js";
 import { triggerHaptic, warmupHaptics } from "../src/lib/haptics.js";
 import { makeBoardModel } from "./helpers.js";

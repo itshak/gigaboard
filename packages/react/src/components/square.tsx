@@ -46,8 +46,8 @@
  * and wipe out any CSS-set gradient overlay.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { memo, type ReactNode, useCallback, useEffect, useRef } from "react";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { CSS_VARS } from "../default-theme.js";
 import { useSquareCell } from "../hooks/use-board-subscription.js";
 import type { SquareContext } from "../types.js";

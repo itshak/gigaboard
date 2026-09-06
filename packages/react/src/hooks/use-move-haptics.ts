@@ -1,7 +1,7 @@
 "use client";
 
-import type { BoardModel } from "../core/index.js";
 import { useCallback, useEffect, useRef } from "react";
+import type { BoardModel } from "../core/index.js";
 import {
   type HapticFeedbackOptions,
   type HapticInput,

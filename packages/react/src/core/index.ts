@@ -34,7 +34,12 @@ export { createDragController } from "./drag-controller.js";
 export type { EngineAdapter } from "./engine-adapter.js";
 export { writeBoardCell } from "./engine-adapter.js";
 // ---- Legal-move cache ----
-export type { LegalMoveEntry, LegalMoveIndex, LegalMoveIndexOptions, PositionHash } from "./legal-move-index.js";
+export type {
+  LegalMoveEntry,
+  LegalMoveIndex,
+  LegalMoveIndexOptions,
+  PositionHash,
+} from "./legal-move-index.js";
 export { createLegalMoveIndex } from "./legal-move-index.js";
 // ---- Premove buffer ----
 export type { PremoveBuffer } from "./premove-buffer.js";
@@ -80,8 +85,8 @@ export {
   MOVE2_PROMO_NONE,
   MOVE2_PROMO_QUEEN,
   MOVE2_PROMO_ROOK,
-  packMove,
   PieceType,
+  packMove,
   pieceTypeOf,
   toSquareIndex,
   unpackMove,

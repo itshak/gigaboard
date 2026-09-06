@@ -10,8 +10,8 @@
  * layers inside the board container.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { memo, type ReactNode, useMemo } from "react";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import type { Orientation, SquareContext } from "../types.js";
 import { Square } from "./square.js";
 

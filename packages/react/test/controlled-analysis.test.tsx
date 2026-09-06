@@ -1,7 +1,7 @@
 import { cleanup, render } from "@testing-library/react";
-import { makeArrow, type SquareIndex } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
+import { makeArrow, type SquareIndex } from "../src/core/index.js";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
 const hapticMocks = vi.hoisted(() => ({

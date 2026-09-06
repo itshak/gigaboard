@@ -7,9 +7,9 @@
  */
 
 import { type RenderResult, render } from "@testing-library/react";
-import { type BoardModel, createBoardModel, createGigachessAdapter } from "../src/core/index.js";
 import { afterAll, beforeAll } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
+import { type BoardModel, createBoardModel, createGigachessAdapter } from "../src/core/index.js";
 import type { ChessboardProps } from "../src/types.js";
 
 /** Build a live board model synchronously (for tests that need deterministic timing). */

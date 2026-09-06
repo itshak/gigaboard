@@ -7,9 +7,9 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BoardModel } from "../src/core/index.js";
 import { PieceType } from "../src/core/index.js";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
 /** FEN with white pawn on a7 ready to promote to a8. */
@@ -153,7 +153,9 @@ describe("promotion — built-in overlay", () => {
     expect(screen.getByRole("button", { name: "Конь" })).toBeDefined();
 
     // Live region announces active piece
-    const liveRegion = document.querySelector('[data-layer="promotion-overlay"] [aria-live="polite"]');
+    const liveRegion = document.querySelector(
+      '[data-layer="promotion-overlay"] [aria-live="polite"]',
+    );
     expect(liveRegion?.textContent).toBe("Ферзь");
 
     // Arrow navigation updates announcement

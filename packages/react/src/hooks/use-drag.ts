@@ -40,14 +40,14 @@
  *   drag-layer render state.
  */
 
+import { type RefObject, useEffect, useRef } from "react";
+import type { DragLayerHandle } from "../components/drag-layer.js";
 import {
   type BoardCell,
   type BoardModel,
   createDragController,
   type SquareIndex,
 } from "../core/index.js";
-import { type RefObject, useEffect, useRef } from "react";
-import type { DragLayerHandle } from "../components/drag-layer.js";
 import { CSS_VARS } from "../default-theme.js";
 import { algebraicOf, getSquareAtPoint } from "../lib/geometry.js";
 import type { Orientation } from "../types.js";

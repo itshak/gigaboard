@@ -34,8 +34,8 @@
  * semi-transparent rgba tints.
  */
 
-import type { BoardModel, SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect } from "react";
+import type { BoardModel, SquareIndex } from "../core/index.js";
 
 /** Values written to `data-gb-last-move`. */
 type LastMoveState = "from" | "to";

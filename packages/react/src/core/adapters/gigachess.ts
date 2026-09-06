@@ -6,13 +6,8 @@
  * and canonical King-captures-Rook castling representation (Move2).
  */
 
+import { ensureMagicTablesLoaded, ensureZobristLoaded, makeSan, type Role } from "gigachess";
 import { Chess } from "gigachess/chessjs";
-import {
-  ensureMagicTablesLoaded,
-  ensureZobristLoaded,
-  makeSan,
-  type Role,
-} from "gigachess";
 import type { EngineAdapter } from "../engine-adapter.js";
 import type { PackedMove, PieceType, SquareIndex, ZobristKey } from "../types.js";
 import { Color, encodeBoardCell, packMove, unpackMove } from "../types.js";
@@ -96,10 +91,10 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
 
       // Canonical King-captures-Rook encoding for castling
       if (res.flags.includes("k")) {
-        return (res.color === "w" ? packMove(4, 7, 0) : packMove(60, 63, 0));
+        return res.color === "w" ? packMove(4, 7, 0) : packMove(60, 63, 0);
       }
       if (res.flags.includes("q")) {
-        return (res.color === "w" ? packMove(4, 0, 0) : packMove(60, 56, 0));
+        return res.color === "w" ? packMove(4, 0, 0) : packMove(60, 56, 0);
       }
 
       const pCode = res.promotion
@@ -121,10 +116,10 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
     const res = chess.undo();
     if (res === null) return null;
     if (res.flags.includes("k")) {
-      return (res.color === "w" ? packMove(4, 7, 0) : packMove(60, 63, 0));
+      return res.color === "w" ? packMove(4, 7, 0) : packMove(60, 63, 0);
     }
     if (res.flags.includes("q")) {
-      return (res.color === "w" ? packMove(4, 0, 0) : packMove(60, 56, 0));
+      return res.color === "w" ? packMove(4, 0, 0) : packMove(60, 56, 0);
     }
     const from = squareIndexOf(res.from);
     const to = squareIndexOf(res.to);

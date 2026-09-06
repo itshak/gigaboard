@@ -7,8 +7,8 @@
  * errors tend to land.
  */
 
-import type { SquareIndex } from "../src/core/index.js";
 import { describe, expect, it } from "vitest";
+import type { SquareIndex } from "../src/core/index.js";
 import { algebraicOf, getPointAtSquareCentre, getSquareAtPoint } from "../src/lib/geometry.js";
 
 /** Stub an element whose `getBoundingClientRect` returns a fixed box. */

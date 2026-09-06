@@ -61,7 +61,6 @@ export type ZobristKey = {
   readonly hi: number;
 };
 
-
 /**
  * A single byte representing one square of the board. `0` is empty; values
  * `1..12` encode a piece. The encoding is a stable contract: consumers may
@@ -142,7 +141,6 @@ export function colorOf(cell: BoardCell): Color {
 export function pieceTypeOf(cell: BoardCell): PieceType {
   return ((cell - 1) % 6) as PieceType;
 }
-
 
 /**
  * Optional text label rendered alongside an arrow. Positioned at the

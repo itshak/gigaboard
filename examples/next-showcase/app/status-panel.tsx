@@ -1,7 +1,7 @@
 "use client";
 
-import type { BoardModel } from "gigaboard/core";
 import { useBoardSnapshot } from "gigaboard";
+import type { BoardModel } from "gigaboard/core";
 import { buttonGhostStyle, buttonPrimaryStyle } from "./showcase";
 
 interface Props {

@@ -14,14 +14,6 @@
  */
 
 import {
-  type BoardCell,
-  colorOf,
-  isEmptyCell,
-  type PieceType,
-  pieceTypeOf,
-  type SquareIndex,
-} from "./core/index.js";
-import {
   type CSSProperties,
   useCallback,
   useEffect,
@@ -41,6 +33,14 @@ import { PieceLayer } from "./components/piece-layer.js";
 import { PremoveLayer } from "./components/premove-layer.js";
 import { PromotionOverlay } from "./components/promotion-overlay.js";
 import { StaticPieceLayer } from "./components/static-piece-layer.js";
+import {
+  type BoardCell,
+  colorOf,
+  isEmptyCell,
+  type PieceType,
+  pieceTypeOf,
+  type SquareIndex,
+} from "./core/index.js";
 import { defaultArrowColors, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
 import { AnimationRunner } from "./hooks/use-animation.js";

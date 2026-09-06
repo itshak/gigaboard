@@ -14,8 +14,8 @@
  * that byte.
  */
 
-import type { BoardModel, BoardSnapshot, SquareIndex } from "../core/index.js";
 import { useCallback, useSyncExternalStore } from "react";
+import type { BoardModel, BoardSnapshot, SquareIndex } from "../core/index.js";
 
 /** Subscribe to the entire board snapshot. Wakes up on every commit. */
 export function useBoardSnapshot(model: BoardModel): BoardSnapshot {
@@ -47,10 +47,7 @@ export function useBoardSlice<T>(model: BoardModel, selector: (snapshot: BoardSn
  * to `(model, index)` — a Square that re-renders for unrelated reasons
  * doesn't force a re-subscription.
  */
-export function useSquareCell(
-  model: BoardModel | null | undefined,
-  index: SquareIndex,
-): number {
+export function useSquareCell(model: BoardModel | null | undefined, index: SquareIndex): number {
   const subscribe = useCallback(
     (listener: () => void) => (model ? model.subscribeSquare(index, listener) : () => {}),
     [model, index],

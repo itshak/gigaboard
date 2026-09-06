@@ -8,9 +8,9 @@
  */
 
 import { act, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import type { BoardModel } from "../src/core/index.js";
 import { Color, type SquareIndex } from "../src/core/index.js";
-import { describe, expect, it, vi } from "vitest";
 import { useBoardSlice, useSquareCell } from "../src/hooks/use-board-subscription.js";
 import { useChessGame } from "../src/hooks/use-chess-game.js";
 import { useClickToMove } from "../src/hooks/use-click-to-move.js";

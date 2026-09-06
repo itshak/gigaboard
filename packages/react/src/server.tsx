@@ -25,8 +25,8 @@
  * ```
  */
 
-import type { BoardCell, SquareIndex } from "./core/index.js";
 import type { CSSProperties, ReactNode } from "react";
+import type { BoardCell, SquareIndex } from "./core/index.js";
 import { CSS_VARS, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
 import { defaultPieces } from "./pieces/default-pieces.js";

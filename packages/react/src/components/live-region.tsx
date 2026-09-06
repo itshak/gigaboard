@@ -17,8 +17,8 @@
  * snapshot so no extra engine call is required.
  */
 
-import { type BoardModel, decodePackedMove, type PackedMove } from "../core/index.js";
 import { useMemo } from "react";
+import { type BoardModel, decodePackedMove, type PackedMove } from "../core/index.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 
 /** 0-indexed square → algebraic (`"e4"`). */

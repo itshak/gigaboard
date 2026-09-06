@@ -81,12 +81,10 @@ function planFromMove(
       pieceTypeOf(targetBefore) === PieceType.Rook;
 
     const isKingCapturesRookCanonical =
-      (from === 4 && (to === 7 || to === 0)) ||
-      (from === 60 && (to === 63 || to === 56));
+      (from === 4 && (to === 7 || to === 0)) || (from === 60 && (to === 63 || to === 56));
 
     const isKingTwoSquares =
-      (from === 4 && (to === 6 || to === 2)) ||
-      (from === 60 && (to === 62 || to === 58));
+      (from === 4 && (to === 6 || to === 2)) || (from === 60 && (to === 62 || to === 58));
 
     if (isFriendlyRookTarget || isKingCapturesRookCanonical || isKingTwoSquares) {
       const isKingside = (to & 7) > (from & 7);
@@ -208,11 +206,7 @@ export function decodePackedMove(m: PackedMove): {
     (from === 60 && (to === 63 || to === 56 || to === 62 || to === 58));
 
   const kind: "normal" | "promotion" | "en-passant" | "castle" =
-    promotion !== null
-      ? "promotion"
-      : isCastle
-        ? "castle"
-        : "normal";
+    promotion !== null ? "promotion" : isCastle ? "castle" : "normal";
 
   return { from, to, kind, promotion };
 }

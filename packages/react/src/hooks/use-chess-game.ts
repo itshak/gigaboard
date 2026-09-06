@@ -9,13 +9,13 @@
  * intermediate async gap.
  */
 
+import { useEffect, useRef, useState } from "react";
 import {
   type BoardModel,
   type BoardModelOptions,
   createBoardModel,
   createGigachessAdapter,
 } from "../core/index.js";
-import { useEffect, useRef, useState } from "react";
 import type { UseChessGameOptions } from "../types.js";
 
 /**
@@ -28,9 +28,7 @@ import type { UseChessGameOptions } from "../types.js";
  * long tasks during mount. Changing `options.fen` disposes the current model
  * and allocates a fresh one.
  */
-export function useChessGame(
-  options: UseChessGameOptions & BoardModelOptions = {},
-): BoardModel {
+export function useChessGame(options: UseChessGameOptions & BoardModelOptions = {}): BoardModel {
   const { fen, ...modelOptions } = options;
   const [initialModelOptions] = useState<BoardModelOptions>(() => modelOptions);
 

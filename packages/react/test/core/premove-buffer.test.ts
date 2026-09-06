@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createPremoveBuffer, makePremove, PieceType, type SquareIndex } from "../../src/core/index.js";
+import {
+  createPremoveBuffer,
+  makePremove,
+  PieceType,
+  type SquareIndex,
+} from "../../src/core/index.js";
 
 const pm = (from: number, to: number) => makePremove(from as SquareIndex, to as SquareIndex);
 

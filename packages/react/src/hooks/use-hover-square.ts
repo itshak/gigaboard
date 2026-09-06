@@ -13,8 +13,8 @@
  * render doesn't re-install the effect.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { type RefObject, useEffect, useRef } from "react";
+import type { BoardCell, BoardModel, SquareIndex } from "../core/index.js";
 import { getSquareAtPoint } from "../lib/geometry.js";
 import type { Orientation } from "../types.js";
 

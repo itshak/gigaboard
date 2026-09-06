@@ -7,28 +7,27 @@
  * Server-only entry (static SSR board, zero client JS): `gigaboard/server`.
  */
 
-// ---- Core engine & models ----
-export {
-  createGigachessAdapter,
-  preloadGigachessAdapter,
-  createBoardModel,
-  packMove,
-  unpackMove,
-  PieceType,
-  Color,
-} from "./core/index.js";
+// ---- Components ----
+export { Chessboard } from "./chessboard.js";
 export type {
+  BoardCell,
   BoardModel,
   BoardSnapshot,
-  BoardCell,
   EngineAdapter,
   PackedMove,
   SquareIndex,
   ZobristKey,
 } from "./core/index.js";
-
-// ---- Components ----
-export { Chessboard } from "./chessboard.js";
+// ---- Core engine & models ----
+export {
+  Color,
+  createBoardModel,
+  createGigachessAdapter,
+  PieceType,
+  packMove,
+  preloadGigachessAdapter,
+  unpackMove,
+} from "./core/index.js";
 export {
   CSS_VARS,
   DEFAULT_ILLEGAL_FLASH_TINT,

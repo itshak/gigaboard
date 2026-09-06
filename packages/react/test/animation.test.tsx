@@ -7,9 +7,9 @@
  */
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "../src/core/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
+import type { BoardModel, SquareIndex } from "../src/core/index.js";
 import { installBoardGeometry, makeBoardModel, renderBoard } from "./helpers.js";
 
 /**
