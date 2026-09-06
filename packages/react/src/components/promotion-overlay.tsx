@@ -118,8 +118,8 @@ export function PromotionOverlay({
 
       if (e.key === "Tab") {
         e.preventDefault();
-        const activeEl = document.activeElement;
-        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        const activeEl = document.activeElement as HTMLButtonElement | null;
+        const currentIdx = buttonRefs.current.indexOf(activeEl);
         let nextIdx: number;
         if (e.shiftKey) {
           nextIdx = currentIdx <= 0 ? buttonRefs.current.length - 1 : currentIdx - 1;
@@ -132,8 +132,8 @@ export function PromotionOverlay({
 
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         e.preventDefault();
-        const activeEl = document.activeElement;
-        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        const activeEl = document.activeElement as HTMLButtonElement | null;
+        const currentIdx = buttonRefs.current.indexOf(activeEl);
         const nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % CHOICE_ORDER.length;
         buttonRefs.current[nextIdx]?.focus();
         return;
@@ -141,8 +141,8 @@ export function PromotionOverlay({
 
       if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
         e.preventDefault();
-        const activeEl = document.activeElement;
-        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        const activeEl = document.activeElement as HTMLButtonElement | null;
+        const currentIdx = buttonRefs.current.indexOf(activeEl);
         const prevIdx = currentIdx <= 0 ? CHOICE_ORDER.length - 1 : currentIdx - 1;
         buttonRefs.current[prevIdx]?.focus();
         return;

@@ -14,10 +14,10 @@
 import type { Theme } from "./index.js";
 
 const LIGHT_HATCH =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'8\' height=\'8\'%3E%3Cpath d=\'M0 8L8 0M-1 1L1 -1M7 9L9 7\' stroke=\'%23000\' stroke-width=\'1\' stroke-opacity=\'0.08\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M0 8L8 0M-1 1L1 -1M7 9L9 7' stroke='%23000' stroke-width='1' stroke-opacity='0.08'/%3E%3C/svg%3E\")";
 
 const DARK_HATCH =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'8\' height=\'8\'%3E%3Cpath d=\'M0 8L8 0M-1 1L1 -1M7 9L9 7\' stroke=\'%23000\' stroke-width=\'1.5\' stroke-opacity=\'0.2\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M0 8L8 0M-1 1L1 -1M7 9L9 7' stroke='%23000' stroke-width='1.5' stroke-opacity='0.2'/%3E%3C/svg%3E\")";
 
 export const newspaper: Theme = Object.freeze({
   "--gb-sq-light": "#ffffff",

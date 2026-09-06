@@ -49,44 +49,28 @@ describe("Square Textures and A11y Piece Filters", () => {
       renderBoard(model, { theme: highContrast });
 
       // White pawn on e2 (cell <= 6)
-      const whitePieceSlot = document.querySelector<HTMLElement>(
-        '[data-piece-square="e2"]',
-      );
+      const whitePieceSlot = document.querySelector<HTMLElement>('[data-piece-square="e2"]');
       expect(whitePieceSlot).not.toBeNull();
-      expect(whitePieceSlot?.style.filter).toBe(
-        "var(--gb-piece-filter-white, none)",
-      );
+      expect(whitePieceSlot?.style.filter).toBe("var(--gb-piece-filter-white, none)");
 
       // Black pawn on e7 (cell > 6)
-      const blackPieceSlot = document.querySelector<HTMLElement>(
-        '[data-piece-square="e7"]',
-      );
+      const blackPieceSlot = document.querySelector<HTMLElement>('[data-piece-square="e7"]');
       expect(blackPieceSlot).not.toBeNull();
-      expect(blackPieceSlot?.style.filter).toBe(
-        "var(--gb-piece-filter-black, none)",
-      );
+      expect(blackPieceSlot?.style.filter).toBe("var(--gb-piece-filter-black, none)");
     });
 
     it("applies piece filter CSS variables to pre-materialized DragLayer ghost slots", () => {
       renderBoard(model, { theme: highContrast });
 
       // Drag slot 1 = white pawn
-      const whiteDragSlot = document.querySelector<HTMLElement>(
-        '[data-drag-cell="1"]',
-      );
+      const whiteDragSlot = document.querySelector<HTMLElement>('[data-drag-cell="1"]');
       expect(whiteDragSlot).not.toBeNull();
-      expect(whiteDragSlot?.style.filter).toBe(
-        "var(--gb-piece-filter-white, none)",
-      );
+      expect(whiteDragSlot?.style.filter).toBe("var(--gb-piece-filter-white, none)");
 
       // Drag slot 7 = black pawn
-      const blackDragSlot = document.querySelector<HTMLElement>(
-        '[data-drag-cell="7"]',
-      );
+      const blackDragSlot = document.querySelector<HTMLElement>('[data-drag-cell="7"]');
       expect(blackDragSlot).not.toBeNull();
-      expect(blackDragSlot?.style.filter).toBe(
-        "var(--gb-piece-filter-black, none)",
-      );
+      expect(blackDragSlot?.style.filter).toBe("var(--gb-piece-filter-black, none)");
     });
 
     it("preserves selection and last-move pseudo-element integration on textured boards", () => {
@@ -116,17 +100,13 @@ describe("Square Textures and A11y Piece Filters", () => {
 
   describe("Server Static Board (<StaticChessboard />)", () => {
     it("renders square texture styles and piece filters in SSR HTML output", () => {
-      const html = renderToStaticMarkup(
-        <StaticChessboard fen={STARTING_FEN} theme={newspaper} />,
-      );
+      const html = renderToStaticMarkup(<StaticChessboard fen={STARTING_FEN} theme={newspaper} />);
 
       // Check light and dark square texture styles
       expect(html).toContain("background-image:var(--gb-sq-light-image,none)");
       expect(html).toContain("background-image:var(--gb-sq-dark-image,none)");
       expect(html).toContain("background-size:var(--gb-sq-image-size,cover)");
-      expect(html).toContain(
-        "background-blend-mode:var(--gb-sq-blend-mode,normal)",
-      );
+      expect(html).toContain("background-blend-mode:var(--gb-sq-blend-mode,normal)");
 
       // Check piece filter styles
       expect(html).toContain("filter:var(--gb-piece-filter-white, none)");
@@ -140,9 +120,7 @@ describe("Square Textures and A11y Piece Filters", () => {
     });
 
     it("matches client square structure for zero-shift SSR hydration", () => {
-      const html = renderToStaticMarkup(
-        <StaticChessboard fen={STARTING_FEN} theme={newspaper} />,
-      );
+      const html = renderToStaticMarkup(<StaticChessboard fen={STARTING_FEN} theme={newspaper} />);
 
       // Has 64 gridcells with data-gb-square and data-light
       const squareMatches = html.match(/data-gb-square=""/g) ?? [];

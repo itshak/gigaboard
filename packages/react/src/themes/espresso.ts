@@ -12,10 +12,10 @@
 import type { Theme } from "./index.js";
 
 const GRAIN_LIGHT =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'4\' height=\'4\'%3E%3Crect width=\'1\' height=\'1\' fill=\'%235c3826\' fill-opacity=\'0.06\'/%3E%3Crect x=\'2\' y=\'2\' width=\'1\' height=\'1\' fill=\'%23ffffff\' fill-opacity=\'0.08\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='%235c3826' fill-opacity='0.06'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23ffffff' fill-opacity='0.08'/%3E%3C/svg%3E\")";
 
 const GRAIN_DARK =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'4\' height=\'4\'%3E%3Crect width=\'1\' height=\'1\' fill=\'%23000000\' fill-opacity=\'0.12\'/%3E%3Crect x=\'2\' y=\'2\' width=\'1\' height=\'1\' fill=\'%23ffffff\' fill-opacity=\'0.05\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='%23000000' fill-opacity='0.12'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E\")";
 
 export const espresso: Theme = Object.freeze({
   "--gb-sq-light": "#ebd3be",

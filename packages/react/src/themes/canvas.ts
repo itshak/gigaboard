@@ -12,7 +12,7 @@
 import type { Theme } from "./index.js";
 
 const LINEN_PATTERN =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'4\' height=\'4\'%3E%3Cpath d=\'M0 2h4M2 0v4\' stroke=\'%23000\' stroke-width=\'0.5\' stroke-opacity=\'0.05\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Cpath d='M0 2h4M2 0v4' stroke='%23000' stroke-width='0.5' stroke-opacity='0.05'/%3E%3C/svg%3E\")";
 
 export const canvas: Theme = Object.freeze({
   "--gb-sq-light": "#ede4d3",

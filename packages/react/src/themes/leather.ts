@@ -12,7 +12,7 @@
 import type { Theme } from "./index.js";
 
 const LEATHER_GRAIN =
-  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'6\' height=\'6\'%3E%3Cpath d=\'M1 1h1v1H1zM4 3h1v1H4z\' fill=\'%23000\' fill-opacity=\'0.06\'/%3E%3C/svg%3E")';
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M1 1h1v1H1zM4 3h1v1H4z' fill='%23000' fill-opacity='0.06'/%3E%3C/svg%3E\")";
 
 export const leather: Theme = Object.freeze({
   "--gb-sq-light": "#c89d7c",
