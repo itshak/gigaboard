@@ -27,7 +27,7 @@
 * 🛡️ **100% Permissive MIT License**: Engineered from the ground up as a pure React-native replacement for `chessground` without restrictive GPL/AGPL viral licensing.
 * 🎯 **Instant Synchronous Engine**: Backed by `gigachess` (`createGigachessAdapter`) — zero WASM lag, sub-millisecond frame-0 render without blank screen flashes.
 * ♿ **First-Class Accessibility (WAI-ARIA)**: Roving tabindex, full keyboard navigation (arrows, Enter, Space, promotion keys), and screen-reader `LiveRegion` announcements.
-* 🎨 **Modular Themes & Crisp Piece Sets**: Tree-shakable pieces (~660B/set) and zero-runtime CSS variable themes (`--gb-*`, ~205B/theme).
+* 🎨 **Modular Themes, Textures & Piece Sets**: 22 zero-runtime themes (~205B–430B/theme) with tactile textures, SVG patterns, and independent piece outline/contrast filters for low vision, plus crisp tree-shakable pieces (~660B/set).
 * 🏹 **Hardware Canvas Arrow Engine**: Imperative high-DPI 2D canvas arrows, freehand gestures, knight L-shapes, and customizable highlight overlays.
 * 📦 **SSR & React Server Components Ready**: `gigaboard/server` renders static HTML chessboards on Node/Next.js with zero hydration mismatch and zero client JS.
 
@@ -132,11 +132,11 @@ Mix and match tree-shakable piece sets and CSS-variable themes without bundle bl
 ```tsx
 import { Chessboard, useChessGame } from "gigaboard";
 import { cburnett } from "gigaboard/pieces/cburnett";
-import { wood } from "gigaboard/themes/wood";
+import { newspaper } from "gigaboard/themes/newspaper";
 
 export function CustomBoard() {
   const game = useChessGame();
-  return <Chessboard game={game} pieces={cburnett} theme={wood} />;
+  return <Chessboard game={game} pieces={cburnett} theme={newspaper} />;
 }
 ```
 
@@ -147,11 +147,31 @@ Available piece sets (`gigaboard/pieces/*`):
 * `alpha` (minimalist mobile silhouettes)
 * `chesscom` (explicit alias for neo)
 
-Available themes (`gigaboard/themes/*`):
-* `green` (default chess.com palette)
-* `brown` (classic tournament wood)
-* `blue` (modern cool contrast)
-* `wood` (warm natural board)
+Available themes (`gigaboard/themes/*` — 22 tree-shakable palettes):
+* **Classic**: `green` (default chess.com), `brown` (tournament wood), `blue` (modern cool contrast), `wood` (warm board), `chesscomGreen`, `chesscomBlue`, `ic`
+* **Textured SVG Patterns**: `newspaper` (vintage newsprint grain), `espresso` (rich dark roast grain), `cafeCreme` (warm cafe froth pattern)
+* **Tactile Materials**: `canvas`, `leather`, `marble`, `walnut`, `darkWood`
+* **Modern & Vibrant**: `neon`, `olive`, `pink`, `purple`
+* **Accessibility & Low Vision**: `highContrast` (pure black/white + invert filter), `deuteranopia` (red-green safe), `tritanopia` (blue-yellow safe)
+
+#### Square Textures & Piece Filters
+
+All themes are zero-runtime CSS custom-property dictionaries (`Theme = Partial<Record<string, string>>`). You can supply textured backgrounds, gradients, blend modes, and piece drop-shadows or outlines directly:
+
+```tsx
+const customTheme = {
+  "--gb-sq-light": "#f0d9b5",
+  "--gb-sq-dark": "#b58863",
+  "--gb-sq-light-image": "radial-gradient(circle, rgba(255,255,255,0.25) 15%, transparent 16%)",
+  "--gb-sq-dark-image": "radial-gradient(circle, rgba(0,0,0,0.18) 15%, transparent 16%)",
+  "--gb-sq-image-size": "8px 8px",
+  "--gb-sq-blend-mode": "multiply",
+  "--gb-piece-filter-white": "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45))",
+  "--gb-piece-filter-black": "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.65))",
+};
+
+<Chessboard game={game} theme={customTheme} />
+```
 
 ---
 

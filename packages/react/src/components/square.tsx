@@ -185,9 +185,12 @@ function SquareImpl({
       style={{
         position: "relative",
         // `backgroundColor` (not the `background` shorthand) so the
-        // CSS `background-image` set by `useSelectionController` can
-        // layer on top without clobbering this base colour.
+        // CSS `background-image` set by `useSelectionController` (or pseudo-elements)
+        // can layer on top without clobbering this base colour.
         backgroundColor: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
+        backgroundImage: `var(${isLight ? CSS_VARS.SQ_LIGHT_IMAGE : CSS_VARS.SQ_DARK_IMAGE},none)`,
+        backgroundSize: `var(${CSS_VARS.SQ_IMAGE_SIZE},cover)`,
+        backgroundBlendMode: `var(${CSS_VARS.SQ_BLEND_MODE},normal)`,
         // Cursor is managed by `useCursorController` via injected CSS so
         // it can flip between `pointer` / `grab` / `grabbing` without a
         // React re-render per hover.

@@ -5,6 +5,12 @@ import type { Theme } from "./types.js";
 export const CSS_VARS = {
   SQ_LIGHT: "--gb-sq-light",
   SQ_DARK: "--gb-sq-dark",
+  SQ_LIGHT_IMAGE: "--gb-sq-light-image",
+  SQ_DARK_IMAGE: "--gb-sq-dark-image",
+  SQ_IMAGE_SIZE: "--gb-sq-image-size",
+  SQ_BLEND_MODE: "--gb-sq-blend-mode",
+  PIECE_FILTER_WHITE: "--gb-piece-filter-white",
+  PIECE_FILTER_BLACK: "--gb-piece-filter-black",
   LAST_MOVE: "--gb-last-move",
   SELECTED: "--gb-selected",
   LEGAL_TARGET: "--gb-legal-target",

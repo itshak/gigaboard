@@ -140,10 +140,16 @@ export function StaticChessboard(props: StaticChessboardProps): ReactNode {
               aria-rowindex={rank + 1}
               aria-colindex={file + 1}
               data-square={algebraicOf(index)}
+              data-gb-square=""
               data-light={isLight ? "true" : "false"}
               style={{
-                background: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
+                position: "relative",
+                backgroundColor: `var(${isLight ? CSS_VARS.SQ_LIGHT : CSS_VARS.SQ_DARK})`,
+                backgroundImage: `var(${isLight ? CSS_VARS.SQ_LIGHT_IMAGE : CSS_VARS.SQ_DARK_IMAGE},none)`,
+                backgroundSize: `var(${CSS_VARS.SQ_IMAGE_SIZE},cover)`,
+                backgroundBlendMode: `var(${CSS_VARS.SQ_BLEND_MODE},normal)`,
                 userSelect: "none",
+                outline: "none",
                 containerType: "size",
               }}
             />
@@ -181,6 +187,7 @@ export function StaticChessboard(props: StaticChessboardProps): ReactNode {
                 alignItems: "center",
                 justifyContent: "center",
                 containerType: "size",
+                filter: `var(${cell <= 6 ? CSS_VARS.PIECE_FILTER_WHITE : CSS_VARS.PIECE_FILTER_BLACK}, none)`,
               }}
             >
               {pieces({ cell, square: idx })}

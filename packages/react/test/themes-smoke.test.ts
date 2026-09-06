@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blue, brown, green, PACKAGE_VERSION, themes, wood } from "../src/themes/index.js";
+import { green, PACKAGE_VERSION, themes } from "../src/themes/index.js";
 
 describe("@gigaboard/themes", () => {
   it("exports a semver-looking version string", () => {
@@ -7,7 +7,7 @@ describe("@gigaboard/themes", () => {
   });
 
   it("ships frozen theme records", () => {
-    for (const theme of [brown, blue, green, wood]) {
+    for (const theme of Object.values(themes)) {
       expect(Object.isFrozen(theme)).toBe(true);
     }
   });
@@ -25,15 +25,38 @@ describe("@gigaboard/themes", () => {
       "--gb-coord-dark",
     ] as const;
 
-    for (const [name, theme] of Object.entries({ brown, blue, green, wood })) {
+    for (const [name, theme] of Object.entries(themes)) {
       for (const key of required) {
         expect(theme[key], `${name} missing ${key}`).toBeDefined();
       }
     }
   });
 
-  it("the theme registry includes all four built-ins", () => {
-    expect(Object.keys(themes).sort()).toEqual(["blue", "brown", "green", "wood"]);
+  it("the theme registry includes all built-in themes", () => {
+    expect(Object.keys(themes).sort()).toEqual([
+      "blue",
+      "brown",
+      "cafeCreme",
+      "canvas",
+      "chesscomBlue",
+      "chesscomGreen",
+      "darkWood",
+      "deuteranopia",
+      "espresso",
+      "green",
+      "highContrast",
+      "ic",
+      "leather",
+      "marble",
+      "neon",
+      "newspaper",
+      "olive",
+      "pink",
+      "purple",
+      "tritanopia",
+      "walnut",
+      "wood",
+    ]);
   });
 
   it("green matches the chess.com default palette", () => {

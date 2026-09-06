@@ -23,6 +23,7 @@
  */
 
 import type { BoardCell, SquareIndex } from "../core/index.js";
+import { CSS_VARS } from "../default-theme.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 import { algebraicOf, CONTAINER_STYLE, gridCoord, SLOT_BASE_STYLE } from "./piece-layer.js";
 
@@ -52,7 +53,12 @@ export function StaticPieceLayer({ board, orientation, pieces }: StaticPieceLaye
         key={i}
         data-piece-square={algebraicOf(index)}
         data-piece-cell={cell}
-        style={{ ...SLOT_BASE_STYLE, gridColumnStart: col, gridRowStart: row }}
+        style={{
+          ...SLOT_BASE_STYLE,
+          gridColumnStart: col,
+          gridRowStart: row,
+          filter: `var(${cell <= 6 ? CSS_VARS.PIECE_FILTER_WHITE : CSS_VARS.PIECE_FILTER_BLACK}, none)`,
+        }}
       >
         {pieces({ cell: cell as BoardCell, square: index })}
       </div>,

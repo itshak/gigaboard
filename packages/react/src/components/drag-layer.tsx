@@ -21,6 +21,7 @@
 
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import type { BoardCell } from "../core/index.js";
+import { CSS_VARS } from "../default-theme.js";
 import type { PieceRenderer } from "../types.js";
 
 /**
@@ -115,7 +116,10 @@ export const DragLayer = forwardRef<DragLayerHandle, DragLayerProps>(function Dr
             slotRefs.current[cell] = el;
           }}
           data-drag-cell={cell}
-          style={SLOT_STYLE}
+          style={{
+            ...SLOT_STYLE,
+            filter: `var(${cell <= 6 ? CSS_VARS.PIECE_FILTER_WHITE : CSS_VARS.PIECE_FILTER_BLACK}, none)`,
+          }}
         >
           {child}
         </div>,
