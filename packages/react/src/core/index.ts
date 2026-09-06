@@ -93,4 +93,4 @@ export {
 } from "./types.js";
 
 /** Package version. Baked in at build time by the consumer's bundler. */
-export const PACKAGE_VERSION = "0.1.0-alpha";
+export const PACKAGE_VERSION = "0.0.1";

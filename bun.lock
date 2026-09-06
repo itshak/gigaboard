@@ -94,7 +94,7 @@
     },
     "packages/react": {
       "name": "gigaboard",
-      "version": "1.2.3",
+      "version": "0.0.1",
       "dependencies": {
         "gigachess": "^0.4.1",
         "web-haptics": "^0.0.6",
