@@ -95,8 +95,10 @@ jobs:
     permissions:
       # id-token: write is what turns OIDC on — required for both
       # npm Trusted Publishing and npm provenance attestations.
+      # contents: write is required by the trailing "Create GitHub
+      # Release" step on tag pushes (checkout only needs read).
       id-token: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
