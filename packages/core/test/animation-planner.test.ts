@@ -15,16 +15,18 @@ import {
   planAnimations,
 } from "../src/index.js";
 
-/** Pack a move the same way `ultrachess` does. */
+import {
+  packMove,
+  MOVE2_PROMO_QUEEN,
+} from "../src/index.js";
+
+/** Pack a move conforming to the 16-bit Move2 wire format. */
 function pack(opts: {
   from: number;
   to: number;
-  kind?: 0 | 1 | 2 | 3;
-  promotion?: 0 | 1 | 2 | 3;
+  promotion?: number;
 }): PackedMove {
-  const kind = opts.kind ?? 0;
-  const promo = opts.promotion ?? 0;
-  return (opts.from | (opts.to << 6) | (promo << 12) | (kind << 14)) as PackedMove;
+  return packMove(opts.from, opts.to, opts.promotion ?? 0);
 }
 
 function freshBoard(): Uint8Array {
@@ -71,7 +73,7 @@ describe("planAnimations — fast path with packed move", () => {
     prev[36] = BOARD_CELL_WP;
     prev[35] = BOARD_CELL_BP;
     next[43] = BOARD_CELL_WP;
-    const descriptors = planAnimations(prev, next, pack({ from: 36, to: 43, kind: 2 }));
+    const descriptors = planAnimations(prev, next, pack({ from: 36, to: 43 }));
     expect(descriptors[0]).toEqual({
       kind: "en-passant",
       from: 36,
@@ -82,15 +84,14 @@ describe("planAnimations — fast path with packed move", () => {
     });
   });
 
-  it("classifies kingside castle", () => {
+  it("classifies kingside castle with canonical King-captures-Rook move (e1h1)", () => {
     const prev = freshBoard();
     const next = freshBoard();
-    // White king e1 (4), rook h1 (7). Castle kingside: king to g1 (6), rook to f1 (5).
     prev[4] = BOARD_CELL_WK;
     prev[7] = BOARD_CELL_WR;
     next[6] = BOARD_CELL_WK;
     next[5] = BOARD_CELL_WR;
-    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 6, kind: 3 }));
+    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 7 }));
     expect(descriptors[0]).toEqual({
       kind: "castle",
       kingFrom: 4,
@@ -100,14 +101,48 @@ describe("planAnimations — fast path with packed move", () => {
     });
   });
 
-  it("classifies queenside castle", () => {
+  it("classifies kingside castle with 2-square King jump (e1g1)", () => {
+    const prev = freshBoard();
+    const next = freshBoard();
+    prev[4] = BOARD_CELL_WK;
+    prev[7] = BOARD_CELL_WR;
+    next[6] = BOARD_CELL_WK;
+    next[5] = BOARD_CELL_WR;
+    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 6 }));
+    expect(descriptors[0]).toEqual({
+      kind: "castle",
+      kingFrom: 4,
+      kingTo: 6,
+      rookFrom: 7,
+      rookTo: 5,
+    });
+  });
+
+  it("classifies queenside castle with canonical King-captures-Rook move (e1a1)", () => {
     const prev = freshBoard();
     const next = freshBoard();
     prev[4] = BOARD_CELL_WK;
     prev[0] = BOARD_CELL_WR;
     next[2] = BOARD_CELL_WK;
     next[3] = BOARD_CELL_WR;
-    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 2, kind: 3 }));
+    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 0 }));
+    expect(descriptors[0]).toEqual({
+      kind: "castle",
+      kingFrom: 4,
+      kingTo: 2,
+      rookFrom: 0,
+      rookTo: 3,
+    });
+  });
+
+  it("classifies queenside castle with 2-square King jump (e1c1)", () => {
+    const prev = freshBoard();
+    const next = freshBoard();
+    prev[4] = BOARD_CELL_WK;
+    prev[0] = BOARD_CELL_WR;
+    next[2] = BOARD_CELL_WK;
+    next[3] = BOARD_CELL_WR;
+    const descriptors = planAnimations(prev, next, pack({ from: 4, to: 2 }));
     expect(descriptors[0]).toEqual({
       kind: "castle",
       kingFrom: 4,
@@ -126,7 +161,7 @@ describe("planAnimations — fast path with packed move", () => {
     const descriptors = planAnimations(
       prev,
       next,
-      pack({ from: 48, to: 56, kind: 1, promotion: 3 }),
+      pack({ from: 48, to: 56, promotion: MOVE2_PROMO_QUEEN }),
     );
     expect(descriptors[0]).toEqual({
       kind: "promotion",
@@ -147,7 +182,7 @@ describe("planAnimations — fast path with packed move", () => {
     const descriptors = planAnimations(
       prev,
       next,
-      pack({ from: 48, to: 57, kind: 1, promotion: 3 }),
+      pack({ from: 48, to: 57, promotion: MOVE2_PROMO_QUEEN }),
     );
     expect(descriptors[0]).toEqual({
       kind: "promotion",
@@ -211,15 +246,17 @@ describe("decodePackedMove", () => {
   });
 
   it("round-trips promotion moves with the correct promoted piece", () => {
-    const m = pack({ from: 48, to: 56, kind: 1, promotion: 3 });
+    const m = pack({ from: 48, to: 56, promotion: MOVE2_PROMO_QUEEN });
     const d = decodePackedMove(m);
     expect(d.kind).toBe("promotion");
     expect(d.promotion).toBe(PieceType.Queen);
   });
 
-  it("round-trips castle and en-passant kinds", () => {
-    expect(decodePackedMove(pack({ from: 4, to: 6, kind: 3 })).kind).toBe("castle");
-    expect(decodePackedMove(pack({ from: 36, to: 43, kind: 2 })).kind).toBe("en-passant");
+  it("round-trips castle moves (both e1h1 and e1g1)", () => {
+    expect(decodePackedMove(pack({ from: 4, to: 7 })).kind).toBe("castle");
+    expect(decodePackedMove(pack({ from: 4, to: 6 })).kind).toBe("castle");
+    expect(decodePackedMove(pack({ from: 4, to: 0 })).kind).toBe("castle");
+    expect(decodePackedMove(pack({ from: 4, to: 2 })).kind).toBe("castle");
   });
 });
 

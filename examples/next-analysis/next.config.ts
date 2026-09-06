@@ -2,7 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@ultrachess/react", "@ultrachess/core"],
+  transpilePackages: [
+    "gigaboard",
+    "@gigaboard/core",
+    "@gigaboard/pieces",
+    "@gigaboard/themes",
+  ],
 };
 
 export default nextConfig;

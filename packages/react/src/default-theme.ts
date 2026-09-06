@@ -1,23 +1,23 @@
-import { green } from "@ultrachess/themes/green";
+import { green } from "@gigaboard/themes/green";
 import type { Theme } from "./types.js";
 
-/** Keys every Ultra Chess React board understands. */
+/** Keys every Gigaboard board understands. */
 export const CSS_VARS = {
-  SQ_LIGHT: "--ucr-sq-light",
-  SQ_DARK: "--ucr-sq-dark",
-  LAST_MOVE: "--ucr-last-move",
-  SELECTED: "--ucr-selected",
-  LEGAL_TARGET: "--ucr-legal-target",
-  LEGAL_TARGET_CAPTURE: "--ucr-legal-target-capture",
-  CHECK: "--ucr-check",
-  COORDINATE_LIGHT: "--ucr-coord-light",
-  COORDINATE_DARK: "--ucr-coord-dark",
+  SQ_LIGHT: "--gb-sq-light",
+  SQ_DARK: "--gb-sq-dark",
+  LAST_MOVE: "--gb-last-move",
+  SELECTED: "--gb-selected",
+  LEGAL_TARGET: "--gb-legal-target",
+  LEGAL_TARGET_CAPTURE: "--gb-legal-target-capture",
+  CHECK: "--gb-check",
+  COORDINATE_LIGHT: "--gb-coord-light",
+  COORDINATE_DARK: "--gb-coord-dark",
   /**
    * Opacity of the piece left behind at the drag origin while the ghost
    * is in flight. Default `0.35` (lichess parity). Themes may override
    * to `0` for a chess.com-style "piece vanishes" effect.
    */
-  DRAG_GHOST_OPACITY: "--ucr-drag-ghost-opacity",
+  DRAG_GHOST_OPACITY: "--gb-drag-ghost-opacity",
 } as const;
 
 export const defaultTheme: Theme = Object.freeze({

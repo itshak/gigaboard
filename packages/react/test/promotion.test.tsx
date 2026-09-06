@@ -7,8 +7,8 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { PieceType } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
+import { PieceType } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
@@ -72,6 +72,93 @@ describe("promotion — built-in overlay", () => {
     fireEvent.click(backdrop);
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(model.getSnapshot().historyPly).toBe(0);
+  });
+
+  it("renders buttons in Chess.com order (Queen, Knight, Rook, Bishop) and auto-focuses Queen", () => {
+    renderBoard(model);
+    fireEvent.click(screen.getByRole("gridcell", { name: "a7" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "a8" }));
+
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((b) => b.getAttribute("data-promotion-piece"))).toEqual([
+      "Queen",
+      "Knight",
+      "Rook",
+      "Bishop",
+    ]);
+
+    // Queen button is auto-focused on mount
+    expect(document.activeElement).toBe(buttons[0]);
+  });
+
+  it("supports arrow key navigation and focus trapping", () => {
+    renderBoard(model);
+    fireEvent.click(screen.getByRole("gridcell", { name: "a7" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "a8" }));
+
+    const buttons = screen.getAllByRole("button");
+    expect(document.activeElement).toBe(buttons[0]); // Queen
+
+    // ArrowDown -> Knight
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(buttons[1]); // Knight
+
+    // ArrowDown -> Rook
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    expect(document.activeElement).toBe(buttons[2]); // Rook
+
+    // ArrowUp -> Knight
+    fireEvent.keyDown(window, { key: "ArrowUp" });
+    expect(document.activeElement).toBe(buttons[1]); // Knight
+
+    // End -> Bishop
+    fireEvent.keyDown(window, { key: "End" });
+    expect(document.activeElement).toBe(buttons[3]); // Bishop
+
+    // Home -> Queen
+    fireEvent.keyDown(window, { key: "Home" });
+    expect(document.activeElement).toBe(buttons[0]); // Queen
+
+    // Shift+Tab wraps from Queen to Bishop
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(buttons[3]); // Bishop
+
+    // Tab wraps from Bishop to Queen
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(document.activeElement).toBe(buttons[0]); // Queen
+  });
+
+  it("announces active piece in aria-live and supports getPromotionPieceAriaLabel", () => {
+    const customLabel = (piece: PieceType) => {
+      switch (piece) {
+        case PieceType.Queen:
+          return "Ферзь";
+        case PieceType.Knight:
+          return "Конь";
+        case PieceType.Rook:
+          return "Ладья";
+        case PieceType.Bishop:
+          return "Слон";
+        default:
+          return "Фигура";
+      }
+    };
+
+    renderBoard(model, { getPromotionPieceAriaLabel: customLabel });
+    fireEvent.click(screen.getByRole("gridcell", { name: "a7" }));
+    fireEvent.click(screen.getByRole("gridcell", { name: "a8" }));
+
+    // Buttons should have localized aria-labels
+    expect(screen.getByRole("button", { name: "Ферзь" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Конь" })).toBeDefined();
+
+    // Live region announces active piece
+    const liveRegion = document.querySelector('[data-layer="promotion-overlay"] [aria-live="polite"]');
+    expect(liveRegion?.textContent).toBe("Ферзь");
+
+    // Arrow navigation updates announcement
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    expect(liveRegion?.textContent).toBe("Конь");
   });
 });
 

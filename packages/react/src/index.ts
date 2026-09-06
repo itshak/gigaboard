@@ -1,11 +1,31 @@
 /**
- * `@ultrachess/react` — interactive React chessboard.
+ * `gigaboard` — ultra-fast interactive React chessboard.
  *
  * Hand-curated barrel; sub-modules are never re-exported wholesale so
  * consumers can tree-shake aggressively.
  *
- * Server-only entry (static SSR board, zero client JS): `@ultrachess/react/server`.
+ * Server-only entry (static SSR board, zero client JS): `gigaboard/server`.
  */
+
+// ---- Core engine & models ----
+export {
+  createGigachessAdapter,
+  preloadGigachessAdapter,
+  createBoardModel,
+  packMove,
+  unpackMove,
+  PieceType,
+  Color,
+} from "@gigaboard/core";
+export type {
+  BoardModel,
+  BoardSnapshot,
+  BoardCell,
+  EngineAdapter,
+  PackedMove,
+  SquareIndex,
+  ZobristKey,
+} from "@gigaboard/core";
 
 // ---- Components ----
 export { Chessboard } from "./chessboard.js";

@@ -10,7 +10,7 @@ import { defineConfig } from "vite";
  * instrumented scenario, so any measured difference is attributable to
  * the library under test, not the harness.
  *
- * - `/` (`index.html`)       → Ultra Chess React (`<UltraChessboard/>`)
+ * - `/` (`index.html`)       → Gigaboard (`<Chessboard/>`)
  * - `/rcb.html`              → `react-chessboard` (`<RcbChessboard/>`)
  *
  * Both entry bundles import a shared `bench-harness.ts` that installs
@@ -21,7 +21,7 @@ import { defineConfig } from "vite";
  */
 export default defineConfig({
   plugins: [react()],
-  // `@ultrachess/core` dev-only assertions read `process.env["NODE_ENV"]`
+  // `@gigaboard/core` dev-only assertions read `process.env["NODE_ENV"]`
   // with bracket access, which Vite's built-in `process.env.NODE_ENV`
   // replacement does NOT rewrite. Stub `process.env` here so the browser
   // bundle doesn't throw `process is not defined` on first eval.

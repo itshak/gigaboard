@@ -1,5 +1,5 @@
 /**
- * `@ultrachess/themes` — CSS-variable-only board themes.
+ * `@gigaboard/themes` — CSS-variable-only board themes.
  *
  * Each theme ships as a frozen record of CSS custom-property pairs that the
  * React layer writes inline on the board container at first paint. Themes
@@ -9,17 +9,17 @@
  * Import sub-paths to keep bundles minimal:
  *
  * ```tsx
- * import { brown } from "@ultrachess/themes/brown";
- * import { green } from "@ultrachess/themes/green";  // chess.com default
- * import { blue }  from "@ultrachess/themes/blue";
- * import { wood }  from "@ultrachess/themes/wood";
+ * import { brown } from "@gigaboard/themes/brown";
+ * import { green } from "@gigaboard/themes/green";  // chess.com default
+ * import { blue }  from "@gigaboard/themes/blue";
+ * import { wood }  from "@gigaboard/themes/wood";
  * ```
  *
  * Or pull the full set from the package root (convenient for theme pickers,
  * at a marginally larger bundle cost):
  *
  * ```tsx
- * import { brown, green, blue, wood } from "@ultrachess/themes";
+ * import { brown, green, blue, wood } from "@gigaboard/themes";
  * ```
  */
 

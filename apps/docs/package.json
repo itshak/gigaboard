@@ -1,8 +1,8 @@
 {
-  "name": "@ultrachess/docs",
+  "name": "@gigaboard/docs",
   "version": "0.0.0",
   "private": true,
-  "description": "Documentation site for Ultra Chess React. Next.js 15 App Router + MDX.",
+  "description": "Documentation site for Gigaboard. Next.js 15 App Router + MDX.",
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
@@ -15,14 +15,13 @@
     "clean": "rm -rf .next .turbo playwright-report test-results"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*",
-    "@ultrachess/pieces": "workspace:*",
-    "@ultrachess/react": "workspace:*",
-    "@ultrachess/themes": "workspace:*",
+    "@gigaboard/core": "workspace:*",
+    "@gigaboard/pieces": "workspace:*",
+    "@gigaboard/themes": "workspace:*",
+    "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "ultrachess": "^1.1.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",

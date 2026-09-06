@@ -16,11 +16,11 @@
  *    `useEffect`. Never calls `setState`, never triggers React.
  * 2. On each commit, derives `(from, to)` from `s.lastMove` and
  *    diffs against the previously-painted pair.
- * 3. Writes `el.dataset.ucrLastMove = "from" | "to"` on only the
+ * 3. Writes `el.dataset.gbLastMove = "from" | "to"` on only the
  *    changed squares — removing the attribute for squares that
  *    are no longer either endpoint of the last move.
  * 4. CSS (injected once per document by `injectLastMoveStyles`)
- *    paints a `::after` pseudo-element with the `--ucr-last-move`
+ *    paints a `::after` pseudo-element with the `--gb-last-move`
  *    theme variable.
  *
  * Uses `::after` rather than `::before` because the selection
@@ -34,14 +34,14 @@
  * semi-transparent rgba tints.
  */
 
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { type RefObject, useEffect } from "react";
 
-/** Values written to `data-ucr-last-move`. */
+/** Values written to `data-gb-last-move`. */
 type LastMoveState = "from" | "to";
 
 /** Singleton id used to dedupe the injected `<style>` element. */
-const STYLE_ID = "ucr-last-move-styles";
+const STYLE_ID = "gb-last-move-styles";
 
 /**
  * Inject the last-move CSS once per document. SSR-safe (early-returns).
@@ -51,7 +51,7 @@ const STYLE_ID = "ucr-last-move-styles";
  * That pre-materialises 64 rendering nodes during mount — the same
  * trick used by the selection controller — so the user's first move
  * doesn't pay for first-match pseudo-element creation + first-paint of
- * the tint as an INP outlier. The `data-ucr-last-move` attribute then
+ * the tint as an INP outlier. The `data-gb-last-move` attribute then
  * only changes `background`, which repaints an already-live node.
  */
 function injectLastMoveStyles(): void {
@@ -60,15 +60,15 @@ function injectLastMoveStyles(): void {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-[data-ucr-square]::after {
+[data-gb-square]::after {
   content: "";
   position: absolute;
   inset: 0;
   background: transparent;
   pointer-events: none;
 }
-[data-ucr-square][data-ucr-last-move]::after {
-  background: var(--ucr-last-move);
+[data-gb-square][data-gb-last-move]::after {
+  background: var(--gb-last-move);
 }
 `;
   document.head.appendChild(style);
@@ -105,9 +105,9 @@ export function useLastMoveController(
       const el = squareRefs.current?.[i];
       if (el === null || el === undefined) return;
       if (val === null) {
-        delete el.dataset["ucrLastMove"];
+        delete el.dataset["gbLastMove"];
       } else {
-        el.dataset["ucrLastMove"] = val;
+        el.dataset["gbLastMove"] = val;
       }
     };
 

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "ultrachess-react-workspace",
+      "name": "gigaboard-workspace",
       "devDependencies": {
         "@biomejs/biome": "2.4.12",
         "@types/node": "^22.10.0",
@@ -12,19 +12,18 @@
       },
     },
     "apps/benchmarks": {
-      "name": "@ultrachess/benchmarks",
+      "name": "@gigaboard/benchmarks",
       "version": "0.0.0",
       "dependencies": {
-        "@ultrachess/core": "workspace:*",
-        "@ultrachess/pieces": "workspace:*",
-        "@ultrachess/react": "workspace:*",
-        "@ultrachess/themes": "workspace:*",
+        "@gigaboard/core": "workspace:*",
+        "@gigaboard/pieces": "workspace:*",
+        "@gigaboard/themes": "workspace:*",
         "chess.js": "^1.4.0",
         "chessground": "^9.2.0",
+        "gigaboard": "workspace:*",
         "react": "^19.0.0",
         "react-chessboard": "^5.10.0",
         "react-dom": "^19.0.0",
-        "ultrachess": "^1.1.4",
       },
       "devDependencies": {
         "@playwright/test": "^1.50.0",
@@ -38,17 +37,16 @@
       },
     },
     "apps/docs": {
-      "name": "@ultrachess/docs",
+      "name": "@gigaboard/docs",
       "version": "0.0.0",
       "dependencies": {
-        "@ultrachess/core": "workspace:*",
-        "@ultrachess/pieces": "workspace:*",
-        "@ultrachess/react": "workspace:*",
-        "@ultrachess/themes": "workspace:*",
+        "@gigaboard/core": "workspace:*",
+        "@gigaboard/pieces": "workspace:*",
+        "@gigaboard/themes": "workspace:*",
+        "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "ultrachess": "^1.1.4",
       },
       "devDependencies": {
         "@axe-core/playwright": "^4.10.1",
@@ -58,18 +56,17 @@
       },
     },
     "examples/next-analysis": {
-      "name": "@ultrachess/example-next-analysis",
+      "name": "@gigaboard/example-next-analysis",
       "version": "0.0.0",
       "dependencies": {
-        "@ultrachess/core": "workspace:*",
-        "@ultrachess/pieces": "workspace:*",
-        "@ultrachess/react": "workspace:*",
-        "@ultrachess/themes": "workspace:*",
+        "@gigaboard/core": "workspace:*",
+        "@gigaboard/pieces": "workspace:*",
+        "@gigaboard/themes": "workspace:*",
+        "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "stockfish": "^18.0.7",
-        "ultrachess": "^1.1.4",
       },
       "devDependencies": {
         "@types/react": "^19.0.0",
@@ -77,17 +74,16 @@
       },
     },
     "examples/next-showcase": {
-      "name": "@ultrachess/example-next-showcase",
+      "name": "@gigaboard/example-next-showcase",
       "version": "0.0.0",
       "dependencies": {
-        "@ultrachess/core": "workspace:*",
-        "@ultrachess/pieces": "workspace:*",
-        "@ultrachess/react": "workspace:*",
-        "@ultrachess/themes": "workspace:*",
+        "@gigaboard/core": "workspace:*",
+        "@gigaboard/pieces": "workspace:*",
+        "@gigaboard/themes": "workspace:*",
+        "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "ultrachess": "^1.1.4",
       },
       "devDependencies": {
         "@types/react": "^19.0.0",
@@ -95,14 +91,13 @@
       },
     },
     "examples/puzzle-trainer": {
-      "name": "@ultrachess/example-puzzle-trainer",
+      "name": "@gigaboard/example-puzzle-trainer",
       "version": "0.0.0",
       "dependencies": {
-        "@ultrachess/react": "workspace:*",
+        "gigaboard": "workspace:*",
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "ultrachess": "^1.1.4",
       },
       "devDependencies": {
         "@types/react": "^19.0.0",
@@ -110,23 +105,22 @@
       },
     },
     "packages/core": {
-      "name": "@ultrachess/core",
+      "name": "@gigaboard/core",
       "version": "1.1.3",
+      "dependencies": {
+        "gigachess": "^0.4.1",
+      },
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
         "@vitest/coverage-v8": "^3.0.0",
         "fast-check": "^3.23.2",
         "size-limit": "^11.1.6",
         "tsup": "^8.5.1",
-        "ultrachess": "^1.1.4",
         "vitest": "^3.0.0",
-      },
-      "peerDependencies": {
-        "ultrachess": "^1.1.4",
       },
     },
     "packages/pieces": {
-      "name": "@ultrachess/pieces",
+      "name": "@gigaboard/pieces",
       "version": "1.1.1",
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
@@ -141,12 +135,12 @@
       },
     },
     "packages/react": {
-      "name": "@ultrachess/react",
-      "version": "1.1.6",
+      "name": "gigaboard",
+      "version": "1.2.3",
       "dependencies": {
-        "@ultrachess/core": "1.1.3",
-        "@ultrachess/pieces": "1.1.1",
-        "@ultrachess/themes": "1.1.1",
+        "@gigaboard/core": "1.1.3",
+        "@gigaboard/pieces": "1.1.1",
+        "@gigaboard/themes": "1.1.1",
         "web-haptics": "^0.0.6",
       },
       "devDependencies": {
@@ -161,17 +155,15 @@
         "react-dom": "^19.0.0",
         "size-limit": "^11.1.6",
         "tsup": "^8.5.1",
-        "ultrachess": "^1.1.4",
         "vitest": "^3.0.0",
       },
       "peerDependencies": {
         "react": "^18.3.0 || ^19.0.0",
         "react-dom": "^18.3.0 || ^19.0.0",
-        "ultrachess": "^1.1.4",
       },
     },
     "packages/themes": {
-      "name": "@ultrachess/themes",
+      "name": "@gigaboard/themes",
       "version": "1.1.1",
       "devDependencies": {
         "@size-limit/preset-small-lib": "^11.1.6",
@@ -307,6 +299,22 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.25.12", "", { "os": "win32", "cpu": "ia32" }, "sha512-HkqnmmBoCbCwxUKKNPBixiWDGCpQGVsrQfJoVGYLPT41XWF8lHuE5N6WhVia2n4o5QK5M4tYr21827fNhi4byQ=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.12", "", { "os": "win32", "cpu": "x64" }, "sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA=="],
+
+    "@gigaboard/benchmarks": ["@gigaboard/benchmarks@workspace:apps/benchmarks"],
+
+    "@gigaboard/core": ["@gigaboard/core@workspace:packages/core"],
+
+    "@gigaboard/docs": ["@gigaboard/docs@workspace:apps/docs"],
+
+    "@gigaboard/example-next-analysis": ["@gigaboard/example-next-analysis@workspace:examples/next-analysis"],
+
+    "@gigaboard/example-next-showcase": ["@gigaboard/example-next-showcase@workspace:examples/next-showcase"],
+
+    "@gigaboard/example-puzzle-trainer": ["@gigaboard/example-puzzle-trainer@workspace:examples/puzzle-trainer"],
+
+    "@gigaboard/pieces": ["@gigaboard/pieces@workspace:packages/pieces"],
+
+    "@gigaboard/themes": ["@gigaboard/themes@workspace:packages/themes"],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
@@ -498,24 +506,6 @@
 
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 
-    "@ultrachess/benchmarks": ["@ultrachess/benchmarks@workspace:apps/benchmarks"],
-
-    "@ultrachess/core": ["@ultrachess/core@workspace:packages/core"],
-
-    "@ultrachess/docs": ["@ultrachess/docs@workspace:apps/docs"],
-
-    "@ultrachess/example-next-analysis": ["@ultrachess/example-next-analysis@workspace:examples/next-analysis"],
-
-    "@ultrachess/example-next-showcase": ["@ultrachess/example-next-showcase@workspace:examples/next-showcase"],
-
-    "@ultrachess/example-puzzle-trainer": ["@ultrachess/example-puzzle-trainer@workspace:examples/puzzle-trainer"],
-
-    "@ultrachess/pieces": ["@ultrachess/pieces@workspace:packages/pieces"],
-
-    "@ultrachess/react": ["@ultrachess/react@workspace:packages/react"],
-
-    "@ultrachess/themes": ["@ultrachess/themes@workspace:packages/themes"],
-
     "@vitejs/plugin-react": ["@vitejs/plugin-react@4.7.0", "", { "dependencies": { "@babel/core": "^7.28.0", "@babel/plugin-transform-react-jsx-self": "^7.27.1", "@babel/plugin-transform-react-jsx-source": "^7.27.1", "@rolldown/pluginutils": "1.0.0-beta.27", "@types/babel__core": "^7.20.5", "react-refresh": "^0.17.0" }, "peerDependencies": { "vite": "^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA=="],
 
     "@vitest/coverage-v8": ["@vitest/coverage-v8@3.2.4", "", { "dependencies": { "@ampproject/remapping": "^2.3.0", "@bcoe/v8-coverage": "^1.0.2", "ast-v8-to-istanbul": "^0.3.3", "debug": "^4.4.1", "istanbul-lib-coverage": "^3.2.2", "istanbul-lib-report": "^3.0.1", "istanbul-lib-source-maps": "^5.0.6", "istanbul-reports": "^3.1.7", "magic-string": "^0.30.17", "magicast": "^0.3.5", "std-env": "^3.9.0", "test-exclude": "^7.0.1", "tinyrainbow": "^2.0.0" }, "peerDependencies": { "@vitest/browser": "3.2.4", "vitest": "3.2.4" }, "optionalPeers": ["@vitest/browser"] }, "sha512-EyF9SXU6kS5Ku/U82E259WSnvg6c8KTjppUncuNdm5QHpe17mwREHnjDzozC8x9MZ0xfBUFSaLkRv4TMA75ALQ=="],
@@ -633,6 +623,10 @@
     "fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
     "gensync": ["gensync@1.0.0-beta.2", "", {}, "sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg=="],
+
+    "gigaboard": ["gigaboard@workspace:packages/react"],
+
+    "gigachess": ["gigachess@0.4.1", "", {}, "sha512-BYkBrJE0efMBGowUqbjqdBakW26kePuPGoKsQzlp9DIsdGlcb5yeYrhM0NPRScDfNI18/5FxPp/BL45dcYiDIQ=="],
 
     "glob": ["glob@10.5.0", "", { "dependencies": { "foreground-child": "^3.1.0", "jackspeak": "^3.1.2", "minimatch": "^9.0.4", "minipass": "^7.1.2", "package-json-from-dist": "^1.0.0", "path-scurry": "^1.11.1" }, "bin": { "glob": "dist/esm/bin.mjs" } }, "sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg=="],
 
@@ -824,8 +818,6 @@
 
     "ufo": ["ufo@1.6.3", "", {}, "sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q=="],
 
-    "ultrachess": ["ultrachess@1.4.0", "", {}, "sha512-GAsuWLKGcqr0q7+uelhX3jMf1oUOww7YdzuLC6dHzacknMi91Dkpl8w7O+Q9a/1rDxX4SgrtymPYBAxsr2dX+w=="],
-
     "undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
     "update-browserslist-db": ["update-browserslist-db@1.2.3", "", { "dependencies": { "escalade": "^3.2.0", "picocolors": "^1.1.1" }, "peerDependencies": { "browserslist": ">= 4.21.0" }, "bin": { "update-browserslist-db": "cli.js" } }, "sha512-Js0m9cx+qOgDxo0eMiFGEueWztz+d4+M3rGlmKPT+T4IS/jP4ylw3Nwpu6cpTTP8R1MAC1kF4VbdLt3ARf209w=="],
@@ -858,7 +850,7 @@
 
     "@size-limit/esbuild/nanoid": ["nanoid@5.1.9", "", { "bin": { "nanoid": "bin/nanoid.js" } }, "sha512-ZUvP7KeBLe3OZ1ypw6dI/TzYJuvHP77IM4Ry73waSQTLn8/g8rpdjfyVAh7t1/+FjBtG4lCP42MEbDxOsRpBMw=="],
 
-    "@ultrachess/react/happy-dom": ["happy-dom@15.11.7", "", { "dependencies": { "entities": "^4.5.0", "webidl-conversions": "^7.0.0", "whatwg-mimetype": "^3.0.0" } }, "sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg=="],
+    "gigaboard/happy-dom": ["happy-dom@15.11.7", "", { "dependencies": { "entities": "^4.5.0", "webidl-conversions": "^7.0.0", "whatwg-mimetype": "^3.0.0" } }, "sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg=="],
 
     "glob/minimatch": ["minimatch@9.0.9", "", { "dependencies": { "brace-expansion": "^2.0.2" } }, "sha512-OBwBN9AL4dqmETlpS2zasx+vTeWclWzkblfZk7KTA5j3jeOONz/tRCnZomUyvNg83wL5Zv9Ss6HMJXAgL8R2Yg=="],
 
@@ -890,7 +882,7 @@
 
     "wrap-ansi-cjs/strip-ansi": ["strip-ansi@6.0.1", "", { "dependencies": { "ansi-regex": "^5.0.1" } }, "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A=="],
 
-    "@ultrachess/react/happy-dom/entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
+    "gigaboard/happy-dom/entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
 
     "glob/minimatch/brace-expansion": ["brace-expansion@2.1.0", "", { "dependencies": { "balanced-match": "^1.0.0" } }, "sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w=="],
 

@@ -18,7 +18,7 @@
  * board grid beneath owns pointer events.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { memo } from "react";
 import { useSquareCell } from "../hooks/use-board-subscription.js";
 import type { Orientation, PieceRenderer } from "../types.js";

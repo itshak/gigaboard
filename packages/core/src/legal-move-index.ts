@@ -12,17 +12,20 @@
  * past capacity we evict the oldest (the first key in iteration order).
  */
 
-import type { SquareIndex } from "./types.js";
+import type { SquareIndex, ZobristKey } from "./types.js";
 
 /** Lookup outcome from {@link LegalMoveIndex.get}. */
 export type LegalMoveEntry = Readonly<Uint8Array>;
 
+/** Position hash representation: zero-BigInt { lo, hi } pair or bigint. */
+export type PositionHash = bigint | ZobristKey;
+
 /** The cache API. */
 export interface LegalMoveIndex {
   /** Return cached target squares for `(hash, from)`, or `undefined` on miss. */
-  get(hash: bigint, from: SquareIndex): LegalMoveEntry | undefined;
+  get(hash: PositionHash, from: SquareIndex): LegalMoveEntry | undefined;
   /** Store target squares for `(hash, from)`. */
-  set(hash: bigint, from: SquareIndex, tos: Uint8Array): void;
+  set(hash: PositionHash, from: SquareIndex, tos: Uint8Array): void;
   /** Drop every entry. */
   clear(): void;
   /** Current number of entries. */
@@ -43,9 +46,12 @@ export interface LegalMoveIndexOptions {
   readonly capacity?: number;
 }
 
-/** Pack `(hash, from)` into a single bigint key. */
-function makeKey(hash: bigint, from: SquareIndex): bigint {
-  return (hash << 6n) | BigInt(from);
+/** Pack `(hash, from)` into a key without BigInt heap allocation on { lo, hi }. */
+function makeKey(hash: PositionHash, from: SquareIndex): string {
+  if (typeof hash === "bigint") {
+    return `${hash}_${from}`;
+  }
+  return `${hash.lo}_${hash.hi}_${from}`;
 }
 
 /** Create an LRU cache. */
@@ -55,7 +61,7 @@ export function createLegalMoveIndex(options: LegalMoveIndexOptions = {}): Legal
     throw new RangeError(`LegalMoveIndex: capacity must be a positive integer, got ${capacity}`);
   }
 
-  const entries = new Map<bigint, Uint8Array>();
+  const entries = new Map<string, Uint8Array>();
   let hits = 0;
   let misses = 0;
 

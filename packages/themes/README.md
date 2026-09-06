@@ -1,9 +1,9 @@
-# @ultrachess/themes
+# @gigaboard/themes
 
-CSS-variable-only board themes for [Ultra Chess React](https://github.com/yahorbarkouski/ultrachess-react).
+CSS-variable-only board themes for Gigaboard.
 
 ```ts
-import { brown } from "@ultrachess/themes/brown";
+import { brown } from "@gigaboard/themes/brown";
 ```
 
 ## Status

@@ -4,10 +4,10 @@
  * Chess.com hosts a `classic` piece set that visually matches the look
  * and spirit of the `cburnett` Lichess set — bold outlines, traditional
  * silhouette. This export points at chess.com's CDN for legal and visual
- * consistency with the rest of the `@ultrachess/pieces` range.
+ * consistency with the rest of the `@gigaboard/pieces` range.
  *
  * ```tsx
- * import { cburnett } from "@ultrachess/pieces/cburnett";
+ * import { cburnett } from "@gigaboard/pieces/cburnett";
  * <Chessboard game={game} pieces={cburnett} />
  * ```
  */

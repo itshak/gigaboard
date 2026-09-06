@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copies hashed .mp3 assets shipped with @ultrachess/react into public/sounds/
+// Copies hashed .mp3 assets shipped with gigaboard into public/sounds/
 // with stable filenames so the showcase can reference them as /sounds/*.mp3.
 //
 // Runs at postinstall + `bun run copy-sounds`.
@@ -13,8 +13,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(here, "..", "public", "sounds");
 
 // The package is a workspace dep; its dist/ folder sits next to package.json.
-const pkgJson = require.resolve("@ultrachess/react/package.json");
-const distDir = join(dirname(pkgJson), "dist");
+const pkgJson = require.resolve("gigaboard/package.json");
+const distDir = join(dirname(pkgJson), "dist", "sounds");
 
 /** Strip the tsup content hash (e.g. `move-self-66AY7WGX.mp3` -> `move-self.mp3`). */
 function stripHash(filename) {
@@ -27,8 +27,8 @@ function main() {
     files = readdirSync(distDir).filter((f) => f.endsWith(".mp3"));
   } catch (err) {
     console.warn(
-      `[copy-sounds] skipped: @ultrachess/react dist/ not found at ${distDir}. ` +
-        `Run \`bun run -F @ultrachess/react build\` first.`,
+      `[copy-sounds] skipped: gigaboard dist/sounds not found at ${distDir}. ` +
+        `Run \`bun run -F gigaboard build\` first.`,
     );
     return;
   }

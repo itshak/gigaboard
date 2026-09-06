@@ -1,6 +1,6 @@
-# Migrating from `react-chessboard` to `@ultrachess/react`
+# Migrating from `react-chessboard` to `gigaboard`
 
-This is the full migration guide for teams currently shipping [`react-chessboard`](https://github.com/Clariity/react-chessboard) who are evaluating `@ultrachess/react`. It assumes you have a working `react-chessboard` integration and want the shortest path to a more opinionated board: owned state, a built-in engine adapter, strict render boundaries, accessibility, SSR, and measured budgets.
+This is the full migration guide for teams currently shipping [`react-chessboard`](https://github.com/Clariity/react-chessboard) who are evaluating `gigaboard`. It assumes you have a working `react-chessboard` integration and want the shortest path to a more opinionated board: owned state, a built-in engine adapter, strict render boundaries, accessibility, SSR, and measured budgets.
 
 If you're starting greenfield, you don't need this document — read [`README.md`](../README.md) and copy the quick-tour snippet.
 
@@ -13,15 +13,14 @@ If you're starting greenfield, you don't need this document — read [`README.md
 - **A different ownership model.** The board owns a `BoardModel`; your app drives it through a stable handle instead of rebuilding a position prop on every move.
 - **Tighter React boundaries.** Measured in [`BENCH.md`](../BENCH.md): 1.00 React commits per move for the 40-ply Najdorf, versus 2.83 for `react-chessboard`.
 - **Better sustained-session and multi-board behavior.** The Playwright bench shows lower heap growth during long play and materially lower heap/DOM cost at 100 boards.
-- **~55 % smaller bundle** for the typical "one piece set + one theme" app: `core` + `react` + pieces + theme ≈ **17.8 KB gzip** vs `react-chessboard` ~40 KB + `chess.js` ~12.9 KB.
-- **Built-in engine via `ultrachess` WASM.** No more wiring `chess.js` alongside the board for legal move decoration or analysis UI helpers.
+- **~55 % smaller bundle** for the typical "one piece set + one theme" app: `core` + `react` + pieces + theme ≈ **22.3 KB gzip** vs `react-chessboard` ~40 KB + `chess.js` ~12.9 KB.
+- **Built-in engine via `gigachess`.** No more wiring `chess.js` alongside the board for legal move decoration or analysis UI helpers. Zero WASM compile latency!
 - Built-in drawable arrows with modifier-key channels, premoves, sound, keyboard navigation, WAI-ARIA grid, SSR static board.
 
 **Give up / trade-offs:**
 
-- **~255 ms WASM compile on cold mount.** Amortises after ~5 boards on a page; `preloadEngine()` reclaims most of it.
 - **Standard chess only.** No Chess960, variants. `react-chessboard` doesn't handle rules either, but the `chessops`/`chess.js` stacks you might have paired with it do. Variants require a custom `EngineAdapter`.
-- **Different mental model.** `react-chessboard` is a view over a `position` string you own. `@ultrachess/react` owns its own state (`BoardModel`) and gives you a handle. See §2.
+- **Different mental model.** `react-chessboard` is a view over a `position` string you own. `gigaboard` owns its own state (`BoardModel`) and gives you a handle. See §2.
 - **`PackedMove` instead of verbose move objects.** A branded `u16` with a decoder, not `{ from: "e2", to: "e4", san: "e4", ... }`. See §5.
 - **No built-in PGN viewer chrome.** Move list, headers, variation tree — still your job.
 
@@ -45,7 +44,7 @@ const [game, setGame] = useState(new Chess());  // YOU own chess.js
 />
 ```
 
-`@ultrachess/react` is **stateful**:
+`gigaboard` is **stateful**:
 
 ```tsx
 const game = useChessGame();                     // owns its engine + state
@@ -64,10 +63,10 @@ If this sounds like `chessground` — it is, but wrapped in idiomatic React with
 
 ```bash
 bun remove react-chessboard chess.js
-bun add @ultrachess/react @ultrachess/pieces @ultrachess/themes ultrachess
+bun add gigaboard @gigaboard/pieces @gigaboard/themes
 ```
 
-`ultrachess` is a peer dependency (shared across every board on the page). `@ultrachess/react` defaults to the green theme, Neo pieces, and bundled move sounds; `@ultrachess/pieces` and `@ultrachess/themes` remain separate tree-shakable packages for customisation. `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
+`gigaboard` defaults to the green theme, Neo pieces, and bundled move sounds; `@gigaboard/pieces` and `@gigaboard/themes` remain separate tree-shakable packages for customisation. `react` 18.3+ or 19 is required. `chess.js` can stay if your app logic depends on it (PGN parsing, SAN generation outside the board) — it no longer needs to drive the board.
 
 ---
 
@@ -106,11 +105,11 @@ export function Board() {
 }
 ```
 
-### After — `@ultrachess/react`
+### After — `gigaboard`
 
 ```tsx
 "use client";
-import { Chessboard, useChessGame } from "@ultrachess/react";
+import { Chessboard, useChessGame } from "gigaboard";
 
 export function Board() {
   const game = useChessGame();                         // BoardModel | null
@@ -127,16 +126,16 @@ export function Board() {
 }
 ```
 
-Things gone: `useState`, the `Chess` clone-on-every-move dance, the manual FEN plumbing, the `onPieceDrop → boolean` contract, and the need to wire a presentable board by hand. Things new: `game` handle and `fallbackFen` to paint pieces during WASM init.
+Things gone: `useState`, the `Chess` clone-on-every-move dance, the manual FEN plumbing, the `onPieceDrop → boolean` contract, and the need to wire a presentable board by hand. Things new: `game` handle and `fallbackFen` to paint pieces immediately.
 
 ---
 
 ## 5. Move objects — `PackedMove`, not `{ from, to, san }`
 
-`react-chessboard` gives you string coordinates in callbacks (`from: "e2"`, `to: "e4"`). `@ultrachess/react` emits a `PackedMove` — a branded `u16` that encodes `from | to | promotion | kind`. Decode only when you need to:
+`react-chessboard` gives you string coordinates in callbacks (`from: "e2"`, `to: "e4"`). `gigaboard` emits a `PackedMove` — a branded `u16` that encodes `from | to | promotion | kind`. Decode only when you need to:
 
 ```ts
-import { decodePackedMove, moveToUci } from "@ultrachess/core";
+import { decodePackedMove, moveToUci } from "@gigaboard/core";
 
 onMove={(m) => {
   const { from, to, promotion, kind } = decodePackedMove(m);
@@ -159,7 +158,7 @@ const algebraic = `${"abcdefgh"[file]}${rank + 1}`;
 
 ## 6. Prop-by-prop mapping
 
-| `react-chessboard`                              | `@ultrachess/react`                                                                                          |
+| `react-chessboard`                              | `gigaboard`                                                                                                  |
 |-------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
 | `position` (FEN string)                         | Replaced by `game` + `fallbackFen`. For imperative resets call `game.load(fen)` / `game.reset()`.            |
 | `onPieceDrop(from, to, piece) => boolean`       | `onMove(m: PackedMove)` — fires *after* a successful move. Drop-gating: use `canDragPiece`.                  |
@@ -171,7 +170,7 @@ const algebraic = `${"abcdefgh"[file]}${rank + 1}`;
 | `isDraggablePiece({ piece, sourceSquare })`     | `canDragPiece({ square, cell })`. `cell` is a `BoardCell` byte — use `pieceTypeOf(cell)` / `colorOf(cell)`.  |
 | `boardWidth`                                    | Removed. The board fills its container; set CSS `width` / `height` on the wrapper. See §10.                  |
 | `customBoardStyle`                              | `style` + `className` on `<Chessboard/>`.                                                                    |
-| `customDarkSquareStyle` / `customLightSquareStyle` | Use a `Theme` (`@ultrachess/themes/*`) or author your own `Record<string, string>` of CSS vars — see §11.  |
+| `customDarkSquareStyle` / `customLightSquareStyle` | Use a `Theme` (`@gigaboard/themes/*`) or author your own `Record<string, string>` of CSS vars — see §11.   |
 | `customSquareStyles`                            | `renderSquare(ctx) => ReactNode` — absolute-positioned overlay per square.                                    |
 | `customPieces`                                  | `pieces: PieceRenderer` — a `(args: { cell, square }) => ReactNode`. See §12.                                 |
 | `customArrows`                                  | `game.setManagedArrows([...])` (engine-owned) or `game.addArrow(...)` (ad-hoc). See §14.                      |
@@ -185,7 +184,7 @@ const algebraic = `${"abcdefgh"[file]}${rank + 1}`;
 | `areArrowsAllowed`                              | `allowDrawingArrows` (default `true`).                                                                       |
 | `id`                                            | Not needed — the board doesn't namespace globals. Pass `className` / `ariaLabel` for your own hooks.          |
 
-Anything not in this table is either (a) a feature `@ultrachess/react` doesn't have, documented in §17, or (b) a default behaviour with no knob because it didn't need one (e.g. the legal-target highlights are always present and styled via `showLegalTargets: "rings" | "dots" | false`).
+Anything not in this table is either (a) a feature `gigaboard` doesn't have, documented in §17, or (b) a default behaviour with no knob because it didn't need one (e.g. the legal-target highlights are always present and styled via `showLegalTargets: "rings" | "dots" | false`).
 
 ---
 
@@ -205,7 +204,7 @@ Anything not in this table is either (a) a feature `@ultrachess/react` doesn't h
 | `game.in_check()`        | `game.getSnapshot().inCheck`                 | `boolean`                        |
 | `game.game_over()`       | `game.getSnapshot().isGameOver`              | `boolean`                        |
 | `game.turn()`            | `game.getSnapshot().turn`                    | `Color` (0 = White, 1 = Black)   |
-| `game.history({ verbose })` | History is reconstructable via `engine` — see `adapters/ultrachess.ts`. | — |
+| `game.history({ verbose })` | History is reconstructable via `engine` — see `adapters/gigachess.ts`. | — |
 | `game.fen()` hash        | `game.getSnapshot().hash`                    | `bigint` — O(1) Zobrist key      |
 
 All of these commit a single snapshot (≤ 1 React commit). `game.load(fen)` is what replaces the `position` prop when app state needs to jump to an arbitrary FEN — e.g. scrubbing through a PGN, loading a puzzle, undoing beyond the engine's own history:
@@ -242,7 +241,7 @@ Prefer `useBoardSlice` in app code. It's cheap and it keeps the "≤ 1 commit pe
 
 `react-chessboard` v4 depended on `react-dnd`; v5 moved to `@dnd-kit`. In both cases you could sometimes hit conflicts with other drag-and-drop surfaces on the same page.
 
-`@ultrachess/react` has **zero** drag-library dependency. The drag layer is raw `pointerdown` / `pointermove` / `pointerup` written to `style.transform` on a single absolutely-positioned DOM node. No React state writes per frame. It cannot conflict with `@dnd-kit`, `react-dnd`, `dnd-kit`, or any app-level drag surface because it doesn't play in the same event bus.
+`gigaboard` has **zero** drag-library dependency. The drag layer is raw `pointerdown` / `pointermove` / `pointerup` written to `style.transform` on a single absolutely-positioned DOM node. No React state writes per frame. It cannot conflict with `@dnd-kit`, `react-dnd`, `dnd-kit`, or any app-level drag surface because it doesn't play in the same event bus.
 
 If you had custom drag-gating (`isDraggablePiece`), port it to `canDragPiece`:
 
@@ -281,8 +280,8 @@ Two paths, depending on how much you're customising.
 **Pre-built themes.** Import a palette and pass it:
 
 ```tsx
-import { green } from "@ultrachess/themes/green";
-import { brown } from "@ultrachess/themes/brown";
+import { green } from "@gigaboard/themes/green";
+import { brown } from "@gigaboard/themes/brown";
 // …blue, wood
 <Chessboard game={game} theme={green} />
 ```
@@ -291,10 +290,10 @@ import { brown } from "@ultrachess/themes/brown";
 
 ```ts
 const myTheme = {
-  "--ucr-sq-light": "#edeed1",
-  "--ucr-sq-dark":  "#779952",
-  "--ucr-last-move": "rgba(155, 199, 0, 0.41)",
-  "--ucr-selected": "rgba(20, 85, 30, 0.5)",
+  "--gb-sq-light": "#edeed1",
+  "--gb-sq-dark":  "#779952",
+  "--gb-last-move": "rgba(155, 199, 0, 0.41)",
+  "--gb-selected": "rgba(20, 85, 30, 0.5)",
 } satisfies Theme;
 ```
 
@@ -320,8 +319,8 @@ The callback returns React nodes that render absolute-positioned inside each squ
 `react-chessboard`'s `customPieces` took a `{ wP: Component, wN: Component, ... }` record. Ours takes a single `PieceRenderer`:
 
 ```tsx
-import type { PieceRenderer } from "@ultrachess/react";
-import { pieceTypeOf, colorOf, Color, PieceType } from "@ultrachess/core";
+import type { PieceRenderer } from "gigaboard";
+import { pieceTypeOf, colorOf, Color, PieceType } from "@gigaboard/core";
 
 const myPieces: PieceRenderer = ({ cell, square }) => {
   const color = colorOf(cell);
@@ -333,7 +332,7 @@ const myPieces: PieceRenderer = ({ cell, square }) => {
 <Chessboard game={game} pieces={myPieces} />
 ```
 
-Or import a full pre-built set from `@ultrachess/pieces/{alpha,cburnett,chesscom,merida,neo}`. Each is a tree-shakable sub-path at ~660 B gzip.
+Or import a full pre-built set from `@gigaboard/pieces/{alpha,cburnett,chesscom,merida,neo}`. Each is a tree-shakable sub-path at ~660 B gzip.
 
 **Stability matters.** Return referentially-stable React nodes — ideally stateless SVG. A renderer that allocates new closures per call forces per-commit re-rendering and you'll lose the commit-count win.
 
@@ -387,7 +386,7 @@ Because `chess.js` plays no part in the hot drag / render path, its 33 µs `tryM
 **Programmatic** (engine hints, coach annotations). Managed arrows survive user click-to-dismiss:
 
 ```ts
-import { makeArrow } from "@ultrachess/core";
+import { makeArrow } from "@gigaboard/core";
 
 useEffect(() => {
   if (!game || !bestMove) return;
@@ -407,29 +406,23 @@ useEffect(() => {
 
 ```tsx
 // Static (RSC — zero client JS). Drop into MDX, docs, PGN viewers, diagrams.
-import { StaticChessboard } from "@ultrachess/react/server";
+import { StaticChessboard } from "gigaboard/server";
 <StaticChessboard fen="r1bqkb1r/..." orientation="white" />
 
 // Interactive (client). "use client" required in the parent.
 "use client";
-import { Chessboard, useChessGame } from "@ultrachess/react";
+import { Chessboard, useChessGame } from "gigaboard";
 ```
 
 Both emit the **same DOM shape**, so you can SSR the static board on the critical render path and hydrate the interactive one over it — zero layout shift, zero flash-of-empty-board.
 
-**Warm the engine at app boot** to hide the ~250 ms WASM compile behind hydration:
+**Warm the engine at app boot:**
 
 ```tsx
 // app/layout.tsx
-import { preloadEngine } from "@ultrachess/react";
+import { preloadEngine } from "gigaboard";
 preloadEngine();                                     // fire-and-forget
 export default function RootLayout({ children }) { return <html><body>{children}</body></html>; }
-```
-
-Pair with a preload hint in `<head>` to overlap the **fetch** as well as the compile:
-
-```html
-<link rel="preload" as="fetch" href="/path/to/ultrachess_bg.wasm" crossorigin>
 ```
 
 ---
@@ -438,12 +431,10 @@ Pair with a preload hint in `<head>` to overlap the **fetch** as well as the com
 
 1. **Still passing a `position` string every render.** There's no such prop. `useChessGame` owns position; call `game.load(fen)` when app state needs to jump. Doing it in a `useMemo`-style "compute FEN from app state, feed to board" pattern fights the library — you'll commit and thrash.
 2. **`onMove` returns a boolean in your head.** It doesn't. The move is already committed. To *gate* a move, use `canDragPiece` (for drag) or the engine's legal-move check at click time. To *react* to a move, use `onMove`.
-3. **Treating `game` as non-null.** `useChessGame` returns `BoardModel | null` while WASM compiles. Guard with `fallbackFen` on the board and an `if (!game) return null;` on any code that calls `game.tryMove` / `game.load`.
-4. **Rebuilding the model on every render.** Don't call `createBoardModel` in render — use `useChessGame`. If you spread `options` into the hook, make sure the fields that trigger re-init (`fen`) are stable.
-5. **Expecting `{ san, from, to }` in the callback.** `onMove` delivers a `PackedMove`. Decode with `decodePackedMove(m)`. For SAN, keep `chess.js` as a sidecar (§13).
-6. **Setting `animationDuration: 0` and still seeing glides.** We honour `prefers-reduced-motion: reduce` globally; but if your OS pref doesn't match your test, pass `animation={{ durationMs: 0 }}` explicitly.
-7. **Spinning up N boards at once on a page.** Each allocates a WASM instance. ~5–6 ms incremental per additional board, negligible at scale, but the first-board cost is real. Call `preloadEngine()` at app boot.
-8. **Style resets clobbering CSS vars.** Themes work by writing `--ucr-*` custom properties on the board's outer element. A global `* { all: unset }` or a CSS-in-JS `:root` reset that shadows those vars will break the theme. Scope any resets so they don't leak into the board subtree.
+3. **Rebuilding the model on every render.** Don't call `createBoardModel` in render — use `useChessGame`. If you spread `options` into the hook, make sure the fields that trigger re-init (`fen`) are stable.
+4. **Expecting `{ san, from, to }` in the callback.** `onMove` delivers a `PackedMove`. Decode with `decodePackedMove(m)`. For SAN, keep `chess.js` as a sidecar (§13).
+5. **Setting `animationDuration: 0` and still seeing glides.** We honour `prefers-reduced-motion: reduce` globally; but if your OS pref doesn't match your test, pass `animation={{ durationMs: 0 }}` explicitly.
+6. **Style resets clobbering CSS vars.** Themes work by writing `--gb-*` custom properties on the board's outer element. A global `* { all: unset }` or a CSS-in-JS `:root` reset that shadows those vars will break the theme. Scope any resets so they don't leak into the board subtree.
 
 ---
 
@@ -479,7 +470,7 @@ Pair with a preload hint in `<head>` to overlap the **fetch** as well as the com
 ### We don't have (yet — or by design)
 
 - ❌ **Chess960 / variants.** `EngineAdapter` is swappable — [`chessops`](https://github.com/niklasf/chessops)-backed adapters land outside this package.
-- ❌ **Full-canvas renderer.** Placeholder at `@ultrachess/react/canvas`; DOM is the only live renderer.
+- ❌ **Full-canvas renderer.** Scaffolding placeholder; DOM is the only live renderer.
 - ❌ **PGN viewer chrome** (move list, variation tree, headers, annotations UI). The library draws a board; chrome is your job. See [`examples/next-analysis`](../examples/next-analysis) for one pattern.
 - ❌ **Controlled promotion dialog.** Built-in or via `onPromote: () => Promise<PieceType>`. There's no `isPromotionDialogOpen` prop — own the promise if you need full control.
 - ❌ **Drop-in prop-for-prop compatibility.** Names, shapes, semantics all evolved. Use this document.
@@ -490,7 +481,7 @@ Pair with a preload hint in `<head>` to overlap the **fetch** as well as the com
 
 Paste into your tracking tool, tick as you go.
 
-- [ ] Swap `react-chessboard` + `chess.js` for `@ultrachess/react` + `ultrachess` + `@ultrachess/pieces` + `@ultrachess/themes`.
+- [ ] Swap `react-chessboard` + `chess.js` for `gigaboard` + `@gigaboard/pieces` + `@gigaboard/themes`.
 - [ ] Delete the `useState<Chess>` and `setGame(new Chess(...))` plumbing.
 - [ ] Replace `position={fen}` with `game={useChessGame()}` + `fallbackFen`.
 - [ ] Rewrite `onPieceDrop` as `onMove` + (if needed) `canDragPiece`.
@@ -502,7 +493,7 @@ Paste into your tracking tool, tick as you go.
 - [ ] Rename `boardOrientation → orientation`, `animationDuration → animation.durationMs`, `showBoardNotation → showCoordinates`, `arePiecesDraggable → allowDrag`.
 - [ ] Remove `boardWidth`; size the wrapper via CSS.
 - [ ] Call `preloadEngine()` in your root layout.
-- [ ] For any SSR/MDX boards, swap in `StaticChessboard` from `@ultrachess/react/server`.
+- [ ] For any SSR/MDX boards, swap in `StaticChessboard` from `gigaboard/server`.
 - [ ] (Optional) Keep `chess.js` as a sidecar for SAN / PGN off the render path.
 - [ ] Verify Lighthouse / React Profiler: commits-per-move should collapse to 1 and per-move render time to < 1 ms.
 

@@ -5,7 +5,7 @@
  * work per move." That claim is only true if no upstream controller
  * starts diff-writing per-square attributes across an entire colour's
  * pieces on every commit. Exactly that pattern — a cursor controller
- * rewriting `data-ucr-grabbable` on 32 squares per turn flip — cost the
+ * rewriting `data-gb-grabbable` on 32 squares per turn flip — cost the
  * library 85 % of its per-move DOM mutations before it was caught.
  *
  * This spec:
@@ -133,7 +133,7 @@ for (const library of ALL_LIBRARIES) {
         characterDataOldValue: true,
       });
 
-      await window.__ucrBench__?.playMove("e2", "e4");
+      await (window.__gbBench__ ?? window.__ucrBench__)?.playMove("e2", "e4");
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
       observer.disconnect();
       return { records, total: records.length };

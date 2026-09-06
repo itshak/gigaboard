@@ -2,7 +2,7 @@
  * **Neo** — chess.com's default piece set.
  *
  * ```tsx
- * import { neo } from "@ultrachess/pieces/neo";
+ * import { neo } from "@gigaboard/pieces/neo";
  * <Chessboard game={game} pieces={neo} />
  * ```
  *

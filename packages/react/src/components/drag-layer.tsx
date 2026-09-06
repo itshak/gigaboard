@@ -19,7 +19,7 @@
  * the work. `handle.hide()` on drag-end.
  */
 
-import type { BoardCell } from "@ultrachess/core";
+import type { BoardCell } from "@gigaboard/core";
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import type { PieceRenderer } from "../types.js";
 

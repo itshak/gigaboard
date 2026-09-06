@@ -1,20 +1,20 @@
 # next-showcase
 
-Comprehensive Next.js 15 + `@ultrachess/react` example that exercises every
+Comprehensive Next.js 15 + `gigaboard` example that exercises every
 configurable knob on `<Chessboard/>` — a useful reference when you're deciding
 what to wire up in your own app.
 
 ```bash
 bun install
-bun -F @ultrachess/example-next-showcase dev   # http://localhost:3001
+bun -F @gigaboard/example-next-showcase dev   # http://localhost:3001
 ```
 
 ## What it demonstrates
 
 - **Themes** — live-swap between `brown`, `green`, `blue`, `wood` from
-  `@ultrachess/themes`.
+  `@gigaboard/themes`.
 - **Piece sets** — live-swap between `neo`, `chesscom`, `alpha`, `cburnett`,
-  `merida` from `@ultrachess/pieces`.
+  `merida` from `@gigaboard/pieces`.
 - **Orientation flip**, coordinate labels on/off, legal-target style
   (`rings` / `dots` / off), last-move highlight, check highlight, and
   illegal-move red-flash.
@@ -31,7 +31,7 @@ bun -F @ultrachess/example-next-showcase dev   # http://localhost:3001
 
 ## Sounds: why a `postinstall` script?
 
-The seven move-sound `.mp3` assets ship bundled inside `@ultrachess/react`
+The seven move-sound `.mp3` assets ship bundled inside `gigaboard`
 with [tsup](https://tsup.egoist.dev/) content hashes (e.g.
 `move-self-66AY7WGX.mp3`). The built bundle references them with relative
 URLs that the consumer app's static-file handler then has to serve — but

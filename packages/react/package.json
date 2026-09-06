@@ -1,16 +1,16 @@
 {
-  "name": "@ultrachess/react",
+  "name": "gigaboard",
   "version": "1.2.3",
-  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
+  "description": "Ultra-fast React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
   "license": "MIT",
-  "author": "Yahor Barkouski",
-  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "author": "Yahor Barkouski (forked as gigaboard)",
+  "homepage": "https://github.com/itshak/turbochessboard",
   "bugs": {
-    "url": "https://github.com/yahorbarkouski/ultrachess-react/issues"
+    "url": "https://github.com/itshak/turbochessboard/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
+    "url": "git+https://github.com/itshak/turbochessboard.git",
     "directory": "packages/react"
   },
   "engines": {
@@ -25,8 +25,8 @@
     "chessboard",
     "react",
     "react-chessboard",
-    "wasm",
-    "ultrachess",
+    "gigaboard",
+    "gigachess",
     "chess-engine",
     "chess-ui",
     "accessibility",
@@ -89,13 +89,12 @@
   },
   "peerDependencies": {
     "react": "^18.3.0 || ^19.0.0",
-    "react-dom": "^18.3.0 || ^19.0.0",
-    "ultrachess": "^1.1.4"
+    "react-dom": "^18.3.0 || ^19.0.0"
   },
   "dependencies": {
-    "@ultrachess/core": "1.1.3",
-    "@ultrachess/pieces": "1.1.1",
-    "@ultrachess/themes": "1.1.1",
+    "@gigaboard/core": "1.1.3",
+    "@gigaboard/pieces": "1.1.1",
+    "@gigaboard/themes": "1.1.1",
     "web-haptics": "^0.0.6"
   },
   "devDependencies": {
@@ -110,23 +109,22 @@
     "react-dom": "^19.0.0",
     "size-limit": "^11.1.6",
     "tsup": "^8.5.1",
-    "ultrachess": "^1.1.4",
     "vitest": "^3.0.0"
   },
   "size-limit": [
     {
-      "name": "@ultrachess/react (ESM)",
+      "name": "gigaboard (ESM)",
       "path": "dist/index.js",
       "limit": "24 KB",
       "gzip": true,
       "ignore": [
         "react",
         "react-dom",
-        "ultrachess"
+        "gigachess"
       ]
     },
     {
-      "name": "@ultrachess/react/server",
+      "name": "gigaboard/server",
       "path": "dist/server.js",
       "limit": "4 KB",
       "gzip": true,

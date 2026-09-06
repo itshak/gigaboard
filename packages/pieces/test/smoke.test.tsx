@@ -23,7 +23,7 @@ function inspect(set: ReturnType<typeof createImagePieceSet>, cell: number) {
   return { src: node.props.src, alt: node.props.alt };
 }
 
-describe("@ultrachess/pieces", () => {
+describe("@gigaboard/pieces", () => {
   it("exports a semver-looking version string", () => {
     expect(PACKAGE_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });

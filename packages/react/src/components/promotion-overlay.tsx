@@ -26,8 +26,8 @@ import {
   encodeBoardCell,
   PieceType,
   type SquareIndex,
-} from "@ultrachess/core";
-import { useEffect } from "react";
+} from "@gigaboard/core";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CSS_VARS } from "../default-theme.js";
 import type { Orientation, PieceRenderer } from "../types.js";
 
@@ -40,6 +40,7 @@ export interface PromotionOverlayProps {
   readonly pieces: PieceRenderer;
   readonly onSelect: (piece: PieceType) => void;
   readonly onCancel: () => void;
+  readonly getPromotionPieceAriaLabel?: ((piece: PieceType, color: Color) => string) | undefined;
 }
 
 /** Pixel position of a square within the board, as `{ x%, y% }`. */
@@ -57,12 +58,12 @@ function positionOf(
   return { x: col * 12.5, y: row * 12.5 };
 }
 
-/** Order pieces offer (queen first, knight last — standard lichess order). */
+/** Order pieces offer (Chess.com order: Queen, Knight, Rook, Bishop). */
 const CHOICE_ORDER: readonly PieceType[] = [
   PieceType.Queen,
+  PieceType.Knight,
   PieceType.Rook,
   PieceType.Bishop,
-  PieceType.Knight,
 ];
 
 /** Map from keyboard shortcut to piece type. */
@@ -85,8 +86,28 @@ export function PromotionOverlay({
   pieces,
   onSelect,
   onCancel,
+  getPromotionPieceAriaLabel,
 }: PromotionOverlayProps) {
-  // Keyboard shortcuts + Escape. Registered once while the dialog lives.
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const getLabel = useCallback(
+    (piece: PieceType): string =>
+      getPromotionPieceAriaLabel
+        ? getPromotionPieceAriaLabel(piece, color as Color)
+        : pieceName(piece),
+    [getPromotionPieceAriaLabel, color],
+  );
+
+  const [activeAnnouncement, setActiveAnnouncement] = useState<string>(() =>
+    getLabel(CHOICE_ORDER[0] ?? PieceType.Queen),
+  );
+
+  // Auto-focus the primary promotion option on open
+  useEffect(() => {
+    buttonRefs.current[0]?.focus();
+  }, []);
+
+  // Keyboard navigation, shortcuts, Escape, and focus trapping
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
@@ -94,6 +115,51 @@ export function PromotionOverlay({
         onCancel();
         return;
       }
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const activeEl = document.activeElement;
+        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        let nextIdx: number;
+        if (e.shiftKey) {
+          nextIdx = currentIdx <= 0 ? buttonRefs.current.length - 1 : currentIdx - 1;
+        } else {
+          nextIdx = currentIdx >= buttonRefs.current.length - 1 ? 0 : currentIdx + 1;
+        }
+        buttonRefs.current[nextIdx]?.focus();
+        return;
+      }
+
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const activeEl = document.activeElement;
+        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        const nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % CHOICE_ORDER.length;
+        buttonRefs.current[nextIdx]?.focus();
+        return;
+      }
+
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const activeEl = document.activeElement;
+        const currentIdx = buttonRefs.current.findIndex((el) => el === activeEl);
+        const prevIdx = currentIdx <= 0 ? CHOICE_ORDER.length - 1 : currentIdx - 1;
+        buttonRefs.current[prevIdx]?.focus();
+        return;
+      }
+
+      if (e.key === "Home") {
+        e.preventDefault();
+        buttonRefs.current[0]?.focus();
+        return;
+      }
+
+      if (e.key === "End") {
+        e.preventDefault();
+        buttonRefs.current[CHOICE_ORDER.length - 1]?.focus();
+        return;
+      }
+
       const choice = SHORTCUTS[e.key];
       if (choice !== undefined) {
         e.preventDefault();
@@ -144,14 +210,19 @@ export function PromotionOverlay({
           overflow: "hidden",
         }}
       >
-        {CHOICE_ORDER.map((piece) => {
+        {CHOICE_ORDER.map((piece, index) => {
           const cell = encodeBoardCell(color as Color, piece) as BoardCell;
+          const label = getLabel(piece);
           return (
             <button
               key={piece}
+              ref={(el) => {
+                buttonRefs.current[index] = el;
+              }}
               type="button"
               onClick={() => onSelect(piece)}
-              aria-label={pieceName(piece)}
+              onFocus={() => setActiveAnnouncement(label)}
+              aria-label={label}
               style={{
                 flex: 1,
                 display: "flex",
@@ -172,8 +243,11 @@ export function PromotionOverlay({
           );
         })}
       </div>
-      <span className="sr-only" aria-live="polite" style={srOnlyStyle}>
-        Choose a promotion piece with Q, R, B, or N. Press Escape to cancel.
+      <span className="sr-only" aria-live="polite" aria-atomic="true" style={srOnlyStyle}>
+        {activeAnnouncement}
+      </span>
+      <span className="sr-only" style={srOnlyStyle}>
+        Choose a promotion piece with Q, N, R, or B, or arrow keys. Press Escape to cancel.
       </span>
     </div>
   );

@@ -9,7 +9,7 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   installBoardGeometry,
@@ -32,15 +32,15 @@ describe("viewOnly", () => {
   });
   afterEach(() => model.dispose());
 
-  it("sets aria-readonly and data-ucr-view-only on the container", () => {
+  it("sets aria-readonly and data-gb-view-only on the container", () => {
     renderBoard(model, { viewOnly: true });
     expect(screen.getByRole("grid").getAttribute("aria-readonly")).toBe("true");
-    expect(container().dataset["ucrViewOnly"]).toBe("true");
+    expect(container().dataset["gbViewOnly"]).toBe("true");
   });
 
   it("keeps no square in the tab order", () => {
     renderBoard(model, { viewOnly: true });
-    const squares = container().querySelectorAll("[data-ucr-square]");
+    const squares = container().querySelectorAll("[data-gb-square]");
     expect(squares.length).toBe(64);
     for (const sq of squares) {
       expect(sq.getAttribute("tabindex")).toBe("-1");

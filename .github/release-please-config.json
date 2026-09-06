@@ -16,22 +16,22 @@
   ],
   "packages": {
     "packages/core": {
-      "package-name": "@ultrachess/core",
+      "package-name": "@gigaboard/core",
       "component": "core",
       "changelog-path": "CHANGELOG.md"
     },
     "packages/react": {
-      "package-name": "@ultrachess/react",
+      "package-name": "gigaboard",
       "component": "react",
       "changelog-path": "CHANGELOG.md"
     },
     "packages/pieces": {
-      "package-name": "@ultrachess/pieces",
+      "package-name": "@gigaboard/pieces",
       "component": "pieces",
       "changelog-path": "CHANGELOG.md"
     },
     "packages/themes": {
-      "package-name": "@ultrachess/themes",
+      "package-name": "@gigaboard/themes",
       "component": "themes",
       "changelog-path": "CHANGELOG.md"
     }

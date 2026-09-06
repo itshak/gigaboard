@@ -17,10 +17,10 @@ The numbers behind that contract are committed as benchmarks in `apps/benchmarks
 
 | Metric | Budget | Enforcement |
 |---|---|---|
-| `@ultrachess/core` gzip | < 6 KB | `size-limit` |
-| `@ultrachess/react` gzip | < 16 KB | `size-limit` |
-| `@ultrachess/pieces` gzip per set | < 2 KB | `size-limit` |
-| `@ultrachess/themes` gzip per theme | < 1 KB | `size-limit` |
+| `@gigaboard/core` gzip | < 10 KB | `size-limit` |
+| `gigaboard` gzip | < 24 KB | `size-limit` |
+| `@gigaboard/pieces` gzip per set | < 2 KB | `size-limit` |
+| `@gigaboard/themes` gzip per theme | < 1 KB | `size-limit` |
 | Re-renders per move | ≤ 4 | React Profiler bench |
 | Re-renders per hover | 0 | React Profiler bench |
 | Re-renders per drag frame | 0 | React Profiler bench |
@@ -34,7 +34,7 @@ A PR that regresses any budget is blocked.
 
 ## Why each budget exists
 
-- **6 KB / 16 KB gzip:** consumers should be able to add a chessboard to a page without blowing the JS budget.
+- **Gzip budgets:** consumers should be able to add a chessboard to a page without blowing the JS budget.
 - **Re-renders per move ≤ 4:** a move changes 2 squares (from, to) plus at most 2 highlight slots. Anything more means a component is subscribing too broadly.
 - **Re-renders per hover / drag / arrow:** these happen 60 times per second. Any React work per frame is a battery drain and a jank source.
 - **Legal-move cache hit rate ≥ 95 %:** caching by `hash()` is cheap; if we're missing, something is wrong with invalidation.
@@ -45,9 +45,9 @@ A PR that regresses any budget is blocked.
 2. **Canvas arrows.** Arrows render on a single `<canvas>` with imperative 2D calls. One React commit when the arrow set changes; drawing itself is not React's problem.
 3. **Refs-only drag.** `pointerdown` sets a ref; `pointermove` writes `element.style.transform` directly. React never knows the drag is happening.
 4. **WAAPI animations.** `element.animate(...)` runs off-thread on the compositor. Zero React work during the 60 ms animation window.
-5. **`hash()`-keyed legal-move cache.** `ultrachess.hash()` is O(1) (measured at 0.34 ns); cache key is free.
-6. **Lazy piece image paths.** Piece sets are imported per set; unused sets are tree-shaken. Each set is ~2 KB gzip.
-7. **Server-only static board.** For docs, PGN viewers, embedded boards, the `@ultrachess/react/server` export produces zero client JS.
+5. **`hash()`-keyed legal-move cache.** Engine `hash()` is O(1); cache key is free.
+6. **Lazy piece image paths.** Piece sets are imported per set; unused sets are tree-shaken. Each set is ~660 B gzip.
+7. **Server-only static board.** For docs, PGN viewers, embedded boards, the `gigaboard/server` export produces zero client JS.
 
 ## How to profile locally
 

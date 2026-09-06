@@ -1,8 +1,8 @@
 {
-  "name": "@ultrachess/benchmarks",
+  "name": "@gigaboard/benchmarks",
   "version": "0.0.0",
   "private": true,
-  "description": "Performance regression harness for Ultra Chess React. Node microbenchmarks + React Profiler + head-to-head vs react-chessboard.",
+  "description": "Performance regression harness for Gigaboard. Node microbenchmarks + React Profiler + head-to-head vs react-chessboard.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,16 +18,15 @@
     "clean": "rm -rf dist .turbo bench-results"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*",
-    "@ultrachess/pieces": "workspace:*",
-    "@ultrachess/react": "workspace:*",
-    "@ultrachess/themes": "workspace:*",
+    "@gigaboard/core": "workspace:*",
+    "@gigaboard/pieces": "workspace:*",
+    "@gigaboard/themes": "workspace:*",
     "chess.js": "^1.4.0",
     "chessground": "^9.2.0",
+    "gigaboard": "workspace:*",
     "react": "^19.0.0",
     "react-chessboard": "^5.10.0",
-    "react-dom": "^19.0.0",
-    "ultrachess": "^1.1.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.50.0",

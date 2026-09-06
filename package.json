@@ -1,14 +1,14 @@
 {
-  "name": "ultrachess-react-workspace",
+  "name": "gigaboard-workspace",
   "version": "0.0.0",
   "private": true,
-  "description": "Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, SSR static rendering, and accessibility.",
+  "description": "Gigaboard — high-performance MIT React chessboard. 1 commit/move, WAAPI + Canvas, 120fps GPU, chessground parity without GPL.",
   "license": "MIT",
-  "author": "Yahor Barkouski",
-  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "author": "Itshak <aistreltsov@outlook.com> (fork of Yahor Barkouski ultrachess-react)",
+  "homepage": "https://github.com/itshak/turbochessboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git"
+    "url": "git+https://github.com/itshak/turbochessboard.git"
   },
   "workspaces": [
     "packages/*",

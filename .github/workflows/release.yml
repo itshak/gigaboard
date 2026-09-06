@@ -202,7 +202,7 @@ jobs:
         env:
           PATHS: ${{ steps.resolve.outputs.paths }}
         # Trusted Publishing must be configured on npmjs.com for every
-        # package (@ultrachess/core, /react, /pieces, /themes) pointing
+        # package (@gigaboard/core, gigaboard, @gigaboard/pieces, @gigaboard/themes) pointing
         # at this workflow + environment. npm exchanges the OIDC token
         # (`id-token: write` above) for a short-lived publish credential.
         # No NODE_AUTH_TOKEN needed.

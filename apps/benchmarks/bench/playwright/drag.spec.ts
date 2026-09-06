@@ -60,11 +60,11 @@ async function measureDragStorm(
   await gotoBoard(page, library);
   await throttleCpu(page, 4);
 
-  await page.evaluate(() => window.__ucrBench__?.resetMetrics());
+  await page.evaluate(() => (window.__gbBench__ ?? window.__ucrBench__)?.resetMetrics());
 
   const result = await page.evaluate(
     async ({ moves, steps }) => {
-      const bench = window.__ucrBench__;
+      const bench = window.__gbBench__ ?? window.__ucrBench__;
       if (bench === undefined) throw new Error("harness missing");
 
       const perMove: number[] = [];

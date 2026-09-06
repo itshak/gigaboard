@@ -52,11 +52,11 @@ async function measureContinuousDrag(
   const polyline: string[] = [PATH[0] as string];
   for (let i = 0; i < LOOPS; i++) polyline.push(...PATH.slice(1));
 
-  await page.evaluate(() => window.__ucrBench__?.resetMetrics());
+  await page.evaluate(() => (window.__gbBench__ ?? window.__ucrBench__)?.resetMetrics());
 
   const result = await page.evaluate(
     async ({ path, steps }) => {
-      const bench = window.__ucrBench__;
+      const bench = window.__gbBench__ ?? window.__ucrBench__;
       if (bench === undefined) throw new Error("harness missing");
       const start = performance.now();
       await bench.dragPath(path, steps);

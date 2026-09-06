@@ -1,5 +1,5 @@
 import { cleanup, render } from "@testing-library/react";
-import { makeArrow, type SquareIndex } from "@ultrachess/core";
+import { makeArrow, type SquareIndex } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import { makeBoardModel, renderBoard } from "./helpers.js";

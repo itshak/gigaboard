@@ -13,7 +13,7 @@
  * render doesn't re-install the effect.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { type RefObject, useEffect, useRef } from "react";
 import { getSquareAtPoint } from "../lib/geometry.js";
 import type { Orientation } from "../types.js";

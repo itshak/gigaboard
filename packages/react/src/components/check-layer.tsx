@@ -10,7 +10,7 @@
  * intercepts clicks; the piece on top remains fully interactive.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { CSS_VARS } from "../default-theme.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 import type { Orientation } from "../types.js";

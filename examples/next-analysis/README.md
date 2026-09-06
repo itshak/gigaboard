@@ -4,5 +4,5 @@ Analysis board: history navigation, arrow drawing, premoves, PGN import/export. 
 
 ```bash
 bun install
-bun -F @ultrachess/example-next-analysis dev    # http://localhost:3002
+bun -F @gigaboard/example-next-analysis dev    # http://localhost:3002
 ```

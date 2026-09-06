@@ -7,14 +7,14 @@
  */
 
 import { type RenderResult, render } from "@testing-library/react";
-import { type BoardModel, createBoardModel, createUltrachessAdapter } from "@ultrachess/core";
+import { type BoardModel, createBoardModel, createGigachessAdapter } from "@gigaboard/core";
 import { afterAll, beforeAll } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import type { ChessboardProps } from "../src/types.js";
 
 /** Build a live board model synchronously (for tests that need deterministic timing). */
 export async function makeBoardModel(fen?: string): Promise<BoardModel> {
-  const adapter = await createUltrachessAdapter(fen);
+  const adapter = createGigachessAdapter(fen);
   return createBoardModel(adapter);
 }
 

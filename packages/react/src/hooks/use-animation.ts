@@ -30,7 +30,7 @@
  *   piece-layer was reparented mid-animation) — never throw.
  */
 
-import type { AnimDescriptor, BoardModel, SquareIndex } from "@ultrachess/core";
+import type { AnimDescriptor, BoardModel, SquareIndex } from "@gigaboard/core";
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
 import type { AnimationOptions, Orientation } from "../types.js";
 import { useBoardSlice } from "./use-board-subscription.js";

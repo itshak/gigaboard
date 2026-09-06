@@ -5,7 +5,7 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   installBoardGeometry,
@@ -164,7 +164,7 @@ describe("drag ghost origin opacity", () => {
   });
   afterEach(() => model.dispose());
 
-  it("sets opacity via the --ucr-drag-ghost-opacity CSS var on drag-start", () => {
+  it("sets opacity via the --gb-drag-ghost-opacity CSS var on drag-start", () => {
     renderBoard(model);
     const root = container();
     const e2 = squareCentre("e2");
@@ -177,7 +177,7 @@ describe("drag ghost origin opacity", () => {
     const origin = root.querySelector<HTMLElement>(`[data-piece-square="e2"]`);
     expect(origin).not.toBeNull();
     // Reads through var() so themes control the behaviour; fallback 0.35.
-    expect(origin?.style.opacity).toMatch(/var\(--ucr-drag-ghost-opacity,\s*0.35\)/);
+    expect(origin?.style.opacity).toMatch(/var\(--gb-drag-ghost-opacity,\s*0.35\)/);
 
     fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
   });

@@ -5,7 +5,7 @@
  *
  * Static overlay — no subscriptions. Files (a–h) render along the bottom
  * edge; ranks (1–8) along the left edge. Orientation flips the order.
- * Label colours come from `--ucr-coord-light` / `--ucr-coord-dark` so the
+ * Label colours come from `--gb-coord-light` / `--gb-coord-dark` so the
  * label contrasts against whichever square it sits on.
  */
 

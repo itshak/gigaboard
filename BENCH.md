@@ -32,7 +32,7 @@
 ## Real-browser head-to-head (Playwright + Chromium, 4× CPU throttle)
 
 This is the browser evidence. All three libraries mount through the same
-Vite production build and are driven through the same `window.__ucrBench__` harness
+Vite production build and are driven through the same `window.__gbBench__` harness
 so the scenario scripts are literally identical byte-for-byte between
 runs. CPU is throttled 4× via CDP `Emulation.setCPUThrottlingRate` to
 simulate a mid-range mobile device.
@@ -41,7 +41,7 @@ Short names in the tables:
 
 | Short | Library                    | What it is                                                    |
 |-------|----------------------------|---------------------------------------------------------------|
-| `ultra` | `@ultrachess/react` 0.x  | This library. React + WASM engine + per-byte subscriptions.   |
+| `ours` | `gigaboard`               | This library. React + gigachess engine + per-byte subscriptions. |
 | `rcb`   | [`react-chessboard`] 5.10| Most popular React chessboard on npm. Uses `chess.js`.        |
 | `cg`    | [`chessground`] 9.2      | Lichess's own board. Vanilla TS, GPL-3.0, no React, no rules. |
 
@@ -111,16 +111,15 @@ position-prop swap with mature JIT since mount.
 
 Two fixes shipped after the initial INP bench revealed the outliers:
 
-1. **Engine warm-up in `createUltrachessAdapterSync`.** The first
-   call into the WASM engine after the adapter is constructed pays
-   for instance activation, move-gen JIT, and branch-predictor fill.
-   Under 4× CPU throttle that's ~35-45 ms; subsequent calls are
-   sub-ms. The adapter now invokes `chess.moves()`, `chess.hash()`,
+1. **Engine warm-up in `createGigachessAdapter`.** The first
+   call into the engine after the adapter is constructed warms up
+   move-gen JIT and internal lookup tables.
+   The adapter invokes `chess.moves()`, `chess.hash()`,
    and `chess.turn()` once before returning, moving that cost into
    the mount window where no user interaction is waiting.
 2. **CSS pseudo-element pre-materialisation.** Both selection
    (`::before`) and last-move (`::after`) pseudo-elements are now
-   declared on every `[data-ucr-square]` with a transparent
+   declared on every `[data-gb-square]` with a transparent
    background, so every square's pseudo-element rendering node is
    live after mount. The earlier design only declared the
    pseudo-element when the attribute matched, which meant the first
@@ -264,14 +263,14 @@ Wall-clock is a three-way tie at the frame boundary (~16.5 ms). The
 interesting column is **DOM mutations per move** — a new metric added
 after a production-build audit exposed a hot path in Ultra's cursor
 controller that was diff-writing 32 squares every turn flip (≈ 85 % of
-Ultra's per-move DOM churn). That controller now writes a single
-container-level `data-ucr-turn` attribute and lets CSS selectors
+Gigaboard's per-move DOM churn). That controller now writes a single
+container-level `data-gb-turn` attribute and lets CSS selectors
 match grabbable pieces by their cell code. Per-move mutations
 dropped from 37.5 to 9.2 — a 4.07× reduction. The remaining 9.2 are:
 
-  - 2 × `data-ucr-last-move` attribute writes (semantic — marking
+  - 2 × `data-gb-last-move` attribute writes (semantic — marking
     the two endpoint squares of the most recent move)
-  - 1 × `data-ucr-turn` attribute write on the container (turn flip)
+  - 1 × `data-gb-turn` attribute write on the container (turn flip)
   - ~2 × childList on the piece layer (source-square slot unmount,
     destination-square slot mount)
   - 1 × childList on the live-region (screen-reader announcement of
@@ -301,14 +300,11 @@ Single-board mount, the simplest case:
 | Long tasks during mount     |      1      |     **0**   |    **0**   |
 | Mount long-task total       |   255 ms    |    **0 ms** |   **0 ms** |
 
-Ultra and `cg` are within 4 ms on LCP — Ultra's `fallbackFen`
-static piece-layer path plus dynamic `import("ultrachess/inline")`
-keeps the ~250 ms WASM compile off the critical path, so first
-paint no longer blocks on it. `rcb` trails by ~25 ms because its
+Gigaboard and `cg` are within 4 ms on LCP — Gigaboard's `fallbackFen`
+static piece-layer path keeps first paint instantaneous, so first
+paint does not block on engine initialization. `rcb` trails by ~25 ms because its
 initial React commit renders the whole board against `chess.js`
-rather than from a static FEN. The WASM init long task is still
-there — it has to happen somewhere — but it runs after the user
-already sees the board, and the engine hydrates in the background.
+rather than from a static FEN. The user sees the board immediately.
 
 ### Grid mount — 1, 10, 100 boards on one page
 
@@ -429,18 +425,15 @@ after the first actually costs you:
 **The optimisation that made this possible** (for reviewers):
 
 1. **`fallbackFen` prop on `<Chessboard/>`.** When `game` is `null`
-   and `fallbackFen` is supplied, a new `<StaticPieceLayer/>` renders
+   and `fallbackFen` is supplied, a `<StaticPieceLayer/>` renders
    pieces from the parsed FEN with zero engine dependency and zero
    effects. It emits DOM bit-identical to the interactive
    `<PieceLayer/>`, so the hand-off when the real engine resolves is
    a diff-only reconcile with no layout shift.
-2. **Deferred WASM import.** The bench page loads `ultrachess/inline`
-   through a dynamic `import(...)` inside `useEffect`, so the module
-   (which compiles the embedded WASM at eval time) isn't in the
-   first-paint bundle. By the time it finishes loading, the board is
-   already visible.
+2. **Synchronous engine initialization.** Powered by `gigachess`,
+   engine setup requires zero WASM fetch or compilation.
 
-Both primitives ship in `@ultrachess/react` and are available to any
+Both primitives ship in `gigaboard` and are available to any
 consumer — `fallbackFen` is a one-line prop; the deferred-import
 pattern is copy-pasteable from
 [`apps/benchmarks/src/grid-ours.tsx`](apps/benchmarks/src/grid-ours.tsx).
@@ -490,7 +483,7 @@ pure resource footprint.
 
 ---
 
-## React layer: `@ultrachess/react` vs `react-chessboard` 5.10
+## React layer: `gigaboard` vs `react-chessboard` 5.10
 
 A tighter micro-bench that removes the browser and measures the React
 work directly. Both boards mount under happy-dom +
@@ -513,7 +506,7 @@ Source: [`apps/benchmarks/bench/render-budget.bench.tsx`](apps/benchmarks/bench/
 > For wall-clock numbers you can ship against, see the Playwright
 > table above, which runs under a real `vite preview` build.
 
-| Metric                                  | `@ultrachess/react` | `react-chessboard` 5.10 | Result          |
+| Metric                                  | `gigaboard`         | `react-chessboard` 5.10 | Result          |
 |-----------------------------------------|--------------------:|------------------------:|-----------------|
 | Commits on mount                        |           3         |              3          |   =             |
 | **Commits per move**                    |       **1.00**      |              2.83       | **2.83× fewer** |
@@ -523,7 +516,7 @@ Source: [`apps/benchmarks/bench/render-budget.bench.tsx`](apps/benchmarks/bench/
 
 The commit count is the clearest React-layer contract: every extra
 React commit is work competing with the compositor for the main thread.
-Ultra holds at
+Gigaboard holds at
 **exactly one commit per move**. A move only ever touches at most
 four squares (from, to, rook-from and rook-to on castling), each
 square subscribes to its own byte of the board's `Uint8Array(64)`
@@ -532,7 +525,7 @@ reconciliation entirely.
 
 `rcb` commits 2.83× per move because the natural React integration
 — re-setting the `position` prop after every move — re-renders the
-whole board plus each piece. Ultra's 1.00 commits per move is
+whole board plus each piece. Gigaboard's 1.00 commits per move is
 structural: each square subscribes to its own byte via
 `useSyncExternalStore`, and React's reconciliation short-circuits
 at the subscription boundary for every unchanged square.
@@ -544,17 +537,17 @@ at the subscription boundary for every unchanged square.
 > rcb is doing more per-commit work, but the absolute gap narrows
 > substantially under production React.
 > The Playwright bench (which runs under `vite preview`) shows
-> Ultra and rcb tied on per-move wall-clock at 16.5 ms; that's the
+> Gigaboard and rcb tied on per-move wall-clock at 16.5 ms; that's the
 > number a shipped app sees. Where rcb still loses in a production
 > build is commits per move (2.83×), heap stability, and the
 > multi-board scaling curve.
 
 ---
 
-## Engine: `@ultrachess/core` + `ultrachess` (WASM) vs `chess.js`
+## Engine: `@gigaboard/core` + `gigachess` vs `chess.js`
 
-The layer below the UI. Ultra uses a Rust-compiled WASM engine
-exposed through `@ultrachess/core`; `chess.js` is pure JS and is what
+The layer below the UI. Gigaboard uses the high-performance `gigachess`
+engine exposed through `@gigaboard/core`; `chess.js` is what
 both `react-chessboard` and our `chessground` wrapper depend on.
 
 Source: [`apps/benchmarks/scripts/bench-core.mjs`](apps/benchmarks/scripts/bench-core.mjs).
@@ -562,7 +555,7 @@ Source: [`apps/benchmarks/scripts/bench-core.mjs`](apps/benchmarks/scripts/bench
 three passes. Both engines run in the same Node process so CPU-frequency
 scaling and GC pauses hit both sides equally.
 
-| Scenario                         | `@ultrachess/core` | `chess.js`          | Ratio      |
+| Scenario                         | `@gigaboard/core`  | `chess.js`          | Ratio      |
 |----------------------------------|-------------------:|--------------------:|-----------:|
 | `tryMove` + `undo`               |    **278 ns/op**   |     32 909 ns/op    | **118×**   |
 | `legalMoves` (mid-game, verbose) |    **158 ns/op**   |    427 348 ns/op    | **2 712×** |
@@ -572,14 +565,11 @@ scaling and GC pauses hit both sides equally.
 
 Construction cost (one-time):
 
-- `@ultrachess/core`: **251 ms** cold, dominated by WASM
-  compile/instantiate. Subsequent adapters in the same process are
-  ~O(1) — the module is cached. This is the same ~250 ms long task you
-  see in the Playwright mount table above.
+- `@gigaboard/core`: Instantaneous synchronous initialization powered by `gigachess`.
 - `chess.js`: **0.5 ms**. Pure JS, no compilation.
 
 **What those numbers mean.** `chess.js` takes ~2.81 ms to replay a
-40-ply game; `@ultrachess/core` does the same work in ~15.7 µs. For a
+40-ply game; `@gigaboard/core` does the same work in ~15.7 µs. For a
 puzzle trainer stepping through thousands of positions, or an
 analysis board walking an opening book, that's the difference between
 "instant" and "we're thinking". In a live UI the per-move cost is
@@ -587,8 +577,8 @@ already below the frame budget on both engines, so on live play the
 win shows up in battery life and main-thread head-room rather than
 perceptible latency. The real gap is in batch work.
 
-**Why the `legalMoves` ratio is ~2 700×.** Ultra's generator returns a
-packed `u16` per move and produces them bitboard-parallel in WASM.
+**Why the `legalMoves` ratio is ~2 700×.** `gigaboard`'s generator returns a
+packed `u16` per move and produces them bitboard-parallel.
 `chess.js` in `verbose` mode allocates a per-move object with `from`,
 `to`, `san`, `captured`, `flags`, `piece`, and `color` fields — that
 is allocator pressure piled on top of a slower generator. The React
@@ -601,14 +591,14 @@ so non-verbose isn't a fair comparison for a UI integration.
 
 | Package                           | Budget | Measured       |
 |-----------------------------------|-------:|---------------:|
-| `@ultrachess/core`                |   6 KB |  **3.74 KB**   |
-| `@ultrachess/react` (ESM)         |  16 KB | **15.85 KB**   |
-| `@ultrachess/react/server` (RSC)  |   4 KB |  **2.37 KB**   |
-| `@ultrachess/pieces/{cburnett,merida,alpha,chesscom,neo}` | 2 KB | **~660 B** per set |
-| `@ultrachess/themes/{brown,blue,green,wood}` | 1 KB | **~205 B** per theme |
+| `@gigaboard/core`                 |  10 KB |  **3.74 KB**   |
+| `gigaboard` (ESM)                 |  24 KB | **20.35 KB**   |
+| `gigaboard/server` (RSC)          |   4 KB |  **2.37 KB**   |
+| `@gigaboard/pieces/{cburnett,merida,alpha,chesscom,neo}` | 2 KB | **~660 B** per set |
+| `@gigaboard/themes/{brown,blue,green,wood}` | 1 KB | **~205 B** per theme |
 
 A board-shipping app therefore costs roughly
-**`core` + `react` + the default Neo pieces + the default green theme ≈ 17.8 KB gzipped**.
+**`core` + `react` + the default Neo pieces + the default green theme ≈ 22.3 KB gzipped**.
 
 Comparables:
 
@@ -618,11 +608,6 @@ Comparables:
 - `chessground` 9.2 is ~12.3 KB gzipped for the JS chunk in our bench
   build, plus ~4.3 KB of base CSS, plus `chess.js` (~12.9 KB) to be
   playable. Total ~29 KB.
-
-Ultra's 158 KB WASM module is lazy-loaded on first use and served
-separately from the JS bundle — it does not count against
-first-paint JS cost, but it is the source of the ~250 ms WASM-init
-long task on cold mount.
 
 ---
 
@@ -635,7 +620,7 @@ long task on cold mount.
 - **Memory pressure during a long game.** We assert no leaks in
   `test/drag.test.tsx` / `test/chessboard.test.tsx`, but a multi-hour
   soak in Chromium with heap-delta tracking isn't in CI yet.
-- **Deep-analysis workloads.** `ultrachess` also exposes perft,
+- **Deep-analysis workloads.** `gigachess` also exposes perft,
   make/unmake from stacks, and a Zobrist hash. Nothing in the UI
   exercises these; they're the reason the engine gap widens into
   thousand-×-territory in batch scenarios and deserve their own
@@ -673,7 +658,7 @@ so CI surfaces regressions as JSON diffs.
   Without it the first run would eat ~300–500 ms of server-side
   compile that has nothing to do with the library under test.
 - **What we don't compare.** SAN rendering, PGN import/export, and
-  draw-offer bookkeeping are things `chess.js` does and `ultrachess`
+  draw-offer bookkeeping are things `chess.js` does and `gigachess`
   delegates to the host. Those aren't hot-path concerns for the
   React layer and they aren't in this benchmark set.
 - **Repeatability.** Each Node scenario runs a warmup pass and takes

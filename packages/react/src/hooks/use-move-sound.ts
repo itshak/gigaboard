@@ -27,7 +27,7 @@
  * it does not need `san()`, and it will not re-render the component.
  */
 
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { useCallback, useEffect, useRef } from "react";
 import { classifyMoveFeedback, type MoveFeedbackKey } from "../lib/move-feedback.js";
 

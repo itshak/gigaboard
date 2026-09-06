@@ -19,10 +19,10 @@ import { act, render } from "@testing-library/react";
 import {
   type BoardModel,
   createBoardModel,
-  createUltrachessAdapter,
+  createGigachessAdapter,
   type SquareIndex,
-} from "@ultrachess/core";
-import { Chessboard as UltraChessboard } from "@ultrachess/react";
+} from "@gigaboard/core";
+import { Chessboard } from "gigaboard";
 import { Chess } from "chess.js";
 import {
   Profiler,
@@ -119,17 +119,11 @@ function UltraHarness({
   const [model, setModel] = useState<BoardModel | null>(null);
   const readyRef = useRef(false);
   useEffect(() => {
-    let disposed = false;
-    createUltrachessAdapter().then((adapter) => {
-      if (disposed) {
-        adapter.dispose();
-        return;
-      }
-      const m = createBoardModel(adapter);
-      setModel(m);
-    });
+    const adapter = createGigachessAdapter();
+    const m = createBoardModel(adapter);
+    setModel(m);
     return () => {
-      disposed = true;
+      adapter.dispose();
     };
   }, []);
   useEffect(() => {
@@ -142,7 +136,7 @@ function UltraHarness({
   }, [model, onReady]);
   return (
     <Profiler id="ultra" onRender={profiler}>
-      <UltraChessboard game={model} sound={false} animation={{ durationMs: 0 }} />
+      <Chessboard game={model} sound={false} animation={{ durationMs: 0 }} />
     </Profiler>
   );
 }
@@ -241,7 +235,7 @@ async function runRcb(): Promise<{ mount: ProfileLog; play: ProfileLog }> {
   return { mount, play };
 }
 
-describe("render-budget bench — UltraChessReact vs react-chessboard", () => {
+describe("render-budget bench — Gigaboard vs react-chessboard", () => {
   test("measure and emit bench-results/render.json", async () => {
     const ultra = await runUltra();
     const rcb = await runRcb();

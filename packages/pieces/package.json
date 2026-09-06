@@ -1,16 +1,16 @@
 {
-  "name": "@ultrachess/pieces",
+  "name": "@gigaboard/pieces",
   "version": "1.1.1",
-  "description": "Tree-shakable SVG piece sets for @ultrachess/react — cburnett, merida, alpha, neo, chesscom. Each set is a sub-path export (~660 B gzip) so unused sets drop at bundle time.",
+  "description": "Tree-shakable SVG piece sets for gigaboard — cburnett, merida, alpha, neo, chesscom. Each set is a sub-path export (~660 B gzip) so unused sets drop at bundle time.",
   "license": "MIT",
-  "author": "Yahor Barkouski",
-  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "author": "Yahor Barkouski (forked as gigaboard)",
+  "homepage": "https://github.com/itshak/turbochessboard",
   "bugs": {
-    "url": "https://github.com/yahorbarkouski/ultrachess-react/issues"
+    "url": "https://github.com/itshak/turbochessboard/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
+    "url": "git+https://github.com/itshak/turbochessboard.git",
     "directory": "packages/pieces"
   },
   "engines": {
@@ -29,7 +29,7 @@
     "alpha",
     "neo",
     "chesscom",
-    "ultrachess",
+    "gigaboard",
     "react"
   ],
   "type": "module",
@@ -127,7 +127,7 @@
   },
   "size-limit": [
     {
-      "name": "@ultrachess/pieces/cburnett",
+      "name": "@gigaboard/pieces/cburnett",
       "path": "dist/sets/cburnett.js",
       "limit": "2 KB",
       "gzip": true,
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "name": "@ultrachess/pieces/merida",
+      "name": "@gigaboard/pieces/merida",
       "path": "dist/sets/merida.js",
       "limit": "2 KB",
       "gzip": true,
@@ -145,7 +145,7 @@
       ]
     },
     {
-      "name": "@ultrachess/pieces/alpha",
+      "name": "@gigaboard/pieces/alpha",
       "path": "dist/sets/alpha.js",
       "limit": "2 KB",
       "gzip": true,
@@ -154,7 +154,7 @@
       ]
     },
     {
-      "name": "@ultrachess/pieces/chesscom",
+      "name": "@gigaboard/pieces/chesscom",
       "path": "dist/sets/chesscom.js",
       "limit": "2 KB",
       "gzip": true,
@@ -163,7 +163,7 @@
       ]
     },
     {
-      "name": "@ultrachess/pieces/neo",
+      "name": "@gigaboard/pieces/neo",
       "path": "dist/sets/neo.js",
       "limit": "2 KB",
       "gzip": true,

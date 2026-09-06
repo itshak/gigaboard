@@ -14,7 +14,7 @@
  * ### Design — why not per-square data-attributes
  *
  * An earlier version of this controller imperatively wrote
- * `data-ucr-grabbable="true"` on every square that currently held a
+ * `data-gb-grabbable="true"` on every square that currently held a
  * pickup-eligible piece. The diff logic was correct, but every turn
  * flip changes grabbable status for 16 white + 16 black piece squares,
  * so a single move dispatched **32 DOM attribute mutations**. For a
@@ -25,9 +25,9 @@
  * flip and lets CSS express which pieces are grabbable based on data
  * already present on each piece slot:
  *
- *   - `data-ucr-turn="white" | "black"` on the board container
+ *   - `data-gb-turn="white" | "black"` on the board container
  *     — one attribute write per commit in which `turn` changes.
- *   - `data-ucr-premove="true"` on the container when `allowPremove`
+ *   - `data-gb-premove="true"` on the container when `allowPremove`
  *     is on — one attribute write when premove availability changes.
  *   - `[data-piece-cell]` is already set on every `PieceSlot`
  *     (1..6 white, 7..12 black); see `piece-layer.tsx`.
@@ -45,11 +45,11 @@
  *   ≈ 98 % reduction in cursor-system DOM mutations per move.
  */
 
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { type RefObject, useEffect } from "react";
 
 /** Singleton id used to dedupe the injected `<style>` element. */
-const STYLE_ID = "ucr-cursor-styles";
+const STYLE_ID = "gb-cursor-styles";
 
 /**
  * Inject the cursor CSS once per document. SSR-safe (early-returns).
@@ -59,9 +59,9 @@ const STYLE_ID = "ucr-cursor-styles";
  *   2. Piece slots whose cell code belongs to the side-to-move get
  *      `cursor: grab` and `pointer-events: auto` so the cursor on the
  *      piece reads correctly and the piece intercepts the pointerdown.
- *   3. Same for `data-ucr-premove="true"` + opposite-colour pieces.
+ *   3. Same for `data-gb-premove="true"` + opposite-colour pieces.
  *   4. While any descendant square is under an active drag (the board
- *      container carries `data-ucr-dragging="true"`), every square
+ *      container carries `data-gb-dragging="true"`), every square
  *      reads `grabbing`.
  */
 function injectCursorStyles(): void {
@@ -70,41 +70,41 @@ function injectCursorStyles(): void {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-[data-ucr-square] {
+[data-gb-square] {
   cursor: pointer;
 }
-[data-ucr-turn="white"] [data-piece-cell="1"],
-[data-ucr-turn="white"] [data-piece-cell="2"],
-[data-ucr-turn="white"] [data-piece-cell="3"],
-[data-ucr-turn="white"] [data-piece-cell="4"],
-[data-ucr-turn="white"] [data-piece-cell="5"],
-[data-ucr-turn="white"] [data-piece-cell="6"],
-[data-ucr-turn="black"] [data-piece-cell="7"],
-[data-ucr-turn="black"] [data-piece-cell="8"],
-[data-ucr-turn="black"] [data-piece-cell="9"],
-[data-ucr-turn="black"] [data-piece-cell="10"],
-[data-ucr-turn="black"] [data-piece-cell="11"],
-[data-ucr-turn="black"] [data-piece-cell="12"] {
+[data-gb-turn="white"] [data-piece-cell="1"],
+[data-gb-turn="white"] [data-piece-cell="2"],
+[data-gb-turn="white"] [data-piece-cell="3"],
+[data-gb-turn="white"] [data-piece-cell="4"],
+[data-gb-turn="white"] [data-piece-cell="5"],
+[data-gb-turn="white"] [data-piece-cell="6"],
+[data-gb-turn="black"] [data-piece-cell="7"],
+[data-gb-turn="black"] [data-piece-cell="8"],
+[data-gb-turn="black"] [data-piece-cell="9"],
+[data-gb-turn="black"] [data-piece-cell="10"],
+[data-gb-turn="black"] [data-piece-cell="11"],
+[data-gb-turn="black"] [data-piece-cell="12"] {
   pointer-events: auto;
   cursor: grab;
 }
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="7"],
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="8"],
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="9"],
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="10"],
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="11"],
-[data-ucr-premove="true"][data-ucr-turn="white"] [data-piece-cell="12"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="1"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="2"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="3"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="4"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="5"],
-[data-ucr-premove="true"][data-ucr-turn="black"] [data-piece-cell="6"] {
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="7"],
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="8"],
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="9"],
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="10"],
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="11"],
+[data-gb-premove="true"][data-gb-turn="white"] [data-piece-cell="12"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="1"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="2"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="3"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="4"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="5"],
+[data-gb-premove="true"][data-gb-turn="black"] [data-piece-cell="6"] {
   pointer-events: auto;
   cursor: grab;
 }
-[data-ucr-dragging="true"] [data-ucr-square],
-[data-ucr-dragging="true"] [data-piece-cell] {
+[data-gb-dragging="true"] [data-gb-square],
+[data-gb-dragging="true"] [data-piece-cell] {
   cursor: grabbing;
 }
 `;
@@ -112,7 +112,7 @@ function injectCursorStyles(): void {
 }
 
 /**
- * Paint `data-ucr-turn` (and, when applicable, `data-ucr-premove`) on
+ * Paint `data-gb-turn` (and, when applicable, `data-gb-premove`) on
  * the board container. One attribute write per turn flip, independent
  * of how many pieces are on the board.
  *
@@ -121,7 +121,7 @@ function injectCursorStyles(): void {
  *   ARIA grid and the element that carries every container-level
  *   interaction attribute (dragging, turn, premove).
  * @param allowDrag When `false`, no piece is grabbable — the container
- *   drops the `data-ucr-turn` attribute entirely so the CSS rules no
+ *   drops the `data-gb-turn` attribute entirely so the CSS rules no
  *   longer match.
  * @param allowPremove When `true`, pieces of the colour that's **not**
  *   to move are also grabbable (premove queueing).
@@ -153,25 +153,25 @@ export function useCursorController(
         // Drag is off — CSS rules won't match anything without the
         // attribute, so pull it cleanly if it was set.
         if (lastTurn !== null) {
-          delete el.dataset["ucrTurn"];
+          delete el.dataset["gbTurn"];
           lastTurn = null;
         }
         if (lastPremove !== null) {
-          delete el.dataset["ucrPremove"];
+          delete el.dataset["gbPremove"];
           lastPremove = null;
         }
         return;
       }
       const turn = model.getSnapshot().turn === 0 ? "white" : "black";
       if (turn !== lastTurn) {
-        el.dataset["ucrTurn"] = turn;
+        el.dataset["gbTurn"] = turn;
         lastTurn = turn;
       }
       if (allowPremove !== lastPremove) {
         if (allowPremove) {
-          el.dataset["ucrPremove"] = "true";
+          el.dataset["gbPremove"] = "true";
         } else {
-          delete el.dataset["ucrPremove"];
+          delete el.dataset["gbPremove"];
         }
         lastPremove = allowPremove;
       }
@@ -183,8 +183,8 @@ export function useCursorController(
       unsubscribe();
       const el = containerRef.current;
       if (el !== null) {
-        delete el.dataset["ucrTurn"];
-        delete el.dataset["ucrPremove"];
+        delete el.dataset["gbTurn"];
+        delete el.dataset["gbPremove"];
       }
     };
   }, [model, containerRef, allowDrag, allowPremove]);

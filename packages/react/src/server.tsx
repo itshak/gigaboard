@@ -1,5 +1,5 @@
 /**
- * `@ultrachess/react/server` — server-only static board.
+ * `gigaboard/server` — server-only static board.
  *
  * Ships **zero** client JavaScript. No hooks, no state, no event handlers,
  * no imports of any client module. Imports only:
@@ -15,7 +15,7 @@
  *
  * @example
  * ```tsx
- * import { StaticChessboard } from "@ultrachess/react/server";
+ * import { StaticChessboard } from "gigaboard/server";
  *
  * export default function Page() {
  *   return (
@@ -25,7 +25,7 @@
  * ```
  */
 
-import type { BoardCell, SquareIndex } from "@ultrachess/core";
+import type { BoardCell, SquareIndex } from "@gigaboard/core";
 import type { CSSProperties, ReactNode } from "react";
 import { CSS_VARS, defaultTheme } from "./default-theme.js";
 import { parseFenPlacement } from "./fen.js";
@@ -58,10 +58,10 @@ export interface StaticChessboardProps {
   /** Board orientation. Defaults to `"white"`. */
   readonly orientation?: Orientation;
 
-  /** Theme — defaults to the green palette from `@ultrachess/themes`. */
+  /** Theme — defaults to the green palette from `@gigaboard/themes`. */
   readonly theme?: Theme;
 
-  /** Piece renderer — defaults to the `neo` set from `@ultrachess/pieces`. */
+  /** Piece renderer — defaults to the `neo` set from `@gigaboard/pieces`. */
   readonly pieces?: PieceRenderer;
 
   /** Show algebraic coordinate labels on the edges. Default `true`. */
@@ -110,8 +110,8 @@ export function StaticChessboard(props: StaticChessboardProps): ReactNode {
     <div
       className={className}
       style={containerStyle}
-      data-ucr-orientation={orientation}
-      data-ucr-static="true"
+      data-gb-orientation={orientation}
+      data-gb-static="true"
     >
       {/* 8×8 grid of static squares — no event handlers, no tabindex. */}
       <div

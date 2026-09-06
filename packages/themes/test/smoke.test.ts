@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { blue, brown, green, PACKAGE_VERSION, themes, wood } from "../src/index.js";
 
-describe("@ultrachess/themes", () => {
+describe("@gigaboard/themes", () => {
   it("exports a semver-looking version string", () => {
     expect(PACKAGE_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
@@ -14,15 +14,15 @@ describe("@ultrachess/themes", () => {
 
   it("every theme defines the core board CSS variables", () => {
     const required = [
-      "--ucr-sq-light",
-      "--ucr-sq-dark",
-      "--ucr-last-move",
-      "--ucr-selected",
-      "--ucr-legal-target",
-      "--ucr-legal-target-capture",
-      "--ucr-check",
-      "--ucr-coord-light",
-      "--ucr-coord-dark",
+      "--gb-sq-light",
+      "--gb-sq-dark",
+      "--gb-last-move",
+      "--gb-selected",
+      "--gb-legal-target",
+      "--gb-legal-target-capture",
+      "--gb-check",
+      "--gb-coord-light",
+      "--gb-coord-dark",
     ] as const;
 
     for (const [name, theme] of Object.entries({ brown, blue, green, wood })) {
@@ -37,7 +37,7 @@ describe("@ultrachess/themes", () => {
   });
 
   it("green matches the chess.com default palette", () => {
-    expect(green["--ucr-sq-light"]).toBe("#eeeed2");
-    expect(green["--ucr-sq-dark"]).toBe("#769656");
+    expect(green["--gb-sq-light"]).toBe("#eeeed2");
+    expect(green["--gb-sq-dark"]).toBe("#769656");
   });
 });

@@ -73,7 +73,7 @@ Anything exported from `src/index.ts` has:
 
 ### 1.7 Error handling
 
-- Typed error classes, mirroring `ultrachess`: `IllegalMoveError`, `InvalidFenError`, `EngineDisposedError`.
+- Typed error classes, mirroring the engine adapter: `IllegalMoveError`, `InvalidFenError`, `DisposedError`.
 - Never `catch` silently. If you swallow an error, comment the invariant that justifies it.
 - Results where both outcomes are expected return a discriminated union, not a thrown error.
 
@@ -89,7 +89,7 @@ Anything exported from `src/index.ts` has:
 
 ### 2.2 State lives in stores, not Context
 
-- Engine state and board state live in `@ultrachess/core` stores, subscribed via `useSyncExternalStore`.
+- Engine state and board state live in `@gigaboard/core` stores, subscribed via `useSyncExternalStore`.
 - Context is for **services** (the store instance, config) — never for state that changes. A Context whose value changes is a silent re-render grenade.
 - Each `Square` subscribes only to its byte in the `Uint8Array(64)` snapshot. Equality compares a byte, not an object; React skips untouched squares.
 
@@ -133,9 +133,9 @@ Anything exported from `src/index.ts` has:
 - Mark client leaves with `"use client"`; keep the boundary tight.
 - Use `next/dynamic` with `{ ssr: false }` only for things that genuinely cannot render on the server (e.g. canvas measurements). The board itself renders on the server.
 
-### 3.2 No top-level `await` in client bundles
+### 3.2 Client initialization
 
-- `ultrachess` initializes asynchronously in the client. Load it inside a `useEffect`, or use `ultrachess/inline` and initialize synchronously.
+- The `gigachess` engine adapter initializes synchronously.
 - Top-level `await` in a client module breaks older bundlers and breaks `next/dynamic` chunking.
 
 ### 3.3 CSS variables via `useInsertionEffect`
@@ -161,10 +161,10 @@ Anything exported from `src/index.ts` has:
 
 | Package | Gzip budget |
 |---|---|
-| `@ultrachess/core` | 6 KB |
-| `@ultrachess/react` | 16 KB |
-| `@ultrachess/pieces` (per set) | 2 KB |
-| `@ultrachess/themes` (per theme) | 1 KB |
+| `@gigaboard/core` | 10 KB |
+| `gigaboard` | 24 KB |
+| `@gigaboard/pieces` (per set) | 2 KB |
+| `@gigaboard/themes` (per theme) | 1 KB |
 
 CI blocks any PR that pushes over budget. A budget increase requires a Changeset + an ADR justifying it.
 
@@ -181,7 +181,7 @@ Enforced by `apps/benchmarks` + React Profiler assertions in CI.
 
 - `"sideEffects": false` in every package `package.json`.
 - Barrels only at `src/index.ts`, hand-curated. No `export * from "./x"` unless the whole module is genuinely part of the public API.
-- Separate sub-paths for optional features: `@ultrachess/react/canvas`, `@ultrachess/pieces/sets/cburnett`.
+- Separate sub-paths for optional features: `@gigaboard/pieces/cburnett`, `@gigaboard/themes/wood`.
 
 ### 4.4 Measure, don't guess
 
@@ -204,7 +204,7 @@ Enforced by `apps/benchmarks` + React Profiler assertions in CI.
 ## 6. Imports & dependencies
 
 - Relative imports only within a package (no path aliases).
-- Cross-package imports by package name (`@ultrachess/core`) with `workspace:*` version ranges in `package.json`.
+- Cross-package imports by package name (`@gigaboard/core`) with `workspace:*` version ranges in `package.json`.
 - `import type` for type-only imports (enforced).
 - External dependencies: minimize ruthlessly. A new dep needs a Changeset line justifying it. "It would be convenient" is not a justification.
 

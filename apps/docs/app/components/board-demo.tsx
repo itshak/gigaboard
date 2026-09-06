@@ -8,7 +8,7 @@
  * page stays RSC and ships zero JS for the prose.
  */
 
-import { Chessboard, useChessGame } from "@ultrachess/react";
+import { Chessboard, useChessGame } from "gigaboard";
 import { useState } from "react";
 
 export function BoardDemo() {

@@ -5,7 +5,7 @@
  * `<Chessboard/>`:
  *
  * ```tsx
- * import { green } from "@ultrachess/themes/green";
+ * import { green } from "@gigaboard/themes/green";
  * <Chessboard game={game} theme={green} />
  * ```
  *
@@ -17,13 +17,13 @@
 import type { Theme } from "./index.js";
 
 export const green: Theme = Object.freeze({
-  "--ucr-sq-light": "#eeeed2",
-  "--ucr-sq-dark": "#769656",
-  "--ucr-last-move": "rgba(255, 255, 51, 0.45)",
-  "--ucr-selected": "rgba(255, 255, 51, 0.55)",
-  "--ucr-legal-target": "rgba(0, 0, 0, 0.14)",
-  "--ucr-legal-target-capture": "rgba(0, 0, 0, 0.3)",
-  "--ucr-check": "radial-gradient(rgba(255, 0, 0, 0.55) 30%, rgba(255, 0, 0, 0) 80%)",
-  "--ucr-coord-light": "#769656",
-  "--ucr-coord-dark": "#eeeed2",
+  "--gb-sq-light": "#eeeed2",
+  "--gb-sq-dark": "#769656",
+  "--gb-last-move": "rgba(255, 255, 51, 0.45)",
+  "--gb-selected": "rgba(255, 255, 51, 0.55)",
+  "--gb-legal-target": "rgba(0, 0, 0, 0.14)",
+  "--gb-legal-target-capture": "rgba(0, 0, 0, 0.3)",
+  "--gb-check": "radial-gradient(rgba(255, 0, 0, 0.55) 30%, rgba(255, 0, 0, 0) 80%)",
+  "--gb-coord-light": "#769656",
+  "--gb-coord-dark": "#eeeed2",
 });

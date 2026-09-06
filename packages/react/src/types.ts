@@ -1,5 +1,5 @@
 /**
- * Public types for `@ultrachess/react`.
+ * Public types for `gigaboard`.
  *
  * These describe the prop surface a consumer sees when they import
  * `<Chessboard/>` or any of the exposed hooks. Runtime helpers live with
@@ -10,10 +10,11 @@ import type {
   Arrow,
   BoardCell,
   BoardModel,
+  Color,
   PackedMove,
   PieceType,
   SquareIndex,
-} from "@ultrachess/core";
+} from "@gigaboard/core";
 import type { CSSProperties, ReactNode } from "react";
 import type { MoveHapticOptions } from "./hooks/use-move-haptics.js";
 import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
@@ -21,7 +22,7 @@ import type { MoveSoundOptions } from "./hooks/use-move-sound.js";
 /** Which way the board is facing. */
 export type Orientation = "white" | "black";
 
-/** CSS custom-property record (e.g. `{ "--ucr-sq-light": "#f0d9b5" }`). */
+/** CSS custom-property record (e.g. `{ "--gb-sq-light": "#f0d9b5" }`). */
 export type Theme = Readonly<Record<string, string>>;
 
 /** How legal-target squares are visualised when a piece is selected. */
@@ -199,13 +200,13 @@ export interface ChessboardProps {
   readonly orientation?: Orientation;
 
   /**
-   * Theme as a CSS custom-property record. Import from `@ultrachess/themes/*`.
-   * When omitted the default green theme from `@ultrachess/themes` is applied.
+   * Theme as a CSS custom-property record. Import from `@gigaboard/themes/*`.
+   * When omitted the default green theme from `@gigaboard/themes` is applied.
    */
   readonly theme?: Theme;
 
   /**
-   * Piece renderer. Defaults to the `neo` set from `@ultrachess/pieces`.
+   * Piece renderer. Defaults to the `neo` set from `@gigaboard/pieces`.
    */
   readonly pieces?: PieceRenderer;
 
@@ -424,12 +425,31 @@ export interface ChessboardProps {
    * while still providing tactile feedback on mobile devices.
    */
   readonly haptics?: boolean | MoveHapticOptions;
+
+  /**
+   * Custom accessible label generator for squares.
+   * Allows consumers (e.g. BlindBase) to supply localized, piece-aware
+   * speech descriptions for screen readers.
+   */
+  readonly getSquareAriaLabel?: (square: SquareIndex, cell: BoardCell) => string;
+
+  /**
+   * Fired when a board square receives keyboard or programmatic focus.
+   * Can be used to pipe focus events into external speech queues.
+   */
+  readonly onSquareFocus?: (square: SquareIndex, cell: BoardCell) => void;
+
+  /**
+   * Custom accessible label generator for promotion overlay pieces.
+   * Supports multi-language (Russian, Hebrew, English, etc.) screen-reader announcements.
+   */
+  readonly getPromotionPieceAriaLabel?: (piece: PieceType, color: Color) => string;
 }
 
 /** Options forwarded to {@link useChessGame} on first mount. */
 export interface UseChessGameOptions {
   /**
-   * Initial engine FEN. Defaults to `ultrachess`'s standard starting
+   * Initial engine FEN. Defaults to `gigachess`'s standard starting
    * position. This is a lifecycle input: changing it disposes the current
    * model and creates a fresh one. For replay/analysis viewers, keep the
    * model stable and drive `<Chessboard positionFen={...} />` instead.

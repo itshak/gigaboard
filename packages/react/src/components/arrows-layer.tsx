@@ -51,7 +51,7 @@
  * square".
  */
 
-import type { Arrow, BoardModel } from "@ultrachess/core";
+import type { Arrow, BoardModel } from "@gigaboard/core";
 import {
   forwardRef,
   memo,

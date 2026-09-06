@@ -9,7 +9,6 @@ import {
   Color,
   colorOf,
   encodeBoardCell,
-  fromUltrachessPiece,
   isEmptyCell,
   isSquareIndex,
   type PackedMove,
@@ -76,14 +75,6 @@ describe("BoardCell encoding", () => {
         expect(pieceTypeOf(cell)).toBe(t);
       }
     }
-  });
-
-  it("fromUltrachessPiece translates 255 -> empty and (color<<3|type) -> our encoding", () => {
-    expect(fromUltrachessPiece(255)).toBe(BOARD_CELL_EMPTY);
-    // White pawn in ultrachess is (0 << 3) | 0 = 0
-    expect(fromUltrachessPiece(0)).toBe(BOARD_CELL_WP);
-    // Black king is (1 << 3) | 5 = 13
-    expect(fromUltrachessPiece(13)).toBe(BOARD_CELL_BK);
   });
 });
 

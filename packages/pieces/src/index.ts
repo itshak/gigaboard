@@ -1,5 +1,5 @@
 /**
- * `@ultrachess/pieces` — piece renderers for `<Chessboard/>`.
+ * `@gigaboard/pieces` — piece renderers for `<Chessboard/>`.
  *
  * Every set is a URL-backed `PieceRenderer` built by
  * {@link createImagePieceSet}. Ships **image** pieces (chess.com's public
@@ -12,17 +12,17 @@
  * Import a specific set from its sub-path to keep your bundle minimal:
  *
  * ```tsx
- * import { neo } from "@ultrachess/pieces/neo";        // chess.com default
- * import { chesscom } from "@ultrachess/pieces/chesscom"; // alias of `neo`
- * import { alpha } from "@ultrachess/pieces/alpha";
- * import { cburnett } from "@ultrachess/pieces/cburnett";
- * import { merida } from "@ultrachess/pieces/merida";
+ * import { neo } from "@gigaboard/pieces/neo";        // chess.com default
+ * import { chesscom } from "@gigaboard/pieces/chesscom"; // alias of `neo`
+ * import { alpha } from "@gigaboard/pieces/alpha";
+ * import { cburnett } from "@gigaboard/pieces/cburnett";
+ * import { merida } from "@gigaboard/pieces/merida";
  * ```
  *
  * Or bring the whole registry (useful when building a piece-set picker):
  *
  * ```tsx
- * import { pieceSets } from "@ultrachess/pieces";
+ * import { pieceSets } from "@gigaboard/pieces";
  * ```
  *
  * ### Custom chess.com styles
@@ -32,7 +32,7 @@
  * renderer yourself:
  *
  * ```tsx
- * import { chesscomPieceUrls, createImagePieceSet } from "@ultrachess/pieces";
+ * import { chesscomPieceUrls, createImagePieceSet } from "@gigaboard/pieces";
  * const marble = createImagePieceSet(chesscomPieceUrls("marble"));
  * ```
  */

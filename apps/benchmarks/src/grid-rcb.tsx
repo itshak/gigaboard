@@ -11,7 +11,7 @@ import { Chess } from "chess.js";
 import { useEffect, useMemo, useRef } from "react";
 import { Chessboard } from "react-chessboard";
 import { GridShell } from "./grid-ours.js";
-import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
+import { type BenchMetrics, type GbGrid, installObservers } from "./harness/bench-harness.js";
 
 interface Props {
   readonly n: number;
@@ -33,7 +33,7 @@ export function RcbGridApp({ n }: Props) {
   useEffect(() => {
     const observers = installObservers();
     observers.start();
-    const api: UcrGrid = {
+    const api: GbGrid = {
       library: "rcb",
       boardCount: n,
       ready: readyRef.current?.promise ?? Promise.resolve(),
@@ -41,6 +41,7 @@ export function RcbGridApp({ n }: Props) {
         return observers.snapshot();
       },
     };
+    window.__gbGrid__ = api;
     window.__ucrGrid__ = api;
     requestAnimationFrame(() => readyRef.current?.resolve());
   }, [n]);

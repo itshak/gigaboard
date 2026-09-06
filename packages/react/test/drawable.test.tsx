@@ -10,7 +10,7 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   installBoardGeometry,

@@ -14,7 +14,7 @@
  * OS menu.
  */
 
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { type RefObject, useEffect } from "react";
 import type { ArrowsLayerHandle } from "../components/arrows-layer.js";
 import { getSquareAtPoint } from "../lib/geometry.js";

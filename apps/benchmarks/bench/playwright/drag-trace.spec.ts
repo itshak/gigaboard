@@ -63,7 +63,7 @@ test.use({ video: { mode: "on", size: { width: 1280, height: 900 } } });
 
 async function squareCentre(page: Page, label: string): Promise<{ x: number; y: number }> {
   const pt = await page.evaluate((l) => {
-    const b = window.__ucrBench__;
+    const b = window.__gbBench__ ?? window.__ucrBench__;
     if (b === undefined) throw new Error("harness missing");
     return b.squareCentre(l);
   }, label);
@@ -81,7 +81,7 @@ async function squareCentre(page: Page, label: string): Promise<{ x: number; y: 
 async function installHud(page: Page, library: Library): Promise<void> {
   await page.evaluate((lib) => {
     const hud = document.createElement("div");
-    hud.id = "__ucr_hud__";
+    hud.id = "__gb_hud__";
     Object.assign(hud.style, {
       position: "fixed",
       top: "0",
@@ -116,7 +116,7 @@ async function installHud(page: Page, library: Library): Promise<void> {
     const clockEl = hud.querySelector<HTMLElement>("#hud-clock");
     if (libEl) libEl.textContent = lib.toUpperCase();
     const t0 = performance.now();
-    w.__ucrHud__ = {
+    const hudApi = {
       set(patch: {
         move?: number;
         total?: number;
@@ -148,7 +148,9 @@ async function installHud(page: Page, library: Library): Promise<void> {
         }
       },
     };
-    w.__ucrHud__.set({ move: 0, total: 40, phase: "idle", from: "—", to: "—" });
+    w.__gbHud__ = hudApi;
+    w.__ucrHud__ = hudApi;
+    hudApi.set({ move: 0, total: 40, phase: "idle", from: "—", to: "—" });
   }, library);
 }
 
@@ -165,7 +167,7 @@ async function updateHud(
   await page.evaluate((p) => {
     // biome-ignore lint/suspicious/noExplicitAny: host-only HUD type
     const w = window as any;
-    w.__ucrHud__?.set(p);
+    (w.__gbHud__ ?? w.__ucrHud__)?.set(p);
   }, patch);
 }
 

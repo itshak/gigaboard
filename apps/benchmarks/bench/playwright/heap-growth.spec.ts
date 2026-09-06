@@ -119,7 +119,7 @@ async function measureHeap(
     const move = moves[i];
     if (move === undefined) break;
     const [from, to] = move;
-    await page.evaluate(([f, t]) => window.__ucrBench__?.playMove(f, t), [from, to] as const);
+    await page.evaluate(([f, t]) => (window.__gbBench__ ?? window.__ucrBench__)?.playMove(f, t), [from, to] as const);
     // Reset the game when we hit a terminal position. Each library's
     // state machine will have rejected the next move if it was past
     // the end; we don't observe that, we just trust the chess.js-
@@ -135,7 +135,7 @@ async function measureHeap(
   // only call it AFTER each sample so heap measurement isn't distorted
   // by the reset itself; but we do call it once at the end to leave
   // the board in a clean state.
-  await page.evaluate(() => window.__ucrBench__?.reset());
+  await page.evaluate(() => (window.__gbBench__ ?? window.__ucrBench__)?.reset());
 
   const baseline = samples[0]?.heapBytes ?? 0;
   const end = samples[samples.length - 1]?.heapBytes ?? baseline;

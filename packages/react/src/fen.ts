@@ -18,7 +18,7 @@
  * rather than silently producing a blank board.
  */
 
-import type { BoardCell } from "@ultrachess/core";
+import type { BoardCell } from "@gigaboard/core";
 
 /** FEN piece letter → our 1..12 `BoardCell` code, or 0 for unknown. */
 function pieceCellFromFenChar(ch: string): BoardCell {

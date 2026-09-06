@@ -4,5 +4,5 @@ Puzzle trainer: premove flow, puzzle-next transitions, keyboard shortcuts. Lands
 
 ```bash
 bun install
-bun -F @ultrachess/example-puzzle-trainer dev    # http://localhost:3003
+bun -F @gigaboard/example-puzzle-trainer dev    # http://localhost:3003
 ```

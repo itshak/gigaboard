@@ -1,5 +1,5 @@
 /**
- * @ultrachess/react/canvas — opt-in full-canvas renderer.
+ * gigaboard/canvas — opt-in full-canvas renderer.
  *
  * For stress use cases: very large boards (fairy chess), many simultaneous arrows,
  * or low-end devices where per-square DOM nodes become a cost. Drops some DOM

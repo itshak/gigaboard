@@ -1,6 +1,6 @@
 "use client";
 
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { useCallback, useEffect, useRef } from "react";
 import {
   type HapticFeedbackOptions,

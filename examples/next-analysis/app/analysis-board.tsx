@@ -11,11 +11,11 @@
  * hint survives the next move-start commit instead of flickering.
  */
 
-import type { Arrow, BoardModel, SquareIndex } from "@ultrachess/core";
-import { chesscom } from "@ultrachess/pieces";
-import type { MoveSoundOptions } from "@ultrachess/react";
-import { Chessboard, useBoardSlice, useChessGame } from "@ultrachess/react";
-import { wood } from "@ultrachess/themes";
+import type { Arrow, BoardModel, SquareIndex } from "@gigaboard/core";
+import { chesscom } from "@gigaboard/pieces";
+import type { MoveSoundOptions } from "gigaboard";
+import { Chessboard, useBoardSlice, useChessGame } from "gigaboard";
+import { wood } from "@gigaboard/themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StockfishEngine, type StockfishMessage } from "./stockfish-engine";
 
@@ -46,7 +46,7 @@ const MIN_USEFUL_DEPTH = 8;
 
 /**
  * Engine arrow colour. Matches the library's default "primary" arrow tint
- * (`defaultArrowColors.default` from `@ultrachess/react`) so a user-drawn
+ * (`defaultArrowColors.default` from `gigaboard`) so a user-drawn
  * right-click arrow on top reads as the same channel, not a second visual
  * class.
  */
@@ -54,7 +54,7 @@ const ENGINE_ARROW_COLOR = "rgba(21, 120, 27, 0.8)";
 
 /**
  * Sound-asset overrides — the postinstall `scripts/copy-sounds.mjs` step
- * lifts the hashed MP3s shipped with @ultrachess/react into `public/sounds/`
+ * lifts the hashed MP3s shipped with gigaboard into `public/sounds/`
  * with stable filenames, which we reference here. Without this override the
  * library would try to resolve its bundled asset paths against Next's
  * static root and 404.

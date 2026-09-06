@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useMoveHaptics } from "../src/hooks/use-move-haptics.js";
 import { triggerHaptic, warmupHaptics } from "../src/lib/haptics.js";

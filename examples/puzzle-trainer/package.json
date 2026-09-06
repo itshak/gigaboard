@@ -1,5 +1,5 @@
 {
-  "name": "@ultrachess/example-puzzle-trainer",
+  "name": "@gigaboard/example-puzzle-trainer",
   "version": "0.0.0",
   "private": true,
   "description": "Puzzle trainer example (premove flow, puzzle-next transitions) — lands in M4+.",
@@ -14,11 +14,10 @@
     "clean": "rm -rf .next .turbo"
   },
   "dependencies": {
-    "@ultrachess/react": "workspace:*",
+    "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "ultrachess": "^1.1.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

@@ -1,6 +1,6 @@
 "use client";
 
-import type { LegalTargetStyle, Orientation } from "@ultrachess/react";
+import type { LegalTargetStyle, Orientation } from "gigaboard";
 import type { PieceSetName, ShowcaseConfig, ThemeName } from "./showcase";
 import { PIECE_SETS, THEMES } from "./showcase";
 

@@ -1,0 +1,54 @@
+schema: spec-driven
+
+# Project context — shown to AI when creating artifacts
+context: |
+  Gigaboard is a high-performance MIT-licensed React chessboard UI, forked from ultrachess-react (Yahor Barkouski, MIT).
+  It is the official board layer for Gigachess (fastest JS/TS chess engine).
+
+  Goals: 1:1 chessground feature parity without GPL taint, no wrappers, React-native, 120fps GPU-composited on Win/Mac (WAAPI + Canvas arrows),
+  <16KB gz interactive, 1 commit/move, 0 React/frame drag.
+
+  Upstream: https://github.com/yahorbarkouski/ultrachess-react (MIT).
+  Naming: `gigaboard` (folder & npm package) / `@gigaboard/core`, `@gigaboard/pieces`, `@gigaboard/themes`.
+
+  Stack: React 18.3/19 + TypeScript 5.9 strict, Vite, Turborepo + Bun, Gigachess engine for move legality, Chrome/Playwright benchmarks.
+
+  Accessibility is non-negotiable: WAI-ARIA grid, roving tabindex, keyboard parity for drag/click, LiveRegion SAN announcements, prefers-reduced-motion.
+
+  License: MIT (upstream MIT, no GPL). See AGENTS.md.
+
+# Per-artifact rules
+rules:
+  proposal:
+    - Keep proposals focused on a single feature or fix
+    - Reference relevant ADRs from openspec/adr/ when architectural decisions are involved
+    - Note accessibility implications explicitly
+    - Note performance budgets (INP, commits/move, bundle size)
+  specs:
+    - Every user-facing feature MUST include keyboard navigation requirements
+    - Every feature MUST include screen reader announcement requirements
+    - Use Given/When/Then scenarios for testable behavior
+    - Include i18n requirements (en, ru, he) for any user-facing strings where applicable (board is mostly non-textual, but LiveRegion SAN matters)
+  design:
+    - Reference ADRs for architecture decisions
+    - Note any new npm dependencies and their licenses (must be MIT/Apache-2.0/ISC)
+    - Include accessibility architecture (ARIA, focus management, announcements)
+    - Include performance architecture (WAAPI vs rAF, Canvas vs SVG, commit budget)
+  tasks:
+    - Each task should be completable in one coding session
+    - Include verification steps (typecheck, tests, bench) in the final task
+    - Flag tasks that require VoiceOver/NVDA testing
+
+# Per-operation guidance
+operations:
+  apply:
+    guidance:
+      - Always prefix git commit messages with the change ID in brackets, e.g. "[board-audit] Add move sound parity check"
+      - Run `bun run typecheck` and `bun run lint` after implementation
+      - Run `bun run bench` for any perf-sensitive change
+      - Verify keyboard navigation and LiveRegion for any UI changes
+      - Never remove existing comments or docstrings unrelated to the change
+  archive:
+    guidance:
+      - Summarize accessibility and performance impact in the archive notes
+      - Update docs/STATUS.md and BENCH.md with completed work

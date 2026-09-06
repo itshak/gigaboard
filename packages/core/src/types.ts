@@ -1,25 +1,66 @@
 /**
- * Public types and branded primitives for `@ultrachess/core`.
+ * Public types and branded primitives for `@gigaboard/core`.
  *
  * Design goals:
  * - Primitives carry their meaning in the type (`SquareIndex` never silently
  *   mixes with a piece code or a file number).
  * - Encoding of a board cell is a single byte suitable for `Uint8Array(64)`.
  * - Every symbol exported here is a type or a zero-cost helper — no classes,
- *   no allocations per call, nothing that would eat into the 6 KB budget.
+ *   no allocations per call, nothing that would eat into the budget.
  */
 
 /**
  * A square on the board, in LERF indexing: `0 = a1`, `7 = h1`, `56 = a8`,
- * `63 = h8`. Aligned with `ultrachess`'s square indexing.
+ * `63 = h8`. Aligned with standard 0..63 square indexing.
  */
 export type SquareIndex = number & { readonly __brand: "SquareIndex" };
 
 /**
- * A packed u16 move, identical in layout to `ultrachess`'s `Move`:
- * bits 0–5 = from, 6–11 = to, 12–13 = promotion piece, 14–15 = move kind.
+ * A packed u16 move conforming to the 16-bit Move2 wire format:
+ * bits 0–5: from square index (0..63)
+ * bits 6–11: to square index (0..63)
+ * bits 12–15: promotion code (0 = none, 1 = Knight, 2 = Bishop, 3 = Rook, 4 = Queen).
  */
 export type PackedMove = number & { readonly __brand: "PackedMove" };
+
+/** Move2 promotion codes */
+export const MOVE2_PROMO_NONE = 0;
+export const MOVE2_PROMO_KNIGHT = 1;
+export const MOVE2_PROMO_BISHOP = 2;
+export const MOVE2_PROMO_ROOK = 3;
+export const MOVE2_PROMO_QUEEN = 4;
+
+/**
+ * Packs from/to/promo into one 16-bit Move2 word.
+ */
+export function packMove(from: number, to: number, promo = MOVE2_PROMO_NONE): PackedMove {
+  return (((from & 0x3f) | ((to & 0x3f) << 6) | ((promo & 0x0f) << 12)) & 0xffff) as PackedMove;
+}
+
+/**
+ * Unpacks a 16-bit Move2 word into its from/to/promo fields.
+ */
+export function unpackMove(move: PackedMove | number): {
+  from: SquareIndex;
+  to: SquareIndex;
+  promo: number;
+} {
+  const w = (move as number) & 0xffff;
+  return {
+    from: (w & 0x3f) as SquareIndex,
+    to: ((w >>> 6) & 0x3f) as SquareIndex,
+    promo: (w >>> 12) & 0x0f,
+  };
+}
+
+/**
+ * 64-bit Zobrist key represented as two 32-bit unsigned integers (zero-BigInt).
+ */
+export type ZobristKey = {
+  readonly lo: number;
+  readonly hi: number;
+};
+
 
 /**
  * A single byte representing one square of the board. `0` is empty; values
@@ -28,7 +69,7 @@ export type PackedMove = number & { readonly __brand: "PackedMove" };
  */
 export type BoardCell = number & { readonly __brand: "BoardCell" };
 
-/** Piece color. Matches `ultrachess`'s `Color` (White = 0, Black = 1). */
+/** Piece color (White = 0, Black = 1). */
 export const Color = {
   White: 0,
   Black: 1,
@@ -36,7 +77,7 @@ export const Color = {
 /** Colour value. */
 export type Color = (typeof Color)[keyof typeof Color];
 
-/** Piece type. Matches `ultrachess`'s `PieceType`. */
+/** Piece type (0 = Pawn .. 5 = King). */
 export const PieceType = {
   Pawn: 0,
   Knight: 1,
@@ -102,13 +143,6 @@ export function pieceTypeOf(cell: BoardCell): PieceType {
   return ((cell - 1) % 6) as PieceType;
 }
 
-/** Convert `ultrachess`'s 255-empty `(color << 3) | type` encoding to ours. */
-export function fromUltrachessPiece(code: number): BoardCell {
-  if (code === 255) return BOARD_CELL_EMPTY;
-  const color = (code >> 3) & 1;
-  const type = code & 0b111;
-  return (1 + type + color * 6) as BoardCell;
-}
 
 /**
  * Optional text label rendered alongside an arrow. Positioned at the
@@ -212,7 +246,7 @@ export interface BoardSnapshot {
   /** Side to move. */
   readonly turn: Color;
   /** Zobrist hash of the position (from the engine). */
-  readonly hash: bigint;
+  readonly hash: ZobristKey | bigint;
   /** The packed move that produced this position, or `null` for the initial. */
   readonly lastMove: PackedMove | null;
   /** Currently-selected square (UI state), or `null`. */

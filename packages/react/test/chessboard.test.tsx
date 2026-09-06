@@ -1,14 +1,14 @@
 /**
  * Integration tests for `<Chessboard/>`.
  *
- * Exercises the click-to-move lifecycle with a real `ultrachess` engine.
+ * Exercises the click-to-move lifecycle with a real `gigachess` engine.
  * Queries by accessible role (`gridcell` with an `aria-label` per square)
  * so the test contract is the same one a screen-reader user would use.
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { Color } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
+import { Color } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeBoardModel, renderBoard } from "./helpers.js";
 
@@ -142,20 +142,20 @@ describe("<Chessboard/>", () => {
     fireEvent.click(gridcell("e2"));
     // Selection still lands in the model.
     expect(model.getSnapshot().selected).toBe(12);
-    // The selected square is still tinted via `data-ucr-selection` on
+    // The selected square is still tinted via `data-gb-selection` on
     // the square itself — the imperative controller always honours
     // `selected`, regardless of target style.
     const selectedEl = gridcell("e2");
-    expect(selectedEl?.dataset["ucrSelection"]).toBe("selected");
+    expect(selectedEl?.dataset["gbSelection"]).toBe("selected");
     // But no legal-target squares get the quiet / capture states.
-    const anyQuiet = container.querySelector('[data-ucr-selection="legal-quiet"]');
-    const anyCapture = container.querySelector('[data-ucr-selection="legal-capture"]');
+    const anyQuiet = container.querySelector('[data-gb-selection="legal-quiet"]');
+    const anyCapture = container.querySelector('[data-gb-selection="legal-capture"]');
     expect(anyQuiet).toBeNull();
     expect(anyCapture).toBeNull();
     // And the container advertises that target rendering is off, so
     // the pseudo-element CSS doesn't paint either.
     expect(
-      container.querySelector<HTMLElement>("[data-ucr-target-style]")?.dataset["ucrTargetStyle"],
+      container.querySelector<HTMLElement>("[data-gb-target-style]")?.dataset["gbTargetStyle"],
     ).toBe("off");
   });
 
@@ -176,12 +176,42 @@ describe("<Chessboard/>", () => {
 
   it("spreads theme CSS variables inline on the container (SSR-safe, no effect)", () => {
     const { container } = renderBoard(model, {
-      theme: { "--ucr-sq-light": "magenta" },
+      theme: { "--gb-sq-light": "magenta" },
     });
     // The outermost div carries a style attribute with the theme var.
     const outer = container.firstElementChild as HTMLElement | null;
     expect(outer).not.toBeNull();
     const style = outer?.getAttribute("style") ?? "";
-    expect(style).toMatch(/--ucr-sq-light/);
+    expect(style).toMatch(/--gb-sq-light/);
+  });
+
+  it("consults getSquareAriaLabel to provide custom localized accessible labels", () => {
+    const customLabel = (square: SquareIndex, _cell: BoardCell) => {
+      const file = square & 7;
+      const rank = square >> 3;
+      const alg = `${String.fromCharCode(0x61 + file)}${rank + 1}`;
+      if (square === 12) return `Поле ${alg} с белой пешкой`;
+      return `Поле ${alg}`;
+    };
+
+    renderBoard(model, { getSquareAriaLabel: customLabel });
+    const e2 = screen.getByRole("gridcell", { name: "Поле e2 с белой пешкой" });
+    expect(e2).toBeDefined();
+    expect(e2.getAttribute("data-square")).toBe("e2");
+  });
+
+  it("fires onSquareFocus when focus changes via keyboard navigation or tab", () => {
+    const onFocusSpy = vi.fn();
+    renderBoard(model, { onSquareFocus: onFocusSpy });
+
+    const grid = screen.getByRole("grid");
+    const e2 = screen.getByRole("gridcell", { name: "e2" });
+    // Native focus into the square (sets document.activeElement)
+    e2.focus();
+    expect(onFocusSpy).toHaveBeenCalledWith(12, expect.any(Number));
+
+    // Arrow navigation to e3
+    fireEvent.keyDown(grid, { key: "ArrowUp" });
+    expect(onFocusSpy).toHaveBeenCalledWith(20, expect.any(Number));
   });
 });

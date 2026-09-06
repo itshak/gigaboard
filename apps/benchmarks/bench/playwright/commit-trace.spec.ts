@@ -62,7 +62,7 @@ test.use({ video: { mode: "on", size: { width: 1280, height: 900 } } });
 async function installHud(page: Page, library: Library): Promise<void> {
   await page.evaluate((lib) => {
     const hud = document.createElement("div");
-    hud.id = "__ucr_commit_hud__";
+    hud.id = "__gb_commit_hud__";
     Object.assign(hud.style, {
       position: "fixed",
       top: "0",
@@ -93,7 +93,7 @@ async function installHud(page: Page, library: Library): Promise<void> {
     const sanEl = hud.querySelector<HTMLElement>("#hud-san");
     const mutEl = hud.querySelector<HTMLElement>("#hud-mut-n");
     if (libEl) libEl.textContent = lib.toUpperCase();
-    w.__ucrCommitHud__ = {
+    const hudApi = {
       set(patch: {
         move?: number;
         total?: number;
@@ -112,6 +112,8 @@ async function installHud(page: Page, library: Library): Promise<void> {
         }
       },
     };
+    w.__gbCommitHud__ = hudApi;
+    w.__ucrCommitHud__ = hudApi;
   }, library);
 }
 
@@ -122,7 +124,7 @@ async function updateHud(
   await page.evaluate((p) => {
     // biome-ignore lint/suspicious/noExplicitAny: host-only HUD type
     const w = window as any;
-    w.__ucrCommitHud__?.set(p);
+    (w.__gbCommitHud__ ?? w.__ucrCommitHud__)?.set(p);
   }, patch);
 }
 
@@ -137,14 +139,14 @@ for (const library of ALL_LIBRARIES) {
     // Turn on the red-flash overlay that each library's bench page
     // installed at mount time (library-agnostic MutationObserver).
     await page.evaluate(() => {
-      window.__ucrFlash__?.setVisible(true);
-      window.__ucrFlash__?.resetCount();
+      (window.__gbFlash__ ?? window.__ucrFlash__)?.setVisible(true);
+      (window.__gbFlash__ ?? window.__ucrFlash__)?.resetCount();
     });
 
     await context.tracing.start({
       screenshots: true,
       snapshots: true,
-      sources: true,
+      sources: false,
       title: `commit-trace-40ply-${library as Library}`,
     });
 
@@ -157,10 +159,10 @@ for (const library of ALL_LIBRARIES) {
       // Direct state mutation — the fair comparison. No drag UI, no
       // pointer-event pacing. Each library updates its state and
       // reconciles on its own terms.
-      await page.evaluate(([f, t]) => window.__ucrBench__?.playMove(f, t), [from, to] as const);
+      await page.evaluate(([f, t]) => (window.__gbBench__ ?? window.__ucrBench__)?.playMove(f, t), [from, to] as const);
       // Let the mutation batch settle and reflect it on the HUD so the
       // viewer can watch the cumulative count climb.
-      const mut = await page.evaluate(() => window.__ucrFlash__?.getCount() ?? 0);
+      const mut = await page.evaluate(() => (window.__gbFlash__ ?? window.__ucrFlash__)?.getCount() ?? 0);
       await updateHud(page, { mut });
       await page.waitForTimeout(MOVE_GAP_MS);
     }

@@ -5,7 +5,7 @@
  * mobile boards and puzzle thumbnails.
  *
  * ```tsx
- * import { alpha } from "@ultrachess/pieces/alpha";
+ * import { alpha } from "@gigaboard/pieces/alpha";
  * <Chessboard game={game} pieces={alpha} />
  * ```
  */

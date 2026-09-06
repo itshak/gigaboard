@@ -13,7 +13,7 @@ import type { Api } from "chessground/api";
 import type { Key } from "chessground/types";
 import { useEffect, useMemo, useRef } from "react";
 import { GridShell } from "./grid-ours.js";
-import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
+import { type BenchMetrics, type GbGrid, installObservers } from "./harness/bench-harness.js";
 
 // Chessground styles — mounted once, shared across all cells.
 import "chessground/assets/chessground.base.css";
@@ -83,7 +83,7 @@ export function CgGridApp({ n }: Props) {
   useEffect(() => {
     const observers = installObservers();
     observers.start();
-    const api: UcrGrid = {
+    const api: GbGrid = {
       library: "cg",
       boardCount: n,
       ready: readyRef.current?.promise ?? Promise.resolve(),
@@ -91,6 +91,7 @@ export function CgGridApp({ n }: Props) {
         return observers.snapshot();
       },
     };
+    window.__gbGrid__ = api;
     window.__ucrGrid__ = api;
     requestAnimationFrame(() => readyRef.current?.resolve());
   }, [n]);

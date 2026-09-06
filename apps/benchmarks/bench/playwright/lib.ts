@@ -69,8 +69,8 @@ export const ALL_LIBRARIES: readonly Library[] = ["ultra", "rcb", "cg"];
  */
 export async function gotoBoard(page: Page, library: Library): Promise<void> {
   await page.goto(ROUTES[library]);
-  await page.waitForFunction(() => window.__ucrBench__ !== undefined);
-  await page.evaluate(() => window.__ucrBench__?.ready);
+  await page.waitForFunction(() => (window.__gbBench__ ?? window.__ucrBench__) !== undefined);
+  await page.evaluate(() => (window.__gbBench__ ?? window.__ucrBench__)?.ready);
   // One extra rAF after attach — some libraries mount their internal
   // state in a follow-up useEffect after the harness has attached.
   await page.evaluate(

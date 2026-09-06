@@ -1,8 +1,8 @@
 {
-  "name": "@ultrachess/example-next-showcase",
+  "name": "@gigaboard/example-next-showcase",
   "version": "0.0.0",
   "private": true,
-  "description": "Comprehensive Next.js 15 + Ultra Chess React showcase — themes, piece sets, sounds, and every configurable knob.",
+  "description": "Comprehensive Next.js 15 + Gigaboard showcase — themes, piece sets, sounds, and every configurable knob.",
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
@@ -16,14 +16,13 @@
     "postinstall": "node scripts/copy-sounds.mjs"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*",
-    "@ultrachess/pieces": "workspace:*",
-    "@ultrachess/react": "workspace:*",
-    "@ultrachess/themes": "workspace:*",
+    "@gigaboard/core": "workspace:*",
+    "@gigaboard/pieces": "workspace:*",
+    "@gigaboard/themes": "workspace:*",
+    "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "ultrachess": "^1.1.4"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

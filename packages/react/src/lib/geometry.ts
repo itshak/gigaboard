@@ -11,7 +11,7 @@
  * `container.getBoundingClientRect()` once — cheap but not free, so
  * hot-path callers should batch calls per pointer event.
  */
-import type { SquareIndex } from "@ultrachess/core";
+import type { SquareIndex } from "@gigaboard/core";
 import type { Orientation } from "../types.js";
 
 /**

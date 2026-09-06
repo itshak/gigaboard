@@ -2,17 +2,16 @@
  * Abstract engine protocol.
  *
  * The board model speaks to a chess engine exclusively through an
- * `EngineAdapter`. Swapping the default `ultrachess` adapter for another
+ * `EngineAdapter`. Swapping the default `gigachess` adapter for another
  * (chess.js, a variant engine, a custom server-backed validator) should not
  * require changes to `board-model` or any React code.
  *
  * All methods are synchronous: adapter construction absorbs any async init.
- * Every call is expected to be cheap in the steady state — `ultrachess`'s
- * WASM boundary is measured in nanoseconds. Long-running adapters should
- * cache aggressively on their own side.
+ * Every call is expected to be cheap in the steady state. Long-running adapters
+ * should cache aggressively on their own side.
  */
 
-import type { BoardCell, Color, PackedMove, PieceType, SquareIndex } from "./types.js";
+import type { BoardCell, Color, PackedMove, PieceType, SquareIndex, ZobristKey } from "./types.js";
 
 /** The engine protocol. */
 export interface EngineAdapter {
@@ -47,8 +46,8 @@ export interface EngineAdapter {
   /** Side to move. */
   turn(): Color;
 
-  /** Zobrist hash of the current position. O(1) in `ultrachess`. */
-  hash(): bigint;
+  /** Zobrist hash of the current position. */
+  hash(): ZobristKey | bigint;
 
   /** `true` if the side to move is in check. */
   inCheck(): boolean;
@@ -71,7 +70,7 @@ export interface EngineAdapter {
   /** Reset to the starting position. Clears history. */
   reset(): void;
 
-  /** Release engine resources (the WASM handle in `ultrachess`). */
+  /** Release engine resources. */
   dispose(): void;
 }
 

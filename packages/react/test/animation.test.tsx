@@ -7,7 +7,7 @@
  */
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import { installBoardGeometry, makeBoardModel, renderBoard } from "./helpers.js";
@@ -167,9 +167,8 @@ describe("useAnimation", () => {
     fireEvent(root, pd("pointerdown", 225, 325));
     fireEvent(root, pd("pointermove", 225, 125));
     fireEvent(root, pd("pointerup", 225, 125));
-    // Now click-to-move e2 → e4 — should animate.
+    // Since e2 remains selected after illegal drag abort, clicking e4 executes the move.
     calls.length = 0;
-    fireEvent.click(screen.getByRole("gridcell", { name: "e2" }));
     fireEvent.click(screen.getByRole("gridcell", { name: "e4" }));
     await waitFor(() => {
       expect(model.getSnapshot().historyPly).toBe(1);

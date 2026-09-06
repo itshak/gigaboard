@@ -7,7 +7,7 @@
  */
 
 import { act, render } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useMoveSound } from "../src/hooks/use-move-sound.js";
 import { makeBoardModel } from "./helpers.js";

@@ -35,7 +35,7 @@
  * ### Selection + legal-target highlights are NOT rendered here
  *
  * Chessground-style: a `useSelectionController` hook sets the
- * `data-ucr-selection` attribute on this `<div>` imperatively, and the
+ * `data-gb-selection` attribute on this `<div>` imperatively, and the
  * CSS shipped by `injectSelectionStyles()` paints a `::before`
  * pseudo-element overlay. That bypasses React reconciliation entirely
  * on selection changes — critical for the drag-start peak frame.
@@ -46,13 +46,14 @@
  * and wipe out any CSS-set gradient overlay.
  */
 
-import type { SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { memo, type ReactNode, useCallback, useEffect, useRef } from "react";
 import { CSS_VARS } from "../default-theme.js";
+import { useSquareCell } from "../hooks/use-board-subscription.js";
 import type { SquareContext } from "../types.js";
 
 /** Singleton id used to dedupe the injected focus-ring style element. */
-const FOCUS_STYLE_ID = "ucr-focus-ring-styles";
+const FOCUS_STYLE_ID = "gb-focus-ring-styles";
 
 /**
  * Inject the keyboard-focus ring CSS once per document. SSR-safe
@@ -67,7 +68,7 @@ function injectFocusRingStyles(): void {
   const style = document.createElement("style");
   style.id = FOCUS_STYLE_ID;
   style.textContent = `
-[data-ucr-square]:focus-visible {
+[data-gb-square]:focus-visible {
   box-shadow: inset 0 0 0 3px rgba(255, 206, 76, 0.95);
 }
 `;
@@ -85,7 +86,7 @@ function algebraicOf(index: SquareIndex): string {
 export interface SquareProps {
   readonly index: SquareIndex;
   readonly onClick: (index: SquareIndex) => void;
-  readonly renderSquare?: (ctx: SquareContext) => ReactNode;
+  readonly renderSquare?: ((ctx: SquareContext) => ReactNode) | undefined;
   /**
    * `true` for the single square that currently owns the roving tabindex.
    * When this flips to `true`, the cell focuses itself programmatically.
@@ -95,18 +96,32 @@ export interface SquareProps {
    * Stable setter called with `(index, element | null)` whenever the
    * square's DOM node mounts or unmounts. Consumers (the selection
    * controller) use this to build a 64-entry refs array so they can
-   * write `data-ucr-selection` imperatively on the right square.
+   * write `data-gb-selection` imperatively on the right square.
    */
-  readonly setSquareRef?: (index: SquareIndex, el: HTMLElement | null) => void;
+  readonly setSquareRef?: ((index: SquareIndex, el: HTMLElement | null) => void) | undefined;
+  readonly model?: BoardModel | null | undefined;
+  readonly getSquareAriaLabel?: ((square: SquareIndex, cell: BoardCell) => string) | undefined;
+  readonly onFocus?: ((square: SquareIndex, cell: BoardCell) => void) | undefined;
 }
 
-function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: SquareProps) {
+function SquareImpl({
+  index,
+  onClick,
+  renderSquare,
+  isFocused,
+  setSquareRef,
+  model,
+  getSquareAriaLabel,
+  onFocus,
+}: SquareProps) {
   const file = index & 7;
   const rank = index >> 3;
   const isLight = (file + rank) % 2 === 1;
-  const label = algebraicOf(index);
+  const cell = useSquareCell(model, index) as BoardCell;
+  const label = getSquareAriaLabel ? getSquareAriaLabel(index, cell) : algebraicOf(index);
 
   const internalRef = useRef<HTMLDivElement | null>(null);
+  const lastReportedFocusRef = useRef<boolean>(false);
 
   // Stable ref-setter: React only calls it when the DOM node
   // mounts/unmounts, not per render, so `memo`'s prop-diff stays valid.
@@ -130,7 +145,10 @@ function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: S
   // stealing page focus on load. Once the user has actually entered the
   // board via Tab or click, this effect takes over for arrow-key nav.
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isFocused) {
+      lastReportedFocusRef.current = false;
+      return;
+    }
     const el = internalRef.current;
     if (el === null) return;
     const grid = el.closest('[role="grid"]');
@@ -138,7 +156,16 @@ function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: S
     if (!grid.contains(document.activeElement)) return;
     // Only focus if we aren't already, to avoid thrashing.
     if (document.activeElement !== el) el.focus();
-  }, [isFocused]);
+    if (!lastReportedFocusRef.current) {
+      lastReportedFocusRef.current = true;
+      onFocus?.(index, cell);
+    }
+  }, [isFocused, index, cell, onFocus]);
+
+  const handleFocus = useCallback(() => {
+    lastReportedFocusRef.current = true;
+    onFocus?.(index, cell);
+  }, [index, cell, onFocus]);
 
   const handleClick = (): void => onClick(index);
 
@@ -150,10 +177,11 @@ function SquareImpl({ index, onClick, renderSquare, isFocused, setSquareRef }: S
       aria-rowindex={rank + 1}
       aria-colindex={file + 1}
       tabIndex={isFocused ? 0 : -1}
-      data-square={label}
-      data-ucr-square=""
+      data-square={algebraicOf(index)}
+      data-gb-square=""
       data-light={isLight ? "true" : "false"}
       onClick={handleClick}
+      onFocus={handleFocus}
       style={{
         position: "relative",
         // `backgroundColor` (not the `background` shorthand) so the

@@ -20,12 +20,12 @@ import type { Key } from "chessground/types";
 import { useEffect, useRef } from "react";
 import {
   type BenchMetrics,
+  type GbBench,
   installMutationFlash,
   installObservers,
   pointerDrag,
   pointerDragPath,
   squareCentreByGrid,
-  type UcrBench,
 } from "./harness/bench-harness.js";
 
 // Lichess ships chessground's styles as CSS files; Vite picks these up
@@ -102,7 +102,9 @@ export function CgApp() {
 
     const observers = installObservers();
     observers.start();
-    window.__ucrFlash__ = installMutationFlash(root);
+    const flash = installMutationFlash(root);
+    window.__gbFlash__ = flash;
+    window.__ucrFlash__ = flash;
 
     // Chessground uses a single `<cg-board>` element as the 8×8 layout —
     // the inner `cg-container` is the actual square grid we want to
@@ -111,7 +113,7 @@ export function CgApp() {
     const boardEl = root.querySelector<HTMLElement>("cg-board") ?? root;
     const getCentre = squareCentreByGrid(boardEl, "white");
 
-    const api: UcrBench = {
+    const api: GbBench = {
       library: "cg",
       ready: readyRef.current?.promise ?? Promise.resolve(),
       async playMove(from, to) {
@@ -149,6 +151,7 @@ export function CgApp() {
       },
       squareCentre: getCentre,
     };
+    window.__gbBench__ = api;
     window.__ucrBench__ = api;
     readyRef.current?.resolve();
 

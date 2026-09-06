@@ -1,8 +1,8 @@
-# @ultrachess/core
+# @gigaboard/core
 
-Framework-agnostic state machine and engine adapter for [Ultra Chess React](https://github.com/yahorbarkouski/ultrachess-react).
+Framework-agnostic state machine and engine adapter for Gigaboard.
 
-Zero React, zero DOM. This package owns the `ultrachess` engine handle and exposes a `useSyncExternalStore`-compatible snapshot store that the React layer (and future targets — React Native, Jazz CRDT) consume.
+Zero React, zero DOM. This package owns the `gigachess` engine adapter and exposes a `useSyncExternalStore`-compatible snapshot store that the React layer (and future targets — React Native, Jazz CRDT) consume.
 
 ## Status
 

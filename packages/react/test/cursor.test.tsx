@@ -1,8 +1,8 @@
 /**
- * Tests for the cursor controller — verifies that `data-ucr-turn` and
- * `data-ucr-premove` are written on the board container per the
+ * Tests for the cursor controller — verifies that `data-gb-turn` and
+ * `data-gb-premove` are written on the board container per the
  * allowDrag / allowPremove predicate, and that the container flips
- * `data-ucr-dragging` during an active drag.
+ * `data-gb-dragging` during an active drag.
  *
  * The cursor controller moved from per-square data-attributes to a
  * single container-level attribute + CSS selectors keyed to
@@ -11,7 +11,7 @@
  */
 
 import { fireEvent, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { installBoardGeometry, makeBoardModel, pointerEvent, renderBoard } from "./helpers.js";
 
@@ -40,31 +40,31 @@ describe("cursor controller", () => {
     model.dispose();
   });
 
-  it("writes `data-ucr-turn` on the container (starting position = white)", () => {
+  it("writes `data-gb-turn` on the container (starting position = white)", () => {
     renderBoard(model);
-    expect(boardContainer().dataset["ucrTurn"]).toBe("white");
-    expect(boardContainer().dataset["ucrPremove"]).toBeUndefined();
+    expect(boardContainer().dataset["gbTurn"]).toBe("white");
+    expect(boardContainer().dataset["gbPremove"]).toBeUndefined();
     // Squares no longer carry per-piece grabbable state — the CSS rule
     // keyed to `data-piece-cell` on the overlay does the matching.
-    expect(cellFor("e2")?.dataset["ucrGrabbable"]).toBeUndefined();
+    expect(cellFor("e2")?.dataset["gbGrabbable"]).toBeUndefined();
   });
 
-  it("does NOT write `data-ucr-turn` when `allowDrag` is false", () => {
+  it("does NOT write `data-gb-turn` when `allowDrag` is false", () => {
     renderBoard(model, { allowDrag: false });
-    expect(boardContainer().dataset["ucrTurn"]).toBeUndefined();
-    expect(boardContainer().dataset["ucrPremove"]).toBeUndefined();
+    expect(boardContainer().dataset["gbTurn"]).toBeUndefined();
+    expect(boardContainer().dataset["gbPremove"]).toBeUndefined();
   });
 
-  it('writes `data-ucr-premove="true"` on the container when `allowPremove` is true', () => {
+  it('writes `data-gb-premove="true"` on the container when `allowPremove` is true', () => {
     renderBoard(model, { allowPremove: true });
-    expect(boardContainer().dataset["ucrTurn"]).toBe("white");
-    expect(boardContainer().dataset["ucrPremove"]).toBe("true");
+    expect(boardContainer().dataset["gbTurn"]).toBe("white");
+    expect(boardContainer().dataset["gbPremove"]).toBe("true");
   });
 
-  it("flips `data-ucr-dragging` on the container during an active drag", () => {
+  it("flips `data-gb-dragging` on the container during an active drag", () => {
     renderBoard(model);
     const container = boardContainer();
-    expect(container.dataset["ucrDragging"]).toBeUndefined();
+    expect(container.dataset["gbDragging"]).toBeUndefined();
 
     const e2 = cellFor("e2");
     if (e2 === null) throw new Error("e2 missing");
@@ -72,11 +72,11 @@ describe("cursor controller", () => {
     // Start the drag.
     fireEvent(container, pointerEvent("pointerdown", { x: 200, y: 300 }));
     fireEvent(container, pointerEvent("pointermove", { x: 200, y: 220 }));
-    expect(container.dataset["ucrDragging"]).toBe("true");
+    expect(container.dataset["gbDragging"]).toBe("true");
 
     // End the drag — drop back on e2 so the move is rejected but the
     // drag-end callback still fires.
     fireEvent(container, pointerEvent("pointerup", { x: 200, y: 300 }));
-    expect(container.dataset["ucrDragging"]).toBeUndefined();
+    expect(container.dataset["gbDragging"]).toBeUndefined();
   });
 });

@@ -5,7 +5,7 @@
  * to the classic `merida` tournament set used in print publications.
  *
  * ```tsx
- * import { merida } from "@ultrachess/pieces/merida";
+ * import { merida } from "@gigaboard/pieces/merida";
  * <Chessboard game={game} pieces={merida} />
  * ```
  */

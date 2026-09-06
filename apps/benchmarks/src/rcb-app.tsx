@@ -19,12 +19,12 @@ import { useEffect, useRef, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import {
   type BenchMetrics,
+  type GbBench,
   installMutationFlash,
   installObservers,
   pointerDrag,
   pointerDragPath,
   squareCentreByDataAttr,
-  type UcrBench,
 } from "./harness/bench-harness.js";
 
 export function RcbApp() {
@@ -50,9 +50,11 @@ export function RcbApp() {
     observers.start();
     const boardRoot = document.getElementById("bench-board");
     if (boardRoot !== null) {
-      window.__ucrFlash__ = installMutationFlash(boardRoot);
+      const flash = installMutationFlash(boardRoot);
+      window.__gbFlash__ = flash;
+      window.__ucrFlash__ = flash;
     }
-    const api: UcrBench = {
+    const api: GbBench = {
       library: "rcb",
       ready: readyRef.current?.promise ?? Promise.resolve(),
       async playMove(from, to) {
@@ -89,6 +91,7 @@ export function RcbApp() {
       },
       squareCentre: squareCentreByDataAttr,
     };
+    window.__gbBench__ = api;
     window.__ucrBench__ = api;
     readyRef.current?.resolve();
   }, []);

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 export const metadata = {
   title: "Ultra Chess React — showcase",
   description:
-    "Comprehensive showcase of @ultrachess/react: themes, piece sets, sounds, premoves, arrows, keyboard nav, and more.",
+    "Comprehensive showcase of gigaboard: themes, piece sets, sounds, premoves, arrows, keyboard nav, and more.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

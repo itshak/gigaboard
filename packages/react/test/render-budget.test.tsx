@@ -11,7 +11,7 @@
  */
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { Profiler, type ProfilerOnRenderCallback } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
@@ -64,7 +64,7 @@ describe("render budget", () => {
     const afterMove = harness.getCount("Board");
 
     // Selection changes never trigger a React commit anymore — the
-    // imperative `useSelectionController` hook writes `data-ucr-selection`
+    // imperative `useSelectionController` hook writes `data-gb-selection`
     // directly on the square DOM nodes. Legal-target highlights appear
     // without any reconciliation.
     expect(afterSelect).toBe(0);

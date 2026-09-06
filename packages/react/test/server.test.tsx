@@ -1,5 +1,5 @@
 /**
- * `@ultrachess/react/server` tests.
+ * `gigaboard/server` tests.
  *
  * The server entry is a pure render target — no hooks, no state, no
  * client JS. We verify the **shape** of its output (right number of
@@ -49,8 +49,8 @@ describe("<StaticChessboard/> (server)", () => {
     expect(white).toContain('aria-label="a1"');
     expect(black).toContain('aria-label="a1"');
     // The markers differ on the orientation attr.
-    expect(white).toContain('data-ucr-orientation="white"');
-    expect(black).toContain('data-ucr-orientation="black"');
+    expect(white).toContain('data-gb-orientation="white"');
+    expect(black).toContain('data-gb-orientation="black"');
   });
 
   it("marks the board as read-only for assistive tech", () => {

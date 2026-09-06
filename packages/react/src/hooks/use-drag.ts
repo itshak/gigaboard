@@ -5,7 +5,7 @@
  *
  * The hook attaches `pointerdown`/`pointermove`/`pointerup`/`pointercancel`
  * listeners to a container ref and threads them through the drag state
- * machine from `@ultrachess/core`.
+ * machine from `@gigaboard/core`.
  *
  * ### Why event listeners on the container (not per square)
  *
@@ -45,7 +45,7 @@ import {
   type BoardModel,
   createDragController,
   type SquareIndex,
-} from "@ultrachess/core";
+} from "@gigaboard/core";
 import { type RefObject, useEffect, useRef } from "react";
 import type { DragLayerHandle } from "../components/drag-layer.js";
 import { CSS_VARS } from "../default-theme.js";
@@ -182,7 +182,7 @@ export function useDrag(options: UseDragOptions): void {
           return;
         }
         // Fade the origin piece imperatively (no re-render). The target
-        // opacity is sourced from `--ucr-drag-ghost-opacity` on the board
+        // opacity is sourced from `--gb-drag-ghost-opacity` on the board
         // container so themes control the look — `0` for chess.com's
         // vanish-on-drag, `0.35` for lichess-style translucent ghost.
         // Reading via `var(...)` inside the inline style keeps the value

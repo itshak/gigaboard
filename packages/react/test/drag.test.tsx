@@ -7,8 +7,8 @@
  */
 
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { Color } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
+import { Color } from "@gigaboard/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   squareCentre as centreOf,
@@ -142,7 +142,7 @@ describe("drag + drop", () => {
     expect(model.getSnapshot().legalTargets.size).toBeGreaterThan(0);
   });
 
-  it("drag-end clears the selection regardless of drop outcome", () => {
+  it("drag-end retains the selection on illegal drop or abort for subsequent click-to-move", () => {
     renderBoard(model);
     const root = container();
     const e2 = centreOf("e2");
@@ -150,8 +150,8 @@ describe("drag + drop", () => {
     fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
     fireEvent(root, pointerEvent("pointermove", { x: a6.x, y: a6.y }));
     fireEvent(root, pointerEvent("pointerup", { x: a6.x, y: a6.y }));
-    // Illegal drop — but selection is cleared so legal-target rings disappear.
-    expect(model.getSnapshot().selected).toBeNull();
+    // Illegal drop — selection is retained so user can complete move via click
+    expect(model.getSnapshot().selected).toBe(12);
   });
 
   it("DragLayer toggles visibility via its imperative handle on drag-start/end", async () => {

@@ -12,7 +12,7 @@
  * a pulse.
  */
 
-import type { SquareIndex } from "@ultrachess/core";
+import type { SquareIndex } from "@gigaboard/core";
 import { useLayoutEffect, useRef } from "react";
 import { DEFAULT_ILLEGAL_FLASH_TINT } from "../default-theme.js";
 import type { Orientation } from "../types.js";

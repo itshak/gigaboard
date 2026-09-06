@@ -10,8 +10,8 @@ Thank you for the interest! Before you open a PR, please read:
 ## Local setup
 
 ```bash
-git clone https://github.com/yahorbarkouski/ultrachess-react.git
-cd ultrachess-react
+git clone https://github.com/itshak/gigaboard.git
+cd gigaboard
 bun install
 bun run turbo build
 bun run turbo test
@@ -23,7 +23,7 @@ Requirements: Bun ≥ 1.3, Node ≥ 20. Node is used only for Playwright and a f
 
 ```bash
 bun run turbo dev              # start docs + watch builds
-bun -F @ultrachess/core test --watch
+bun -F @gigaboard/core test --watch
 bun run turbo lint             # format + lint
 bun run turbo typecheck
 bun run turbo test:visual      # Playwright + Loki

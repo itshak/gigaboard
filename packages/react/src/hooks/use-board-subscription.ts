@@ -14,7 +14,7 @@
  * that byte.
  */
 
-import type { BoardModel, BoardSnapshot, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, BoardSnapshot, SquareIndex } from "@gigaboard/core";
 import { useCallback, useSyncExternalStore } from "react";
 
 /** Subscribe to the entire board snapshot. Wakes up on every commit. */
@@ -47,12 +47,16 @@ export function useBoardSlice<T>(model: BoardModel, selector: (snapshot: BoardSn
  * to `(model, index)` — a Square that re-renders for unrelated reasons
  * doesn't force a re-subscription.
  */
-export function useSquareCell(model: BoardModel, index: SquareIndex): number {
+export function useSquareCell(
+  model: BoardModel | null | undefined,
+  index: SquareIndex,
+): number {
   const subscribe = useCallback(
-    (listener: () => void) => model.subscribeSquare(index, listener),
+    (listener: () => void) => (model ? model.subscribeSquare(index, listener) : () => {}),
     [model, index],
   );
   const getSnapshot = useCallback((): number => {
+    if (!model) return 0;
     const snap = model.getSnapshot();
     return snap.board[index] ?? 0;
   }, [model, index]);

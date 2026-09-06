@@ -2,16 +2,17 @@
  * Tests for the React-layer hooks (`useBoardSlice`, `useSquareCell`,
  * `useChessGame`, `useClickToMove`, `useThemeVars`).
  *
- * These exercise the plumbing between `@ultrachess/core` and React's
+ * These exercise the plumbing between `@gigaboard/core` and React's
  * concurrent rendering primitives. The focus is correctness of subscription
  * behaviour rather than visual output.
  */
 
 import { act, render, screen } from "@testing-library/react";
-import type { BoardModel } from "@ultrachess/core";
-import { Color, type SquareIndex } from "@ultrachess/core";
+import type { BoardModel } from "@gigaboard/core";
+import { Color, type SquareIndex } from "@gigaboard/core";
 import { describe, expect, it, vi } from "vitest";
 import { useBoardSlice, useSquareCell } from "../src/hooks/use-board-subscription.js";
+import { useChessGame } from "../src/hooks/use-chess-game.js";
 import { useClickToMove } from "../src/hooks/use-click-to-move.js";
 import { makeBoardModel } from "./helpers.js";
 
@@ -103,5 +104,56 @@ describe("useClickToMove", () => {
     });
     // Nothing to assert beyond "no crash" — render / click completed.
     expect(true).toBe(true);
+  });
+});
+
+describe("useChessGame", () => {
+  it("initializes synchronously on frame 0 without an async gap", () => {
+    let capturedModel: BoardModel | null = null;
+    let initialRenderModel: BoardModel | null = null;
+
+    function GameComponent({ fen }: { fen?: string }) {
+      const game = useChessGame({ fen });
+      if (initialRenderModel === null) {
+        initialRenderModel = game;
+      }
+      capturedModel = game;
+      return <div data-turn={game.getSnapshot().turn}>game</div>;
+    }
+
+    render(<GameComponent />);
+
+    // Must be non-null on the very first commit / render
+    expect(initialRenderModel).not.toBeNull();
+    expect(capturedModel).not.toBeNull();
+    const model = capturedModel as unknown as BoardModel;
+    expect(model.getSnapshot().turn).toBe(Color.White);
+    expect(model.getSnapshot().board[12]).toBe(1); // white pawn on e2
+
+    // Move plays immediately on frame 0
+    act(() => {
+      model.tryMove(12 as SquareIndex, 28 as SquareIndex);
+    });
+    expect(model.getSnapshot().historyPly).toBe(1);
+    expect(model.getSnapshot().turn).toBe(Color.Black);
+  });
+
+  it("recreates model synchronously when fen changes", () => {
+    let currentModel: BoardModel | null = null;
+
+    function GameComponent({ fen }: { fen?: string }) {
+      const game = useChessGame({ fen });
+      currentModel = game;
+      return <div>game</div>;
+    }
+
+    const { rerender } = render(<GameComponent />);
+    const firstModel = currentModel;
+    expect(firstModel).not.toBeNull();
+
+    // Rerender with a new FEN
+    rerender(<GameComponent fen="4k3/8/8/8/8/8/8/4K3 w - - 0 1" />);
+    expect(currentModel).not.toBe(firstModel);
+    expect((currentModel as unknown as BoardModel).engine.fen()).toContain("4k3/8/8/8/8/8/8/4K3");
   });
 });

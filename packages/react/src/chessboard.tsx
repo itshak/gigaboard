@@ -10,7 +10,7 @@
  * needing an effect — SSR-safe and hydration-clean.
  *
  * The board is a client component. For a server-rendered static board
- * (zero client JS), import from `@ultrachess/react/server` (M5).
+ * (zero client JS), import from `gigaboard/server` (M5).
  */
 
 import {
@@ -20,7 +20,7 @@ import {
   type PieceType,
   pieceTypeOf,
   type SquareIndex,
-} from "@ultrachess/core";
+} from "@gigaboard/core";
 import {
   type CSSProperties,
   useCallback,
@@ -344,7 +344,7 @@ function syncPositionFen(
  * @example
  * ```tsx
  * "use client";
- * import { Chessboard, useChessGame } from "@ultrachess/react";
+ * import { Chessboard, useChessGame } from "gigaboard";
  *
  * export default function Board() {
  *   const game = useChessGame();
@@ -390,6 +390,9 @@ export function Chessboard(props: ChessboardProps) {
     onSquareMouseEnter,
     onSquareMouseLeave,
     disableContextMenu = true,
+    getSquareAriaLabel,
+    onSquareFocus,
+    getPromotionPieceAriaLabel,
   } = props;
 
   // Every interactive subsystem consults these resolved flags. Keeping
@@ -750,7 +753,7 @@ export function Chessboard(props: ChessboardProps) {
       // Flip the container into "grabbing" cursor mode. See
       // `useCursorController` for the CSS rule that consumes this.
       const container = containerRef.current;
-      if (container !== null) container.dataset["ucrDragging"] = "true";
+      if (container !== null) container.dataset["gbDragging"] = "true";
       // Calling `game.selectSquare(from)` propagates the drag-source
       // into the model so the selection controller shows legal targets
       // while the piece is in flight — the same visual affordance
@@ -763,19 +766,11 @@ export function Chessboard(props: ChessboardProps) {
     // Reset the cursor. We clear unconditionally because React may have
     // skipped a render cycle between drop and the next pointer event.
     const container = containerRef.current;
-    if (container !== null) delete container.dataset["ucrDragging"];
-    // Clear the selection regardless of whether the drop landed — on a
-    // successful move `tryMove` has already nulled it; on cancel / illegal
-    // drop the selection would otherwise linger with stale legal targets.
-    //
-    // Guarded because `useDrag`'s effect cleanup fires `onDragEnd` during
-    // unmount, and the engine may already have been disposed by then.
-    try {
-      game?.selectSquare(null);
-    } catch {
-      // Engine disposed mid-teardown; nothing to do.
-    }
-  }, [game]);
+    if (container !== null) delete container.dataset["gbDragging"];
+    // Note: Selection on the origin square is retained on drag release/abort
+    // so the user can seamlessly execute click-to-move. On a successful move,
+    // tryMove already cleared the selection.
+  }, []);
 
   const onDrop = useCallback(
     (from: SquareIndex, to: SquareIndex): void => {
@@ -817,6 +812,7 @@ export function Chessboard(props: ChessboardProps) {
       } else {
         skipNextAnimationRef.current = false;
         triggerIllegalFlash(from);
+        game.selectSquare(from);
       }
     },
     [game, requestPromotion, allowPremove, triggerIllegalFlash],
@@ -892,25 +888,25 @@ export function Chessboard(props: ChessboardProps) {
   });
 
   // Imperative selection + legal-target highlighter. Writes
-  // `data-ucr-selection` on the 64 square refs above; no React state,
+  // `data-gb-selection` on the 64 square refs above; no React state,
   // no per-commit reconciliation. This is what closes the drag-start
   // peak-frame gap with chessground — a selectSquare call no longer
   // triggers a React render at all.
   useSelectionController(game, squareRefs, showLegalTargets);
 
   // Imperative last-move tint. Same pattern as the selection
-  // controller — paints `data-ucr-last-move` on the two endpoint
+  // controller — paints `data-gb-last-move` on the two endpoint
   // squares via a CSS `::after` pseudo-element. Removes the
   // `<LastMoveLayer/>` React component from the drop-frame commit,
   // eliminating two DOM creates + layout + paint per move.
   useLastMoveController(game, squareRefs, highlightLastMove);
 
-  // Container-level cursor paint. Writes `data-ucr-turn` (and
-  // optionally `data-ucr-premove`) on the board container — a CSS rule
+  // Container-level cursor paint. Writes `data-gb-turn` (and
+  // optionally `data-gb-premove`) on the board container — a CSS rule
   // chain keyed to `[data-piece-cell]` values picks out grabbable
   // pieces without touching any square. That takes per-move cursor
   // DOM churn from 32 attribute writes down to 0-1; the grabbing
-  // cursor (`grabbing`) is applied by the sibling `data-ucr-dragging`
+  // cursor (`grabbing`) is applied by the sibling `data-gb-dragging`
   // attribute toggled from `onDragStart` / `onDragEnd`.
   useCursorController(game, containerRef, dragEnabled, allowPremove);
 
@@ -933,9 +929,9 @@ export function Chessboard(props: ChessboardProps) {
       ref={containerRef}
       className={className}
       style={containerStyle}
-      data-ucr-orientation={orientation}
-      data-ucr-target-style={showLegalTargets === false ? "off" : showLegalTargets}
-      {...(viewOnly ? { "data-ucr-view-only": "true" } : {})}
+      data-gb-orientation={orientation}
+      data-gb-target-style={showLegalTargets === false ? "off" : showLegalTargets}
+      {...(viewOnly ? { "data-gb-view-only": "true" } : {})}
     >
       <BoardGrid
         orientation={orientation}
@@ -943,6 +939,9 @@ export function Chessboard(props: ChessboardProps) {
         focusedSquare={focusedSquare}
         setSquareRef={setSquareRef}
         readOnly={viewOnly}
+        model={game}
+        getSquareAriaLabel={getSquareAriaLabel}
+        onSquareFocus={onSquareFocus}
         {...(renderSquare !== undefined ? { renderSquare } : {})}
         {...(ariaLabel !== undefined ? { ariaLabel } : {})}
       />
@@ -998,6 +997,7 @@ export function Chessboard(props: ChessboardProps) {
           pieces={pieces}
           onSelect={pendingPromotion.resolve}
           onCancel={pendingPromotion.cancel}
+          getPromotionPieceAriaLabel={getPromotionPieceAriaLabel}
         />
       ) : null}
     </div>

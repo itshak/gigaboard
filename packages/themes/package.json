@@ -1,16 +1,16 @@
 {
-  "name": "@ultrachess/themes",
+  "name": "@gigaboard/themes",
   "version": "1.1.1",
-  "description": "CSS-variable-only board themes for @ultrachess/react — brown, blue, green, wood. Each theme is a sub-path export (~205 B gzip) with zero runtime and zero JS cost at paint time.",
+  "description": "CSS-variable-only board themes for gigaboard — brown, blue, green, wood. Each theme is a sub-path export (~205 B gzip) with zero runtime and zero JS cost at paint time.",
   "license": "MIT",
-  "author": "Yahor Barkouski",
-  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "author": "Yahor Barkouski (forked as gigaboard)",
+  "homepage": "https://github.com/itshak/turbochessboard",
   "bugs": {
-    "url": "https://github.com/yahorbarkouski/ultrachess-react/issues"
+    "url": "https://github.com/itshak/turbochessboard/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
+    "url": "git+https://github.com/itshak/turbochessboard.git",
     "directory": "packages/themes"
   },
   "engines": {
@@ -28,7 +28,7 @@
     "blue",
     "green",
     "wood",
-    "ultrachess",
+    "gigaboard",
     "react"
   ],
   "type": "module",
@@ -111,25 +111,25 @@
   },
   "size-limit": [
     {
-      "name": "@ultrachess/themes/brown",
+      "name": "@gigaboard/themes/brown",
       "path": "dist/brown.js",
       "limit": "1 KB",
       "gzip": true
     },
     {
-      "name": "@ultrachess/themes/blue",
+      "name": "@gigaboard/themes/blue",
       "path": "dist/blue.js",
       "limit": "1 KB",
       "gzip": true
     },
     {
-      "name": "@ultrachess/themes/green",
+      "name": "@gigaboard/themes/green",
       "path": "dist/green.js",
       "limit": "1 KB",
       "gzip": true
     },
     {
-      "name": "@ultrachess/themes/wood",
+      "name": "@gigaboard/themes/wood",
       "path": "dist/wood.js",
       "limit": "1 KB",
       "gzip": true

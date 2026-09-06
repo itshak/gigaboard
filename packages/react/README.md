@@ -1,6 +1,6 @@
-# @ultrachess/react
+# gigaboard
 
-Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-only drag, WAAPI piece movement, Canvas arrows, bundled move sounds, optional mobile haptics, SSR static rendering, WAI-ARIA keyboard parity, and a polished default board using `@ultrachess/themes/green` plus `@ultrachess/pieces/neo`. Powered by [`ultrachess`](https://github.com/yahorbarkouski/ultrachess) (WASM) and [`@ultrachess/core`](../core).
+Ultra-fast React chessboard with owned state, byte-scoped subscriptions, refs-only drag, WAAPI piece movement, Canvas arrows, bundled move sounds, optional mobile haptics, SSR static rendering, WAI-ARIA keyboard parity, and a polished default board using `@gigaboard/themes/green` plus `@gigaboard/pieces/neo`. Powered by [`gigachess`](https://github.com/itshak/gigachess) and [`@gigaboard/core`](../core).
 
 ## Status
 
@@ -15,13 +15,13 @@ Opinionated React chessboard with owned state, byte-scoped subscriptions, refs-o
 
 ## Entry points
 
-- `@ultrachess/react` — interactive board (client component).
-- `@ultrachess/react/server` — static SSR board (zero client JS).
-- `@ultrachess/react/canvas` — opt-in full-canvas renderer (post-1.0).
+- `gigaboard` — interactive board (client component).
+- `gigaboard/server` — static SSR board (zero client JS).
+- `gigaboard/canvas` — opt-in full-canvas renderer (post-1.0).
 
 ## Size budget
 
-- `@ultrachess/react` < 24 KB gzip.
-- `@ultrachess/react/server` < 4 KB gzip.
+- `gigaboard` < 24 KB gzip.
+- `gigaboard/server` < 4 KB gzip.
 
 Enforced in CI via `size-limit`.

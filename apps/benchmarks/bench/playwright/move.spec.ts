@@ -59,15 +59,15 @@ async function measureMoveStorm(
   // condition under which library differences actually surface — an
   // unthrottled desktop Chromium processes either board in < 1 ms.
   await page.evaluate(() => {
-    window.__ucrBench__?.resetMetrics();
-    window.__ucrFlash__?.resetCount();
+    (window.__gbBench__ ?? window.__ucrBench__)?.resetMetrics();
+    (window.__gbFlash__ ?? window.__ucrFlash__)?.resetCount();
   });
   const client = await page.context().newCDPSession(page);
   await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 
   const result = await page.evaluate(
     async (moves) => {
-      const bench = window.__ucrBench__;
+      const bench = window.__gbBench__ ?? window.__ucrBench__;
       if (bench === undefined) throw new Error("harness missing");
 
       // Fire all 40 moves back-to-back with no rAF waits between — this
@@ -99,7 +99,7 @@ async function measureMoveStorm(
         droppedFrames: m.droppedFrames,
         heapPeakBytes: m.heapPeakBytes,
         heapEndBytes: m.heapEndBytes,
-        domMutations: window.__ucrFlash__?.getCount() ?? 0,
+        domMutations: (window.__gbFlash__ ?? window.__ucrFlash__)?.getCount() ?? 0,
       };
     },
     GAME_40 as readonly (readonly [string, string])[],

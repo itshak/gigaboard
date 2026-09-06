@@ -1,16 +1,15 @@
 /**
- * `@ultrachess/core` — framework-agnostic state machine for Ultra Chess React.
+ * `@gigaboard/core` — framework-agnostic state machine for Gigaboard.
  *
  * Zero React, zero DOM. This barrel is hand-curated; sub-modules are never
  * re-exported wholesale so consumers can tree-shake aggressively.
  */
 
-// ---- Default adapter (ultrachess) ----
+// ---- Gigachess adapter ----
 export {
-  createUltrachessAdapter,
-  createUltrachessAdapterSync,
-  preloadUltrachessAdapter,
-} from "./adapters/ultrachess.js";
+  createGigachessAdapter,
+  preloadGigachessAdapter,
+} from "./adapters/gigachess.js";
 // ---- Animation planner ----
 export { animationInspect, decodePackedMove, planAnimations } from "./animation-planner.js";
 // ---- Arrow model ----
@@ -35,7 +34,7 @@ export { createDragController } from "./drag-controller.js";
 export type { EngineAdapter } from "./engine-adapter.js";
 export { writeBoardCell } from "./engine-adapter.js";
 // ---- Legal-move cache ----
-export type { LegalMoveEntry, LegalMoveIndex, LegalMoveIndexOptions } from "./legal-move-index.js";
+export type { LegalMoveEntry, LegalMoveIndex, LegalMoveIndexOptions, PositionHash } from "./legal-move-index.js";
 export { createLegalMoveIndex } from "./legal-move-index.js";
 // ---- Premove buffer ----
 export type { PremoveBuffer } from "./premove-buffer.js";
@@ -55,6 +54,7 @@ export type {
   PackedMove,
   Premove,
   SquareIndex,
+  ZobristKey,
 } from "./types.js";
 export {
   BOARD_CELL_BB,
@@ -73,12 +73,18 @@ export {
   Color,
   colorOf,
   encodeBoardCell,
-  fromUltrachessPiece,
   isEmptyCell,
   isSquareIndex,
+  MOVE2_PROMO_BISHOP,
+  MOVE2_PROMO_KNIGHT,
+  MOVE2_PROMO_NONE,
+  MOVE2_PROMO_QUEEN,
+  MOVE2_PROMO_ROOK,
+  packMove,
   PieceType,
   pieceTypeOf,
   toSquareIndex,
+  unpackMove,
 } from "./types.js";
 
 /** Package version. Baked in at build time by the consumer's bundler. */

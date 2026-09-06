@@ -15,7 +15,7 @@
  * a visual simplification.
  */
 
-import type { BoardCell, BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { DEFAULT_PREMOVE_TINT } from "../default-theme.js";
 import { useBoardSlice, useSquareCell } from "../hooks/use-board-subscription.js";
 import type { Orientation, PieceRenderer } from "../types.js";

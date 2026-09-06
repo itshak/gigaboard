@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * Next.js 15 configuration for the Ultra Chess React docs app.
+ * Next.js 15 configuration for the Gigaboard docs app.
  *
  * Notes:
  * - Transpile the workspace packages so changes are picked up during `dev`.
@@ -11,10 +11,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: [
-    "@ultrachess/core",
-    "@ultrachess/react",
-    "@ultrachess/pieces",
-    "@ultrachess/themes",
+    "@gigaboard/core",
+    "gigaboard",
+    "@gigaboard/pieces",
+    "@gigaboard/themes",
   ],
   experimental: {
     typedRoutes: true,

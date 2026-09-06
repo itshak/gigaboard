@@ -17,25 +17,16 @@
 import type { AnimDescriptor, BoardCell, PackedMove, SquareIndex } from "./types.js";
 import { Color, colorOf, isEmptyCell, PieceType, pieceTypeOf } from "./types.js";
 
-/** Bit layout of a packed `Move` — matches `ultrachess`. */
+/** Bit layout of a packed `Move` in 16-bit Move2 wire format. */
 const MOVE_FROM_MASK = 0x3f;
 const MOVE_TO_SHIFT = 6;
 const MOVE_TO_MASK = 0x3f;
 const MOVE_PROMO_SHIFT = 12;
-const MOVE_PROMO_MASK = 0b11;
-const MOVE_KIND_SHIFT = 14;
-const MOVE_KIND_MASK = 0b11;
+const MOVE_PROMO_MASK = 0x0f;
 
-// `MOVE_KIND_NORMAL = 0` is the fall-through path — the switch below
-// has no explicit case for it because the default branch handles all
-// non-special moves. Kept here as a comment so the encoding table stays
-// self-documenting.
-const MOVE_KIND_PROMOTION = 1;
-const MOVE_KIND_EN_PASSANT = 2;
-const MOVE_KIND_CASTLE = 3;
-
-/** Promotion piece encoding within a packed move (0 = N, 1 = B, 2 = R, 3 = Q). */
-const PROMO_PIECE: readonly PieceType[] = [
+/** Promotion piece encoding within Move2 (0 = none, 1 = N, 2 = B, 3 = R, 4 = Q). */
+const PROMO_PIECE: readonly (PieceType | null)[] = [
+  null,
   PieceType.Knight,
   PieceType.Bishop,
   PieceType.Rook,
@@ -75,21 +66,34 @@ function planFromMove(
 ): AnimDescriptor[] {
   const from = (move & MOVE_FROM_MASK) as SquareIndex;
   const to = ((move >> MOVE_TO_SHIFT) & MOVE_TO_MASK) as SquareIndex;
-  const kind = (move >> MOVE_KIND_SHIFT) & MOVE_KIND_MASK;
+  const promoCode = (move >> MOVE_PROMO_SHIFT) & MOVE_PROMO_MASK;
 
   const pieceBefore = prev[from] as BoardCell;
   const pieceAfter = next[to] as BoardCell;
   const targetBefore = prev[to] as BoardCell;
 
-  switch (kind) {
-    case MOVE_KIND_CASTLE: {
-      // Determine king side vs queen side from the king's file delta.
-      // `from` always holds the king in ultrachess's castle encoding.
-      const kingFrom = from;
-      const kingTo = to;
-      const kingRank = kingFrom >> 3;
+  // 1. Castling detection:
+  // Identified from King-captures-Rook canonical moves or 2-square jumps.
+  if (!isEmptyCell(pieceBefore) && pieceTypeOf(pieceBefore) === PieceType.King) {
+    const isFriendlyRookTarget =
+      !isEmptyCell(targetBefore) &&
+      colorOf(targetBefore) === colorOf(pieceBefore) &&
+      pieceTypeOf(targetBefore) === PieceType.Rook;
+
+    const isKingCapturesRookCanonical =
+      (from === 4 && (to === 7 || to === 0)) ||
+      (from === 60 && (to === 63 || to === 56));
+
+    const isKingTwoSquares =
+      (from === 4 && (to === 6 || to === 2)) ||
+      (from === 60 && (to === 62 || to === 58));
+
+    if (isFriendlyRookTarget || isKingCapturesRookCanonical || isKingTwoSquares) {
+      const isKingside = (to & 7) > (from & 7);
+      const kingRank = from >> 3;
       const base = kingRank << 3;
-      const isKingside = (kingTo & 7) > (kingFrom & 7);
+      const kingFrom = from;
+      const kingTo = (base + (isKingside ? 6 : 2)) as SquareIndex;
       const rookFrom = (base + (isKingside ? 7 : 0)) as SquareIndex;
       const rookTo = (base + (isKingside ? 5 : 3)) as SquareIndex;
       return [
@@ -102,49 +106,59 @@ function planFromMove(
         },
       ];
     }
-    case MOVE_KIND_EN_PASSANT: {
-      // Captured pawn sits on the same file as `to`, on the rank of `from`.
-      const capturedSquare = ((from & ~7) | (to & 7)) as SquareIndex;
-      const captured = prev[capturedSquare] as BoardCell;
-      return [
-        {
-          kind: "en-passant",
-          from,
-          to,
-          capturedSquare,
-          piece: pieceBefore,
-          captured,
-        },
-      ];
-    }
-    case MOVE_KIND_PROMOTION: {
-      const captured = isEmptyCell(targetBefore) ? null : targetBefore;
-      return [
-        {
-          kind: "promotion",
-          from,
-          to,
-          pieceBefore,
-          pieceAfter,
-          captured,
-        },
-      ];
-    }
-    default: {
-      if (!isEmptyCell(targetBefore)) {
-        return [
-          {
-            kind: "capture",
-            from,
-            to,
-            piece: pieceBefore,
-            captured: targetBefore,
-          },
-        ];
-      }
-      return [{ kind: "move", from, to, piece: pieceBefore }];
-    }
   }
+
+  // 2. En-passant detection:
+  // Pawn moves diagonally onto an empty target square.
+  if (
+    !isEmptyCell(pieceBefore) &&
+    pieceTypeOf(pieceBefore) === PieceType.Pawn &&
+    (from & 7) !== (to & 7) &&
+    isEmptyCell(targetBefore)
+  ) {
+    const capturedSquare = ((from & ~7) | (to & 7)) as SquareIndex;
+    const captured = prev[capturedSquare] as BoardCell;
+    return [
+      {
+        kind: "en-passant",
+        from,
+        to,
+        capturedSquare,
+        piece: pieceBefore,
+        captured,
+      },
+    ];
+  }
+
+  // 3. Promotion:
+  if (promoCode > 0) {
+    const captured = isEmptyCell(targetBefore) ? null : targetBefore;
+    return [
+      {
+        kind: "promotion",
+        from,
+        to,
+        pieceBefore,
+        pieceAfter,
+        captured,
+      },
+    ];
+  }
+
+  // 4. Capture or Normal move:
+  if (!isEmptyCell(targetBefore)) {
+    return [
+      {
+        kind: "capture",
+        from,
+        to,
+        piece: pieceBefore,
+        captured: targetBefore,
+      },
+    ];
+  }
+
+  return [{ kind: "move", from, to, piece: pieceBefore }];
 }
 
 /**
@@ -176,7 +190,7 @@ function planFromDiff(prev: Readonly<Uint8Array>, next: Readonly<Uint8Array>): A
 
 /**
  * Lightweight, side-effect-free inspector. Used by tests to decompose a
- * packed move without pulling `ultrachess` as a runtime dep.
+ * packed move without pulling an engine as a runtime dep.
  */
 export function decodePackedMove(m: PackedMove): {
   from: SquareIndex;
@@ -186,19 +200,20 @@ export function decodePackedMove(m: PackedMove): {
 } {
   const from = (m & MOVE_FROM_MASK) as SquareIndex;
   const to = ((m >> MOVE_TO_SHIFT) & MOVE_TO_MASK) as SquareIndex;
-  const kindNum = (m >> MOVE_KIND_SHIFT) & MOVE_KIND_MASK;
+  const promoCode = (m >> MOVE_PROMO_SHIFT) & MOVE_PROMO_MASK;
+  const promotion = PROMO_PIECE[promoCode] ?? null;
+
+  const isCastle =
+    (from === 4 && (to === 7 || to === 0 || to === 6 || to === 2)) ||
+    (from === 60 && (to === 63 || to === 56 || to === 62 || to === 58));
+
   const kind: "normal" | "promotion" | "en-passant" | "castle" =
-    kindNum === 0
-      ? "normal"
-      : kindNum === 1
-        ? "promotion"
-        : kindNum === 2
-          ? "en-passant"
-          : "castle";
-  const promotion =
-    kindNum === MOVE_KIND_PROMOTION
-      ? (PROMO_PIECE[(m >> MOVE_PROMO_SHIFT) & MOVE_PROMO_MASK] ?? null)
-      : null;
+    promotion !== null
+      ? "promotion"
+      : isCastle
+        ? "castle"
+        : "normal";
+
   return { from, to, kind, promotion };
 }
 

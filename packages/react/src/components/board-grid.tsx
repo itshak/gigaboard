@@ -10,7 +10,7 @@
  * layers inside the board container.
  */
 
-import type { SquareIndex } from "@ultrachess/core";
+import type { BoardCell, BoardModel, SquareIndex } from "@gigaboard/core";
 import { memo, type ReactNode, useMemo } from "react";
 import type { Orientation, SquareContext } from "../types.js";
 import { Square } from "./square.js";
@@ -40,8 +40,8 @@ function buildSquareOrder(orientation: Orientation): SquareIndex[] {
 export interface BoardGridProps {
   readonly orientation: Orientation;
   readonly onSquareClick: (index: SquareIndex) => void;
-  readonly renderSquare?: (ctx: SquareContext) => ReactNode;
-  readonly ariaLabel?: string;
+  readonly renderSquare?: ((ctx: SquareContext) => ReactNode) | undefined;
+  readonly ariaLabel?: string | undefined;
   /**
    * Index of the square that currently owns the roving `tabindex=0`.
    * `null` means no cell in the grid is focused — the user hasn't Tabbed
@@ -53,14 +53,17 @@ export interface BoardGridProps {
    * unmount. The selection controller uses the resulting refs array to
    * paint highlights imperatively — no React state, no reconciliation.
    */
-  readonly setSquareRef?: (index: SquareIndex, el: HTMLElement | null) => void;
+  readonly setSquareRef?: ((index: SquareIndex, el: HTMLElement | null) => void) | undefined;
   /**
    * Flip the grid into a declarative, non-interactive mode. Emits
    * `aria-readonly="true"` for assistive tech and mirrors the shape of
    * the server-rendered `StaticChessboard` so a `viewOnly` client board
    * reads the same as an SSR'd one.
    */
-  readonly readOnly?: boolean;
+  readonly readOnly?: boolean | undefined;
+  readonly model?: BoardModel | null | undefined;
+  readonly getSquareAriaLabel?: ((square: SquareIndex, cell: BoardCell) => string) | undefined;
+  readonly onSquareFocus?: ((square: SquareIndex, cell: BoardCell) => void) | undefined;
 }
 
 /**
@@ -76,6 +79,9 @@ export const BoardGrid = memo(function BoardGrid({
   focusedSquare,
   setSquareRef,
   readOnly,
+  model,
+  getSquareAriaLabel,
+  onSquareFocus,
 }: BoardGridProps) {
   const squares = useMemo(() => buildSquareOrder(orientation), [orientation]);
 
@@ -100,6 +106,9 @@ export const BoardGrid = memo(function BoardGrid({
           index={index}
           onClick={onSquareClick}
           isFocused={focusedSquare === index}
+          model={model}
+          getSquareAriaLabel={getSquareAriaLabel}
+          onFocus={onSquareFocus}
           {...(renderSquare !== undefined ? { renderSquare } : {})}
           {...(setSquareRef !== undefined ? { setSquareRef } : {})}
         />

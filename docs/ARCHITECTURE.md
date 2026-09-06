@@ -1,18 +1,18 @@
 # Architecture
 
-> How Ultra Chess React is structured, and why.
+> How Gigaboard is structured, and why.
 
 ## The one-sentence version
 
-A framework-agnostic state core (`@ultrachess/core`) owns an `ultrachess` engine handle and exposes a `useSyncExternalStore`-compatible byte-level snapshot; a layered React renderer (`@ultrachess/react`) subscribes per square, animates via WAAPI, and paints arrows on a Canvas overlay — so a single move costs ≤ 4 component re-renders, hover costs 0, and drag costs 0 re-renders per frame.
+A framework-agnostic state core (`@gigaboard/core`) owns a `gigachess` engine handle and exposes a `useSyncExternalStore`-compatible byte-level snapshot; a layered React renderer (`gigaboard`) subscribes per square, animates via WAAPI, and paints arrows on a Canvas overlay — so a single move costs ≤ 4 component re-renders, hover costs 0, and drag costs 0 re-renders per frame.
 
 ## Packages
 
 ```
-@ultrachess/core     zero React, zero DOM. State machine + engine adapter.
-@ultrachess/react    components, hooks, renderers (DOM default, Canvas opt-in).
-@ultrachess/pieces   SVG piece sets, tree-shakeable per set.
-@ultrachess/themes   CSS variables per theme.
+@gigaboard/core     zero React, zero DOM. State machine + engine adapter.
+gigaboard           components, hooks, renderers (DOM default, Canvas opt-in).
+@gigaboard/pieces   SVG piece sets, tree-shakeable per set.
+@gigaboard/themes   CSS variables per theme.
 ```
 
 Each package ships ESM + CJS + `.d.ts` via `tsup`, `sideEffects: false`, sub-path exports for anything optional.
@@ -21,7 +21,7 @@ Each package ships ESM + CJS + `.d.ts` via `tsup`, `sideEffects: false`, sub-pat
 
 ```
                 ┌───────────────────────┐
-                │   ultrachess (WASM)   │
+                │   gigachess           │
                 └──────────┬────────────┘
                            │ engine-adapter
                 ┌──────────▼────────────┐
@@ -71,7 +71,7 @@ Full-Canvas renderer (post-1.0) is a plug-in alternative, not the default.
 
 ## Engine adapter protocol
 
-`@ultrachess/core` speaks to the engine through a single interface:
+`@gigaboard/core` speaks to the engine through a single interface:
 
 ```ts
 interface EngineAdapter {
@@ -86,7 +86,7 @@ interface EngineAdapter {
 }
 ```
 
-The default adapter is `createUltrachessAdapter()` — wraps `ultrachess`. Users can plug an alternative (`chess.js`, a variant engine) without touching the React layer.
+The default adapter is `createGigachessAdapter()` — wraps `gigachess`. Users can plug an alternative (`chess.js`, a variant engine) without touching the React layer.
 
 ## Legal-move cache
 
@@ -106,7 +106,7 @@ The default adapter is `createUltrachessAdapter()` — wraps `ultrachess`. Users
 
 ## Server rendering
 
-- `@ultrachess/react/server` is a pure server component: takes a FEN, renders static SVG pieces on a CSS grid. No client JS.
+- `gigaboard/server` is a pure server component: takes a FEN, renders static SVG pieces on a CSS grid. No client JS.
 - The interactive `<Chessboard/>` is a client component — its `"use client"` is at the component file level, not in a layout, so static boards on the same page stay on the server.
 
 ## Extension points
@@ -118,5 +118,5 @@ The default adapter is `createUltrachessAdapter()` — wraps `ultrachess`. Users
 
 ## Future targets
 
-- **React Native** (`@ultrachess/react-native`, M8+): shares `@ultrachess/core` verbatim; a new renderer package substitutes `react-native-svg` for DOM.
-- **Jazz CRDT** (`@ultrachess/jazz`, post-1.0): collaborative adapter maps `board-model` state into a `CoMap` for real-time multiplayer.
+- **React Native** (`@gigaboard/react-native`, M8+): shares `@gigaboard/core` verbatim; a new renderer package substitutes `react-native-svg` for DOM.
+- **Jazz CRDT** (`@gigaboard/jazz`, post-1.0): collaborative adapter maps `board-model` state into a `CoMap` for real-time multiplayer.

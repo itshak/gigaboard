@@ -43,9 +43,24 @@ const EMPTY_SET: ReadonlySet<SquareIndex> = Object.freeze(
   new Set<SquareIndex>(),
 ) as ReadonlySet<SquareIndex>;
 
-/** Extract the "to" square from a packed move without importing `ultrachess`. */
+/** Extract the "to" square from a packed move. */
 function moveTo(m: PackedMove): SquareIndex {
   return (((m as unknown as number) >> 6) & 0x3f) as SquareIndex;
+}
+
+/**
+ * Resolves King moves: if the move is a 2-square King jump, normalize destination to
+ * canonical King-captures-Rook (e.g. e1g1 -> e1h1, e1c1 -> e1a1).
+ */
+function normalizeCastlingTarget(from: SquareIndex, to: SquareIndex): SquareIndex {
+  if (from === 4) {
+    if (to === 6) return 7 as SquareIndex;
+    if (to === 2) return 0 as SquareIndex;
+  } else if (from === 60) {
+    if (to === 62) return 63 as SquareIndex;
+    if (to === 58) return 56 as SquareIndex;
+  }
+  return to;
 }
 
 /** Constructor options for {@link createBoardModel}. */
@@ -185,9 +200,8 @@ export interface BoardModel {
 /**
  * Construct a board model around an engine adapter.
  *
- * The model does **not** create the adapter — the caller does, because
- * adapter construction is the only place async engine init can happen.
- * See `createUltrachessAdapter` for the async path.
+ * The model does **not** create the adapter — the caller does.
+ * See `createGigachessAdapter` for standard adapter construction.
  */
 export function createBoardModel(
   engine: EngineAdapter,
@@ -303,7 +317,11 @@ export function createBoardModel(
     to: SquareIndex,
     promotion?: PieceType,
   ): PackedMove | null => {
-    const m = engine.makeMove(from, to, promotion);
+    const resolvedTo = normalizeCastlingTarget(from, to);
+    let m = engine.makeMove(from, resolvedTo, promotion);
+    if (m === null && resolvedTo !== to) {
+      m = engine.makeMove(from, to, promotion);
+    }
     if (m === null) return null;
     // A fresh move invalidates the redo line.
     redoStack.length = 0;
@@ -339,14 +357,8 @@ export function createBoardModel(
     if (m === undefined) return null;
     const from = ((m as unknown as number) & 0x3f) as SquareIndex;
     const to = moveTo(m);
-    const kind = ((m as unknown as number) >> 14) & 0b11;
-    let promotion: PieceType | undefined;
-    if (kind === 1) {
-      // Promotion piece bits 12–13: 0=N, 1=B, 2=R, 3=Q.
-      const promoBits = ((m as unknown as number) >> 12) & 0b11;
-      const map: PieceType[] = [1 as PieceType, 2 as PieceType, 3 as PieceType, 4 as PieceType];
-      promotion = map[promoBits];
-    }
+    const promoBits = ((m as unknown as number) >> 12) & 0x0f;
+    const promotion = promoBits > 0 ? (promoBits as PieceType) : undefined;
     const applied = engine.makeMove(from, to, promotion);
     if (applied === null) {
       // Out-of-sync — don't crash; drop the bad entry.
@@ -376,12 +388,8 @@ export function createBoardModel(
       if (m === undefined) break;
       const from = ((m as unknown as number) & 0x3f) as SquareIndex;
       const to = moveTo(m);
-      const kind = ((m as unknown as number) >> 14) & 0b11;
-      let promotion: PieceType | undefined;
-      if (kind === 1) {
-        const promoBits = ((m as unknown as number) >> 12) & 0b11;
-        promotion = (promoBits + 1) as PieceType;
-      }
+      const promoBits = ((m as unknown as number) >> 12) & 0x0f;
+      const promotion = promoBits > 0 ? (promoBits as PieceType) : undefined;
       const applied = engine.makeMove(from, to, promotion);
       if (applied === null) break;
       history.push(applied);
@@ -452,11 +460,12 @@ export function createBoardModel(
   };
 
   const isLegal = (from: SquareIndex, to: SquareIndex, promotion?: PieceType): boolean => {
+    const resolvedTo = normalizeCastlingTarget(from, to);
     const hash = engine.hash();
     const cached = legalMoveIndex.get(hash, from);
     if (cached !== undefined && promotion === undefined) {
       for (let i = 0; i < cached.length; i++) {
-        if (cached[i] === to) return true;
+        if (cached[i] === resolvedTo || cached[i] === to) return true;
       }
       return false;
     }
@@ -464,12 +473,12 @@ export function createBoardModel(
     for (let i = 0; i < moves.length; i++) {
       const m = moves[i];
       if (m === undefined) continue;
-      if (moveTo(m) !== to) continue;
+      const target = moveTo(m);
+      if (target !== resolvedTo && target !== to) continue;
       if (promotion === undefined) return true;
-      const kind = ((m as unknown as number) >> 14) & 0b11;
-      if (kind !== 1) return true;
-      const promoBits = ((m as unknown as number) >> 12) & 0b11;
-      if (((promoBits + 1) as PieceType) === promotion) return true;
+      const promoBits = ((m as unknown as number) >> 12) & 0x0f;
+      if (promoBits === 0) return true;
+      if ((promoBits as PieceType) === promotion) return true;
     }
     return false;
   };
@@ -492,7 +501,18 @@ export function createBoardModel(
     const set = new Set<SquareIndex>();
     for (let i = 0; i < tos.length; i++) {
       const t = tos[i];
-      if (t !== undefined) set.add(t as SquareIndex);
+      if (t !== undefined) {
+        set.add(t as SquareIndex);
+        // Dual-input castling: add standard 2-square landing destination
+        // when the canonical King-captures-Rook move is legal.
+        if (from === 4) {
+          if (t === 7) set.add(6 as SquareIndex);
+          else if (t === 0) set.add(2 as SquareIndex);
+        } else if (from === 60) {
+          if (t === 63) set.add(62 as SquareIndex);
+          else if (t === 56) set.add(58 as SquareIndex);
+        }
+      }
     }
     return set;
   };

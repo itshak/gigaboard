@@ -1,12 +1,12 @@
 "use client";
 
-import type { PackedMove } from "@ultrachess/core";
-import { alpha, cburnett, merida, neo } from "@ultrachess/pieces";
-import { chesscom } from "@ultrachess/pieces/chesscom";
-import type { LegalTargetStyle, MoveSoundOptions, Orientation } from "@ultrachess/react";
-import { Chessboard, useChessGame } from "@ultrachess/react";
-import type { Theme } from "@ultrachess/themes";
-import { blue, brown, green, wood } from "@ultrachess/themes";
+import type { PackedMove } from "@gigaboard/core";
+import { alpha, cburnett, merida, neo } from "@gigaboard/pieces";
+import { chesscom } from "@gigaboard/pieces/chesscom";
+import type { LegalTargetStyle, MoveSoundOptions, Orientation } from "gigaboard";
+import { Chessboard, useChessGame } from "gigaboard";
+import type { Theme } from "@gigaboard/themes";
+import { blue, brown, green, wood } from "@gigaboard/themes";
 import { useCallback, useMemo, useState } from "react";
 import { Controls } from "./controls";
 import { MoveLog } from "./move-log";
@@ -21,7 +21,7 @@ export type PieceSetName = keyof typeof PIECE_SETS;
 
 /**
  * Explicit sound sources — the postinstall script (`scripts/copy-sounds.mjs`)
- * copies the shipped .mp3 assets from the @ultrachess/react package into
+ * copies the shipped .mp3 assets from the gigaboard package into
  * `public/sounds/` with stable filenames, and this map wires them up.
  *
  * Without this override the library would try to fetch the hashed asset names

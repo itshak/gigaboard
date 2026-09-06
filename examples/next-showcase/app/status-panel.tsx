@@ -1,7 +1,7 @@
 "use client";
 
-import type { BoardModel } from "@ultrachess/core";
-import { useBoardSnapshot } from "@ultrachess/react";
+import type { BoardModel } from "@gigaboard/core";
+import { useBoardSnapshot } from "gigaboard";
 import { buttonGhostStyle, buttonPrimaryStyle } from "./showcase";
 
 interface Props {

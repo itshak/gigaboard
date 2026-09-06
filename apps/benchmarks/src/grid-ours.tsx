@@ -26,16 +26,15 @@
 import {
   type BoardModel,
   createBoardModel,
-  createUltrachessAdapterSync,
+  createGigachessAdapter,
   type EngineAdapter,
-} from "@ultrachess/core";
-import { neo } from "@ultrachess/pieces/neo";
-import { Chessboard } from "@ultrachess/react";
-import { green } from "@ultrachess/themes/green";
+} from "@gigaboard/core";
+import { neo } from "@gigaboard/pieces/neo";
+import { Chessboard } from "gigaboard";
+import { green } from "@gigaboard/themes/green";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type BenchMetrics, installObservers, type UcrGrid } from "./harness/bench-harness.js";
 
-/** Local copy — see note in `app.tsx` for why we don't import from `ultrachess`. */
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 interface Props {
@@ -59,32 +58,23 @@ export function GridApp({ n }: Props) {
     readyRef.current = { promise, resolve };
   }
 
-  // Deferred engine spin-up. Dynamically importing `ultrachess/inline`
-  // defers its module-eval (which includes the ~250 ms WASM compile)
-  // off the critical path: React's first commit has already painted
-  // N cells with the static fallback piece layer by the time we start
-  // fetching the chunk. A single compile serves every board — once
-  // `Chess.createSync()` is live the cost per additional `Chess`
-  // instance is a slab-allocator call.
+  // Synchronous engine initialization with gigachess adapter.
   useEffect(() => {
     let cancelled = false;
     const adapters: EngineAdapter[] = [];
-    (async () => {
-      const { Chess } = await import("ultrachess/inline");
-      if (cancelled) return;
-      const built: BoardModel[] = [];
-      for (let i = 0; i < n; i++) {
-        const chess = Chess.createSync();
-        const adapter = createUltrachessAdapterSync(chess);
-        adapters.push(adapter);
-        built.push(createBoardModel(adapter));
-      }
-      if (cancelled) {
-        for (const a of adapters) a.dispose();
-        return;
-      }
-      setModels(built);
-    })();
+    const built: BoardModel[] = [];
+    for (let i = 0; i < n; i++) {
+      const adapter = createGigachessAdapter();
+      adapters.push(adapter);
+      built.push(createBoardModel(adapter));
+    }
+    if (cancelled) {
+      for (const a of adapters) a.dispose();
+      return;
+    }
+    setModels(built);
+    readyRef.current?.resolve();
+
     return () => {
       cancelled = true;
       for (const a of adapters) a.dispose();
@@ -106,6 +96,7 @@ export function GridApp({ n }: Props) {
         return observers.snapshot();
       },
     };
+    window.__gbGrid__ = api;
     window.__ucrGrid__ = api;
   }, [n]);
 

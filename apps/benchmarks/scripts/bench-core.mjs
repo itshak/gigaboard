@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Node-side microbenchmarks — `@ultrachess/core` (WASM-backed) vs
+ * Node-side microbenchmarks — `@gigaboard/core` (gigachess) vs
  * `chess.js` (pure JS, the engine `react-chessboard` uses internally).
  *
  * Each scenario runs a warmup + a measurement pass, emits ns/op and
@@ -25,7 +25,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
-import { createUltrachessAdapter } from "@ultrachess/core";
+import { createGigachessAdapter } from "@gigaboard/core";
 import { Chess } from "chess.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -57,7 +57,7 @@ function bench(label, fn, { iters = ITERS, warmup = WARMUP } = {}) {
 /** Measure cold engine-init once (separate from the per-op numbers). */
 async function initCost() {
   const t0 = performance.now();
-  await createUltrachessAdapter();
+  createGigachessAdapter();
   const ultraMs = performance.now() - t0;
 
   const t1 = performance.now();
@@ -66,7 +66,7 @@ async function initCost() {
 
   return {
     label: "engine-construction (cold)",
-    ultrachessMs: Number(ultraMs.toFixed(2)),
+    gigachessMs: Number(ultraMs.toFixed(2)),
     chessJsMs: Number(chessJsMs.toFixed(3)),
   };
 }
@@ -74,8 +74,8 @@ async function initCost() {
 function benchTryMove() {
   return Promise.all([
     (async () => {
-      const a = await createUltrachessAdapter();
-      return bench("tryMove e2e4 + undo  (ultrachess)", () => {
+      const a = createGigachessAdapter();
+      return bench("tryMove e2e4 + undo  (gigachess)", () => {
         a.makeMove(12, 28);
         a.undo();
       });
@@ -93,8 +93,8 @@ function benchTryMove() {
 function benchLegalMoves() {
   return Promise.all([
     (async () => {
-      const a = await createUltrachessAdapter(MID_FEN);
-      return bench("legalMoves (all, mid-game)  (ultrachess)", () => {
+      const a = createGigachessAdapter(MID_FEN);
+      return bench("legalMoves (all, mid-game)  (gigachess)", () => {
         a.legalMoves();
       });
     })(),
@@ -110,8 +110,8 @@ function benchLegalMoves() {
 function benchIsCheckGameOver() {
   return Promise.all([
     (async () => {
-      const a = await createUltrachessAdapter(MID_FEN);
-      return bench("inCheck + isGameOver  (ultrachess)", () => {
+      const a = createGigachessAdapter(MID_FEN);
+      return bench("inCheck + isGameOver  (gigachess)", () => {
         a.inCheck();
         a.isGameOver();
       });
@@ -129,8 +129,8 @@ function benchIsCheckGameOver() {
 function benchPositionKey() {
   return Promise.all([
     (async () => {
-      const a = await createUltrachessAdapter(MID_FEN);
-      return bench("position key: hash()  (ultrachess)", () => {
+      const a = createGigachessAdapter(MID_FEN);
+      return bench("position key: hash()  (gigachess)", () => {
         a.hash();
       });
     })(),
@@ -194,11 +194,11 @@ const GAME_40 = [
 function benchFullGame() {
   return Promise.all([
     (async () => {
-      const adapter = await createUltrachessAdapter();
+      const adapter = createGigachessAdapter();
       const fromIdx = (s) => (s.charCodeAt(0) - 97) + (Number(s[1]) - 1) * 8;
       const moves = GAME_40.map((m) => [fromIdx(m.slice(0, 2)), fromIdx(m.slice(2, 4))]);
       return bench(
-        "replay 40-ply game + rewind  (ultrachess)",
+        "replay 40-ply game + rewind  (gigachess)",
         () => {
           for (const [from, to] of moves) adapter.makeMove(from, to);
           for (let i = 0; i < moves.length; i++) adapter.undo();
@@ -228,7 +228,7 @@ function format(results) {
     const [ultra, js] = pair;
     const speedup = (js.nsPerOp / ultra.nsPerOp).toFixed(1);
     rows.push(`  ${name}`);
-    rows.push(`    ultrachess: ${ultra.nsPerOp.toFixed(1).padStart(10)} ns/op  (${ultra.opsPerSec.toLocaleString()} ops/sec)`);
+    rows.push(`    gigachess:  ${ultra.nsPerOp.toFixed(1).padStart(10)} ns/op  (${ultra.opsPerSec.toLocaleString()} ops/sec)`);
     rows.push(`    chess.js:   ${js.nsPerOp.toFixed(1).padStart(10)} ns/op  (${js.opsPerSec.toLocaleString()} ops/sec)`);
     rows.push(`    speedup:    ${speedup}×`);
     rows.push("");
@@ -258,7 +258,7 @@ async function main() {
 
   console.log(format(report));
   console.log(`engine construction (cold):`);
-  console.log(`  ultrachess: ${init.ultrachessMs.toFixed(2)} ms   (WASM load)`);
+  console.log(`  gigachess: ${init.gigachessMs.toFixed(2)} ms`);
   console.log(`  chess.js:   ${init.chessJsMs.toFixed(3)} ms`);
   console.log("");
 

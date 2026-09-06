@@ -21,7 +21,7 @@
  * 2. On each commit, computes the diff between
  *    `(prev.selected, prev.legalTargets)` and
  *    `(next.selected, next.legalTargets)`.
- * 3. Writes `el.dataset.ucrSelection = "selected" | "legal-quiet" |
+ * 3. Writes `el.dataset.gbSelection = "selected" | "legal-quiet" |
  *    "legal-capture" | "none"` on only the squares whose state
  *    changed, using the 64-slot ref array from `<BoardGrid/>`.
  * 4. CSS (injected by `injectSelectionStyles` below) paints the
@@ -32,12 +32,12 @@
  * no layout. Matches chessground's class-toggle strategy.
  */
 
-import type { BoardModel, SquareIndex } from "@ultrachess/core";
+import type { BoardModel, SquareIndex } from "@gigaboard/core";
 import { type RefObject, useEffect } from "react";
 import type { LegalTargetStyle } from "../types.js";
 
 /**
- * Values written to `data-ucr-selection`.
+ * Values written to `data-gb-selection`.
  *
  * - `selected` — the from-square of a pending move.
  * - `legal-quiet` — a legal target with no capture.
@@ -47,7 +47,7 @@ import type { LegalTargetStyle } from "../types.js";
 type SelectionState = "none" | "selected" | "legal-quiet" | "legal-capture";
 
 /** Singleton id used to dedupe the injected `<style>` element. */
-const STYLE_ID = "ucr-selection-styles";
+const STYLE_ID = "gb-selection-styles";
 
 /**
  * Inject the selection CSS once per document. SSR-safe (early-returns).
@@ -55,7 +55,7 @@ const STYLE_ID = "ucr-selection-styles";
  * ### First-click INP: why `::before` is declared on EVERY square
  *
  * The earlier design declared `::before` only on squares currently
- * carrying `data-ucr-selection`. That saves 64 pseudo-element nodes
+ * carrying `data-gb-selection`. That saves 64 pseudo-element nodes
  * at mount but costs the browser a first-match materialisation pass
  * on the user's very first click: when the attribute appears on a
  * square for the first time, Chromium creates the ::before rendering
@@ -64,7 +64,7 @@ const STYLE_ID = "ucr-selection-styles";
  * per-click number and a major share of Ultra's "worst click" INP
  * reading.
  *
- * We now declare a universal `::before` on every `[data-ucr-square]`
+ * We now declare a universal `::before` on every `[data-gb-square]`
  * with a transparent background; the selection attribute only
  * changes `background` / `background-image`. All 64 pseudo-element
  * rendering nodes are materialised during cold mount, where their
@@ -78,27 +78,27 @@ function injectSelectionStyles(): void {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-[data-ucr-square]::before {
+[data-gb-square]::before {
   content: "";
   position: absolute;
   inset: 0;
   background: transparent;
   pointer-events: none;
 }
-[data-ucr-square][data-ucr-selection="selected"]::before {
-  background: var(--ucr-selected);
+[data-gb-square][data-gb-selection="selected"]::before {
+  background: var(--gb-selected);
 }
-[data-ucr-square][data-ucr-selection="legal-quiet"]::before {
-  background-image: radial-gradient(var(--ucr-legal-target) 22%, transparent 24%);
+[data-gb-square][data-gb-selection="legal-quiet"]::before {
+  background-image: radial-gradient(var(--gb-legal-target) 22%, transparent 24%);
 }
-[data-ucr-square][data-ucr-selection="legal-capture"]::before {
-  background-image: radial-gradient(transparent 0 75%, var(--ucr-legal-target-capture) 77% 83%, transparent 85%);
+[data-gb-square][data-gb-selection="legal-capture"]::before {
+  background-image: radial-gradient(transparent 0 75%, var(--gb-legal-target-capture) 77% 83%, transparent 85%);
 }
-[data-ucr-target-style="dots"] [data-ucr-square][data-ucr-selection="legal-quiet"]::before {
-  background-image: radial-gradient(var(--ucr-legal-target) 14%, transparent 16%);
+[data-gb-target-style="dots"] [data-gb-square][data-gb-selection="legal-quiet"]::before {
+  background-image: radial-gradient(var(--gb-legal-target) 14%, transparent 16%);
 }
-[data-ucr-target-style="dots"] [data-ucr-square][data-ucr-selection="legal-capture"]::before {
-  background-image: radial-gradient(var(--ucr-legal-target-capture) 20%, transparent 22%);
+[data-gb-target-style="dots"] [data-gb-square][data-gb-selection="legal-capture"]::before {
+  background-image: radial-gradient(var(--gb-legal-target-capture) 20%, transparent 22%);
 }
 `;
   document.head.appendChild(style);
@@ -112,7 +112,7 @@ function injectSelectionStyles(): void {
  *   the square at that LERF index, or `null` if unmounted.
  * @param style Rendering style for legal targets. `false` suppresses
  *   the overlay entirely; `"rings"` (default) and `"dots"` are picked
- *   up by the board container's `data-ucr-target-style` attribute.
+ *   up by the board container's `data-gb-target-style` attribute.
  */
 export function useSelectionController(
   model: BoardModel | null,
@@ -134,9 +134,9 @@ export function useSelectionController(
       const el = squareRefs.current?.[i];
       if (el === null || el === undefined) return;
       if (val === "none") {
-        delete el.dataset["ucrSelection"];
+        delete el.dataset["gbSelection"];
       } else {
-        el.dataset["ucrSelection"] = val;
+        el.dataset["gbSelection"] = val;
       }
     };
 

@@ -6,7 +6,7 @@
  * for maximum contrast.
  *
  * ```tsx
- * import { wood } from "@ultrachess/themes/wood";
+ * import { wood } from "@gigaboard/themes/wood";
  * <Chessboard game={game} theme={wood} />
  * ```
  */
@@ -14,13 +14,13 @@
 import type { Theme } from "./index.js";
 
 export const wood: Theme = Object.freeze({
-  "--ucr-sq-light": "#d4a574",
-  "--ucr-sq-dark": "#8b5a2b",
-  "--ucr-last-move": "rgba(247, 220, 111, 0.45)",
-  "--ucr-selected": "rgba(247, 220, 111, 0.58)",
-  "--ucr-legal-target": "rgba(0, 0, 0, 0.16)",
-  "--ucr-legal-target-capture": "rgba(0, 0, 0, 0.32)",
-  "--ucr-check": "radial-gradient(rgba(255, 0, 0, 0.55) 30%, rgba(255, 0, 0, 0) 80%)",
-  "--ucr-coord-light": "#8b5a2b",
-  "--ucr-coord-dark": "#d4a574",
+  "--gb-sq-light": "#d4a574",
+  "--gb-sq-dark": "#8b5a2b",
+  "--gb-last-move": "rgba(247, 220, 111, 0.45)",
+  "--gb-selected": "rgba(247, 220, 111, 0.58)",
+  "--gb-legal-target": "rgba(0, 0, 0, 0.16)",
+  "--gb-legal-target-capture": "rgba(0, 0, 0, 0.32)",
+  "--gb-check": "radial-gradient(rgba(255, 0, 0, 0.55) 30%, rgba(255, 0, 0, 0) 80%)",
+  "--gb-coord-light": "#8b5a2b",
+  "--gb-coord-dark": "#d4a574",
 });

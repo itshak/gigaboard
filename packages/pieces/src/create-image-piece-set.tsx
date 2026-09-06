@@ -1,7 +1,7 @@
 /**
  * Shared piece-renderer factory.
  *
- * Every piece set shipped by `@ultrachess/pieces` is a URL-based set — a
+ * Every piece set shipped by `@gigaboard/pieces` is a URL-based set — a
  * thin map from board-cell → image URL. This factory builds a memoised
  * {@link PieceRenderer} around such a map, so every set file is two lines
  * of configuration plus a URL table.

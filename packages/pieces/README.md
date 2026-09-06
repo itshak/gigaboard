@@ -1,11 +1,11 @@
-# @ultrachess/pieces
+# @gigaboard/pieces
 
-Tree-shakeable SVG piece sets for [Ultra Chess React](https://github.com/yahorbarkouski/ultrachess-react).
+Tree-shakeable SVG piece sets for Gigaboard.
 
 Import each set from its sub-path so the rest tree-shake out:
 
 ```ts
-import { cburnett } from "@ultrachess/pieces/cburnett";
+import { cburnett } from "@gigaboard/pieces/cburnett";
 ```
 
 ## Status

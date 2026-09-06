@@ -1,16 +1,16 @@
 {
-  "name": "@ultrachess/core",
+  "name": "@gigaboard/core",
   "version": "1.1.3",
-  "description": "Framework-agnostic chess board state machine and engine adapter, backed by the ultrachess WASM engine. Byte-level Uint8Array(64) board store with per-square subscriptions — zero React, zero DOM, usable from any UI runtime.",
+  "description": "Framework-agnostic chess board state machine and engine adapter, backed by gigachess. Byte-level Uint8Array(64) board store with per-square subscriptions — zero React, zero DOM, usable from any UI runtime.",
   "license": "MIT",
-  "author": "Yahor Barkouski",
-  "homepage": "https://github.com/yahorbarkouski/ultrachess-react",
+  "author": "Yahor Barkouski (forked as gigaboard)",
+  "homepage": "https://github.com/itshak/turbochessboard",
   "bugs": {
-    "url": "https://github.com/yahorbarkouski/ultrachess-react/issues"
+    "url": "https://github.com/itshak/turbochessboard/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yahorbarkouski/ultrachess-react.git",
+    "url": "git+https://github.com/itshak/turbochessboard.git",
     "directory": "packages/core"
   },
   "engines": {
@@ -23,8 +23,8 @@
   "keywords": [
     "chess",
     "chess-engine",
-    "wasm",
-    "ultrachess",
+    "gigachess",
+    "gigaboard",
     "state-machine",
     "framework-agnostic",
     "useSyncExternalStore",
@@ -63,8 +63,8 @@
     "size": "size-limit",
     "clean": "rm -rf dist .turbo coverage"
   },
-  "peerDependencies": {
-    "ultrachess": "^1.1.4"
+  "dependencies": {
+    "gigachess": "^0.4.1"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",
@@ -72,21 +72,26 @@
     "fast-check": "^3.23.2",
     "size-limit": "^11.1.6",
     "tsup": "^8.5.1",
-    "ultrachess": "^1.1.4",
     "vitest": "^3.0.0"
   },
   "size-limit": [
     {
-      "name": "@ultrachess/core (ESM)",
+      "name": "@gigaboard/core (ESM)",
       "path": "dist/index.js",
-      "limit": "6 KB",
-      "gzip": true
+      "limit": "10 KB",
+      "gzip": true,
+      "ignore": [
+        "gigachess"
+      ]
     },
     {
-      "name": "@ultrachess/core (CJS)",
+      "name": "@gigaboard/core (CJS)",
       "path": "dist/index.cjs",
-      "limit": "6 KB",
-      "gzip": true
+      "limit": "10 KB",
+      "gzip": true,
+      "ignore": [
+        "gigachess"
+      ]
     }
   ]
 }

@@ -24,7 +24,7 @@ async function measureMount(
   // paints. 500 ms is plenty for Chromium's LCP throttle.
   await page.waitForTimeout(500);
   return page.evaluate(() => {
-    const m = window.__ucrBench__?.metrics();
+    const m = (window.__gbBench__ ?? window.__ucrBench__)?.metrics();
     return {
       lcpMs: m?.lcpMs ?? null,
       longTasks: m?.longTasks.length ?? 0,

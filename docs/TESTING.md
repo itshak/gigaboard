@@ -31,7 +31,7 @@ These floors are intentionally modest. Coverage is a weak proxy for quality — 
 suite can hit 100% lines while missing every interesting case. Our real bar is
 behavioural: every public symbol has example tests, state machines have
 transition matrices, and the engine-integration code has a differential fuzz
-run against `ultrachess`. The percentage thresholds exist to catch entire
+run against `gigachess`. The percentage thresholds exist to catch entire
 untested modules, not to drive line-counting games.
 
 ## Unit tests
@@ -59,11 +59,11 @@ untested modules, not to drive line-counting games.
 - Synthesize pointer events for drag: `pointerDown → pointerMove* → pointerUp`. Verify `DragLayer` position via `style.transform`, not React state.
 - Assert on the rendered DOM or accessible tree, never on component internals.
 
-## Differential fuzz vs. `ultrachess`
+## Differential fuzz vs. `gigachess`
 
 The engine is the oracle. Our state machine must agree with it on every position.
 
-- Generator: random legal games, depth 80–200 ply, 100 k games nightly (10 k on PRs).
+- Generator: random legal games, depth 80–200 ply, 1,000+ games.
 - At every ply, compare:
   - `fen()` string equality
   - `legalMoves()` set equality
@@ -125,7 +125,7 @@ Visual bugs are the ones users see first and file last. We snapshot aggressively
 
 ## Cross-runtime
 
-Mirrors `ultrachess/test/cross-runtime/`. The core package is exercised under:
+The core package is exercised under:
 
 - Bun (`bun test`).
 - Node 20, 22, 24 (Vitest on each).
@@ -153,7 +153,7 @@ bun install
 bun run turbo test                   # unit + integration, all packages
 bun run turbo test:visual            # Playwright + Loki
 bun run turbo bench                  # perf regression harness
-bun -F @ultrachess/core test --watch
+bun -F @gigaboard/core test --watch
 ```
 
 Visual baselines update: `bun run turbo test:visual -- --update-snapshots`. Always include the updated snapshots in your PR and explain why they changed.

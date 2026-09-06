@@ -1,5 +1,5 @@
 {
-  "name": "@ultrachess/example-next-analysis",
+  "name": "@gigaboard/example-next-analysis",
   "version": "0.0.0",
   "private": true,
   "description": "Analysis board example (history navigation, arrows, premoves) — lands in M4.",
@@ -16,15 +16,14 @@
     "postinstall": "node scripts/copy-sounds.mjs && node scripts/copy-stockfish.mjs"
   },
   "dependencies": {
-    "@ultrachess/core": "workspace:*",
-    "@ultrachess/pieces": "workspace:*",
-    "@ultrachess/react": "workspace:*",
-    "@ultrachess/themes": "workspace:*",
+    "@gigaboard/core": "workspace:*",
+    "@gigaboard/pieces": "workspace:*",
+    "@gigaboard/themes": "workspace:*",
+    "gigaboard": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "stockfish": "^18.0.7",
-    "ultrachess": "^1.1.4"
+    "stockfish": "^18.0.7"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

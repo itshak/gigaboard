@@ -91,7 +91,7 @@ export interface SquareCentre {
 }
 
 /** Global API shape. */
-export interface UcrBench {
+export interface GbBench {
   readonly ready: Promise<void>;
   readonly library: "ultra" | "rcb" | "cg";
   playMove(from: string, to: string): Promise<void>;
@@ -109,7 +109,7 @@ export interface UcrBench {
   resetMetrics(): void;
   /**
    * Locate the pixel centre of a named square (e.g. `"e4"`). Each
-   * library implements this for its own DOM layout — Ultra and
+   * library implements this for its own DOM layout — Gigaboard and
    * react-chessboard both put `data-square="<label>"` attributes on
    * their squares, but `chessground` positions pieces via coordinate
    * transforms without per-square markup, so it derives the centre
@@ -122,20 +122,26 @@ export interface UcrBench {
  * Grid-mount scenario API. Installed by the three `grid-*` apps when a
  * page is loaded with `?grid=N`. Playwright waits on `ready` then
  * collects host-side metrics (JS heap, DOM nodes, long tasks) while the
- * in-page `metrics()` surfaces the same observer snapshot Ultra's
+ * in-page `metrics()` surfaces the same observer snapshot Gigaboard's
  * single-board pages use.
  */
-export interface UcrGrid {
+export interface GbGrid {
   readonly ready: Promise<void>;
   readonly library: "ultra" | "rcb" | "cg";
   readonly boardCount: number;
   metrics(): BenchMetrics;
 }
 
+export type UcrBench = GbBench;
+export type UcrGrid = GbGrid;
+
 declare global {
   interface Window {
-    __ucrBench__?: UcrBench;
-    __ucrGrid__?: UcrGrid;
+    __gbBench__?: GbBench;
+    __gbGrid__?: GbGrid;
+    __gbFlash__?: MutationFlashControl;
+    __ucrBench__?: GbBench;
+    __ucrGrid__?: GbGrid;
     /**
      * Handle to the installed mutation-flash overlay. Set by each
      * bench page once its board mounts. Specs toggle visibility and
@@ -422,7 +428,7 @@ export function installMutationFlash(board: HTMLElement): MutationFlashControl {
   // Separate overlay container, parented to body so observer on `board`
   // never sees our insertions.
   const overlayRoot = document.createElement("div");
-  overlayRoot.id = "__ucr_flash_overlay__";
+  overlayRoot.id = "__gb_flash_overlay__";
   Object.assign(overlayRoot.style, {
     position: "fixed",
     inset: "0",
@@ -435,14 +441,14 @@ export function installMutationFlash(board: HTMLElement): MutationFlashControl {
   // so we don't need to poke an intermediate style value.
   const style = document.createElement("style");
   style.textContent = `
-    @keyframes __ucr_flash__ {
+    @keyframes __gb_flash__ {
       0%   { background: rgba(239,68,68,0.55); outline: 2px solid rgba(239,68,68,0.95); }
       100% { background: rgba(239,68,68,0);    outline: 2px solid rgba(239,68,68,0);    }
     }
-    .__ucr_flash_cell__ {
+    .__gb_flash_cell__ {
       position: absolute;
       border-radius: 3px;
-      animation: __ucr_flash__ 320ms ease-out forwards;
+      animation: __gb_flash__ 320ms ease-out forwards;
     }
   `;
   document.head.appendChild(style);
@@ -452,7 +458,7 @@ export function installMutationFlash(board: HTMLElement): MutationFlashControl {
     // Ignore degenerate rects (elements that are hidden / not laid out).
     if (rect.width === 0 || rect.height === 0) return;
     const el = document.createElement("div");
-    el.className = "__ucr_flash_cell__";
+    el.className = "__gb_flash_cell__";
     Object.assign(el.style, {
       left: `${rect.left}px`,
       top: `${rect.top}px`,

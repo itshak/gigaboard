@@ -4,11 +4,12 @@ import {
   type BoardModel,
   Color,
   createBoardModel,
-  createUltrachessAdapter,
+  createGigachessAdapter,
   makeArrow,
   makePremove,
   PieceType,
   type SquareIndex,
+  unpackMove,
 } from "../src/index.js";
 
 const E2 = 12 as SquareIndex;
@@ -22,7 +23,7 @@ describe("createBoardModel — actions", () => {
   let model: BoardModel;
 
   beforeEach(async () => {
-    const engine = await createUltrachessAdapter();
+    const engine = createGigachessAdapter();
     model = createBoardModel(engine);
   });
   afterEach(() => model.dispose());
@@ -185,7 +186,7 @@ describe("createBoardModel — actions", () => {
   });
 
   it("subscribeSquare only fires for squares that changed bytes", async () => {
-    const engine = await createUltrachessAdapter();
+    const engine = createGigachessAdapter();
     const local = createBoardModel(engine);
     try {
       const e2Fn = vi.fn();
@@ -207,7 +208,7 @@ describe("createBoardModel — actions", () => {
 describe("createBoardModel — arrows and premoves", () => {
   let model: BoardModel;
   beforeEach(async () => {
-    const engine = await createUltrachessAdapter();
+    const engine = createGigachessAdapter();
     model = createBoardModel(engine);
   });
   afterEach(() => model.dispose());
@@ -275,7 +276,7 @@ describe("createBoardModel — arrows and premoves", () => {
 describe("createBoardModel — legal-move cache", () => {
   let model: BoardModel;
   beforeEach(async () => {
-    const engine = await createUltrachessAdapter();
+    const engine = createGigachessAdapter();
     model = createBoardModel(engine);
   });
   afterEach(() => model.dispose());
@@ -295,7 +296,7 @@ describe("createBoardModel — legal-move cache", () => {
 describe("createBoardModel — animation descriptors", () => {
   let model: BoardModel;
   beforeEach(async () => {
-    const engine = await createUltrachessAdapter();
+    const engine = createGigachessAdapter();
     model = createBoardModel(engine);
   });
   afterEach(() => model.dispose());
@@ -330,6 +331,67 @@ describe("createBoardModel — animation descriptors", () => {
     expect(model.lastAnimations.length).toBeGreaterThanOrEqual(1);
     const kinds = new Set(model.lastAnimations.map((d) => d.kind));
     expect(kinds.has("appear") || kinds.has("disappear")).toBe(true);
+  });
+});
+
+describe("createBoardModel with createGigachessAdapter — Move2 and castling", () => {
+  it("supports dual-input castling and always emits canonical King-captures-Rook moves", () => {
+    const fen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+    // 1. Dual input: King 2-square jump e1g1 (4 -> 6)
+    const model1 = createBoardModel(createGigachessAdapter(fen));
+    expect(model1.legalFrom(4 as SquareIndex).has(6 as SquareIndex)).toBe(true);
+    expect(model1.legalFrom(4 as SquareIndex).has(7 as SquareIndex)).toBe(true);
+    expect(model1.isLegal(4 as SquareIndex, 6 as SquareIndex)).toBe(true);
+    expect(model1.isLegal(4 as SquareIndex, 7 as SquareIndex)).toBe(true);
+
+    const m1 = model1.tryMove(4 as SquareIndex, 6 as SquareIndex);
+    expect(m1).not.toBeNull();
+    const unpacked1 = unpackMove(m1!);
+    expect(unpacked1.from).toBe(4);
+    expect(unpacked1.to).toBe(7); // Canonical King-captures-Rook
+    expect(model1.getSnapshot().lastMove).toBe(m1);
+    expect(model1.lastAnimations[0]).toEqual({
+      kind: "castle",
+      kingFrom: 4,
+      kingTo: 6,
+      rookFrom: 7,
+      rookTo: 5,
+    });
+
+    // 2. Dual input: King dropped onto Rook e1h1 (4 -> 7)
+    const model2 = createBoardModel(createGigachessAdapter(fen));
+    const m2 = model2.tryMove(4 as SquareIndex, 7 as SquareIndex);
+    expect(m2).not.toBeNull();
+    const unpacked2 = unpackMove(m2!);
+    expect(unpacked2.from).toBe(4);
+    expect(unpacked2.to).toBe(7); // Canonical King-captures-Rook
+    expect(model2.lastAnimations[0]).toEqual({
+      kind: "castle",
+      kingFrom: 4,
+      kingTo: 6,
+      rookFrom: 7,
+      rookTo: 5,
+    });
+
+    // 3. Queenside: e1c1 and e1a1 both emit canonical e1a1 (4 -> 0)
+    const model3 = createBoardModel(createGigachessAdapter(fen));
+    expect(model3.legalFrom(4 as SquareIndex).has(2 as SquareIndex)).toBe(true);
+    expect(model3.legalFrom(4 as SquareIndex).has(0 as SquareIndex)).toBe(true);
+    const m3 = model3.tryMove(4 as SquareIndex, 2 as SquareIndex);
+    expect(m3).not.toBeNull();
+    expect(unpackMove(m3!).to).toBe(0);
+    expect(model3.lastAnimations[0]).toEqual({
+      kind: "castle",
+      kingFrom: 4,
+      kingTo: 2,
+      rookFrom: 0,
+      rookTo: 3,
+    });
+
+    const model4 = createBoardModel(createGigachessAdapter(fen));
+    const m4 = model4.tryMove(4 as SquareIndex, 0 as SquareIndex);
+    expect(m4).not.toBeNull();
+    expect(unpackMove(m4!).to).toBe(0);
   });
 });
 
