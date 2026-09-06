@@ -76,7 +76,7 @@ entry: {
 
 - `apps/benchmarks`, `apps/docs`, `examples/next-showcase` (plus `next-analysis`) depend solely on `gigaboard: workspace:*`; imports rewritten `@gigaboard/core` → `gigaboard/core`, `@gigaboard/pieces/*` → `gigaboard/pieces/*`, `@gigaboard/themes/*` → `gigaboard/themes/*`.
 - Root `workspaces: ["packages/*", "apps/*", "examples/*"]` unchanged (now resolves to single package).
-- Release automation simplified to single package: `release-please-config.json` tracks only `packages/react` (`gigaboard`, component `gigaboard`); `.release-please-manifest.json` is `{"packages/react": "1.3.0"}`; `release.yml` publishes one provenance-enabled artifact.
+- Release automation simplified to single package: `release-please-config.json` tracks only `packages/react` (`gigaboard`, component `gigaboard`); `.release-please-manifest.json` is `{"packages/react": "1.3.1"}`; `release.yml` publishes one provenance-enabled artifact.
 
 ### E. Breaking Change & Migration
 
