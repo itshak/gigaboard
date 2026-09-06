@@ -222,6 +222,29 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Verify published versions on registry
+        # npm has silently swallowed a publish before (CLI reported
+        # success, version never appeared). Poll the registry so the job
+        # fails loudly instead of going green on a missing version.
+        env:
+          PATHS: ${{ steps.resolve.outputs.paths }}
+        run: |
+          set -euo pipefail
+          echo "$PATHS" | jq -r '.[]' | while read -r dir; do
+            [[ -z "$dir" ]] && continue
+            name=$(jq -r '.name' "$dir/package.json")
+            version=$(jq -r '.version' "$dir/package.json")
+            for i in 1 2 3 4 5 6; do
+              if npm view "$name@$version" version >/dev/null 2>&1; then
+                echo "Verified on registry: $name@$version"
+                break
+              fi
+              echo "Waiting for $name@$version to appear... ($i/6)"
+              sleep 20
+            done
+            npm view "$name@$version" version
+          done
+
       - name: Create GitHub Release (tag push)
         # Manual tags (e.g. `v0.0.1`) bypass the release-please job, so no
         # GitHub Release would exist for them. Create one from the tag so

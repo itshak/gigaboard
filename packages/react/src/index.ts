@@ -92,4 +92,4 @@ export type {
 } from "./types.js";
 
 /** Package version — keep in sync with `package.json`. */
-export const PACKAGE_VERSION = "1.3.1";
+export const PACKAGE_VERSION = "1.3.2";
