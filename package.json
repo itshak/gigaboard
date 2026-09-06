@@ -5,10 +5,10 @@
   "description": "Gigaboard — high-performance MIT React chessboard. 1 commit/move, WAAPI + Canvas, 120fps GPU, chessground parity without GPL.",
   "license": "MIT",
   "author": "Itshak <aistreltsov@outlook.com> (fork of Yahor Barkouski ultrachess-react)",
-  "homepage": "https://github.com/itshak/turbochessboard",
+  "homepage": "https://github.com/itshak/gigaboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/itshak/turbochessboard.git"
+    "url": "git+https://github.com/itshak/gigaboard.git"
   },
   "workspaces": [
     "packages/*",

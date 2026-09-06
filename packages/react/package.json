@@ -4,13 +4,13 @@
   "description": "Ultra-fast React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
   "license": "MIT",
   "author": "Yahor Barkouski (forked as gigaboard)",
-  "homepage": "https://github.com/itshak/turbochessboard",
+  "homepage": "https://github.com/itshak/gigaboard",
   "bugs": {
-    "url": "https://github.com/itshak/turbochessboard/issues"
+    "url": "https://github.com/itshak/gigaboard/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/itshak/turbochessboard.git",
+    "url": "git+https://github.com/itshak/gigaboard.git",
     "directory": "packages/react"
   },
   "engines": {
