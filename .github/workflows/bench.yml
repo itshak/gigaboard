@@ -2,7 +2,8 @@ name: Performance Regression
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
+  workflow_dispatch:
   schedule:
     # Nightly extended runs (heavier fuzz and matrices).
     - cron: "17 4 * * *"

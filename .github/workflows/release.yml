@@ -25,14 +25,15 @@ name: release
 
 on:
   push:
-    branches: [master]
-  # Safety valve for hotfixes or retries: publish all packages at an
-  # already-tagged ref without going through release-please.
+    branches: [main, master]
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       ref:
         description: "Git ref (tag or SHA) to publish — skips release-please job"
-        required: true
+        required: false
+        default: ""
         type: string
 
 # `release-please` needs contents:write and pull-requests:write to open
@@ -57,9 +58,9 @@ jobs:
   release-please:
     name: release-please (version PR + GitHub Release)
     runs-on: ubuntu-latest
-    # Skip entirely on manual dispatch — user wants to publish a
-    # specific ref, not re-run release-please.
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    # Skip entirely on manual dispatch or tag push — user wants to publish a
+    # specific ref or tag, not re-run release-please.
+    if: ${{ github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/') }}
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       paths_released: ${{ steps.release.outputs.paths_released }}
@@ -71,11 +72,10 @@ jobs:
           manifest-file: .github/.release-please-manifest.json
 
   publish:
-    name: npm publish (provenance via OIDC)
+    name: npm publish
     runs-on: ubuntu-latest
     # Gate: only publish if release-please just cut releases OR if a
-    # human explicitly dispatched. `always()` lets the job run even
-    # when release-please was skipped (workflow_dispatch path).
+    # tag was pushed OR if manually dispatched.
     needs: release-please
     if: >-
       ${{
@@ -85,6 +85,8 @@ jobs:
            needs.release-please.outputs.releases_created == 'true')
           ||
           github.event_name == 'workflow_dispatch'
+          ||
+          startsWith(github.ref, 'refs/tags/')
         )
       }}
     environment: npm-publish
@@ -144,14 +146,14 @@ jobs:
         id: resolve
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
             candidate_paths=$(jq -c 'keys' .github/.release-please-manifest.json)
           else
             candidate_paths='${{ needs.release-please.outputs.paths_released }}'
             # Defensive default — should always be non-empty when the
             # `if:` guard above lets us in, but guard anyway.
             if [[ -z "$candidate_paths" || "$candidate_paths" == "null" ]]; then
-              candidate_paths='[]'
+              candidate_paths=$(jq -c 'keys' .github/.release-please-manifest.json)
             fi
           fi
 
@@ -198,18 +200,20 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: npm publish with provenance
+      - name: npm publish
         env:
           PATHS: ${{ steps.resolve.outputs.paths }}
-        # Trusted Publishing must be configured on npmjs.com for every
-        # package (@gigaboard/core, gigaboard, @gigaboard/pieces, @gigaboard/themes) pointing
-        # at this workflow + environment. npm exchanges the OIDC token
-        # (`id-token: write` above) for a short-lived publish credential.
-        # No NODE_AUTH_TOKEN needed.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Supports both secrets.NPM_TOKEN (traditional auth) and Trusted Publishing
+        # via OIDC provenance on npmjs.com.
         run: |
           set -euo pipefail
           echo "$PATHS" | jq -r '.[]' | while read -r dir; do
             echo "::group::publish $dir"
-            (cd "$dir" && npm publish --provenance --access public)
+            if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+              (cd "$dir" && npm publish --access public)
+            else
+              (cd "$dir" && npm publish --provenance --access public)
+            fi
             echo "::endgroup::"
           done

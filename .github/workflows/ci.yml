@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main, master]
   pull_request:
-    branches: [master]
+    branches: [main, master]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -61,6 +62,8 @@ jobs:
         run: bun run turbo build
       - name: Test
         run: bun run turbo test
+      - name: Size budget
+        run: bun run turbo size
 
   package-inspect:
     name: Package inspection (pack + publint + attw)

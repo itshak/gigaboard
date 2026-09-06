@@ -2,7 +2,8 @@ name: Visual Regression
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
+  workflow_dispatch:
 
 concurrency:
   group: visual-${{ github.ref }}
