@@ -30,6 +30,14 @@ Regardless of whether the user executed castling via the two-square jump or King
 - **WHEN** the user initiates queenside castling by dropping King on `a1`
 - **THEN** `onMove` receives the canonical move where source is `e1` and destination is `a1` (`e1a1` / `from=4, to=0`)
 
+### Requirement: Castling Target Normalization SHALL Apply to King Moves Only
+
+Two-square-to-corner normalization (`e1g1 → e1h1`, `e1c1 → e1a1`, and Black mirrors) SHALL apply only when the moving piece is a King. Any other piece sliding from `e1`/`e8` (e.g. a Rook playing `Re1-c1`) keeps its true destination in both `tryMove` and `isLegal` — otherwise the drop is silently replayed onto the corner square.
+
+#### Scenario: Rook slides keep their destination
+- **WHEN** the user drags or clicks a Rook from `e8` to `g8` (or `e8 → c8`, and White mirrors from `e1`)
+- **THEN** the committed move lands exactly on the entered square with a plain `move` animation — never remapped to `h8`/`a8`.
+
 ### Requirement: Board SHALL Support Full Click-to-Move and Retain Selection on Drag Abort
 
 The chessboard component SHALL support click-to-move (click source square, then click destination square to move). Furthermore, when a user starts dragging a piece and releases it back onto its origin square (or on an invalid square without completing a move), the source square SHALL remain selected so the user can immediately click a destination square to complete the move.
