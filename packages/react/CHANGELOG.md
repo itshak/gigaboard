@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.4](https://github.com/itshak/gigaboard/compare/v1.3.3...v1.3.4) (2026-09-09)
+
+
+### Bug Fixes
+
+* **board-model:** only normalize castling targets for king moves ([12941cf](https://github.com/itshak/gigaboard/commit/12941cfe8d62ab67019957de07130a0ee4086eee))
+
 ## [1.2.3](https://github.com/yahorbarkouski/ultrachess-react/compare/react-v1.2.2...react-v1.2.3) (2026-05-08)
 
 
