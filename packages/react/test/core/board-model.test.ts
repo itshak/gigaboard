@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  BOARD_CELL_BR,
   BOARD_CELL_WP,
+  BOARD_CELL_WR,
   type BoardModel,
   Color,
   createBoardModel,
@@ -392,6 +394,78 @@ describe("createBoardModel with createGigachessAdapter — Move2 and castling", 
     const m4 = model4.tryMove(4 as SquareIndex, 0 as SquareIndex);
     expect(m4).not.toBeNull();
     expect(unpackMove(m4!).to).toBe(0);
+  });
+});
+
+describe("createBoardModel — castling remap applies to kings only", () => {
+  // Black rook on e8, white king far away: Re8-g8 and Re8-c8 are plain
+  // rook slides and must keep their destination (previously they were
+  // replayed as e8h8 / e8a8 by the unchecked castling remap).
+  const ROOK_E8 = "4r3/k7/8/8/8/8/8/6K1 b - - 0 1";
+  // White mirror: king already moved to e2, rook on e1.
+  const ROOK_E1 = "4k3/8/8/8/8/8/4K3/4R3 w - - 0 1";
+
+  it("rook e8->g8 keeps g8 (black)", () => {
+    const model = createBoardModel(createGigachessAdapter(ROOK_E8));
+    try {
+      expect(model.isLegal(60 as SquareIndex, 62 as SquareIndex)).toBe(true);
+      const m = model.tryMove(60 as SquareIndex, 62 as SquareIndex);
+      expect(m).not.toBeNull();
+      expect(unpackMove(m!).from).toBe(60);
+      expect(unpackMove(m!).to).toBe(62);
+      expect(model.getSnapshot().board[62]).toBe(BOARD_CELL_BR);
+      expect(model.getSnapshot().board[60]).toBe(0);
+      expect(model.lastAnimations[0]?.kind).toBe("move");
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("rook e8->c8 keeps c8 (black)", () => {
+    const model = createBoardModel(createGigachessAdapter(ROOK_E8));
+    try {
+      const m = model.tryMove(60 as SquareIndex, 58 as SquareIndex);
+      expect(m).not.toBeNull();
+      expect(unpackMove(m!).from).toBe(60);
+      expect(unpackMove(m!).to).toBe(58);
+      expect(model.getSnapshot().board[58]).toBe(BOARD_CELL_BR);
+      expect(model.lastAnimations[0]?.kind).toBe("move");
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("rook e1->g1 and e1->c1 keep their destination (white mirror)", () => {
+    const modelG = createBoardModel(createGigachessAdapter(ROOK_E1));
+    try {
+      const mg = modelG.tryMove(4 as SquareIndex, 6 as SquareIndex);
+      expect(mg).not.toBeNull();
+      expect(unpackMove(mg!).to).toBe(6);
+      expect(modelG.getSnapshot().board[6]).toBe(BOARD_CELL_WR);
+    } finally {
+      modelG.dispose();
+    }
+    const modelC = createBoardModel(createGigachessAdapter(ROOK_E1));
+    try {
+      const mc = modelC.tryMove(4 as SquareIndex, 2 as SquareIndex);
+      expect(mc).not.toBeNull();
+      expect(unpackMove(mc!).to).toBe(2);
+      expect(modelC.getSnapshot().board[2]).toBe(BOARD_CELL_WR);
+    } finally {
+      modelC.dispose();
+    }
+  });
+
+  it("king e1->c1 still castles queenside", () => {
+    const model = createBoardModel(createGigachessAdapter("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1"));
+    try {
+      const m = model.tryMove(4 as SquareIndex, 2 as SquareIndex);
+      expect(m).not.toBeNull();
+      expect(unpackMove(m!).to).toBe(0); // canonical King-captures-Rook
+      expect(model.lastAnimations[0]?.kind).toBe("castle");
+    } finally {
+      model.dispose();
+    }
   });
 });
 

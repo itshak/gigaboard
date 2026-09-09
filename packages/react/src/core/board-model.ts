@@ -37,6 +37,7 @@ import type {
   Premove,
   SquareIndex,
 } from "./types.js";
+import { BOARD_CELL_BK, BOARD_CELL_WK } from "./types.js";
 
 /** Frozen empty set singleton — returned when nothing is selected. */
 const EMPTY_SET: ReadonlySet<SquareIndex> = Object.freeze(
@@ -49,10 +50,14 @@ function moveTo(m: PackedMove): SquareIndex {
 }
 
 /**
- * Resolves King moves: if the move is a 2-square King jump, normalize destination to
- * canonical King-captures-Rook (e.g. e1g1 -> e1h1, e1c1 -> e1a1).
+ * Resolves King castling drops: if a KING moves two squares (e1g1/e1c1 …),
+ * normalize the destination to canonical King-captures-Rook (e1h1/e1a1 …).
+ * Gated on the moving piece — any other piece sliding from e1/e8 (e.g. a
+ * rook playing Re1-c1) must keep its true destination. Without the gate a
+ * rook drop e1→c1 is silently replayed as e1→a1.
  */
-function normalizeCastlingTarget(from: SquareIndex, to: SquareIndex): SquareIndex {
+function normalizeCastlingTarget(from: SquareIndex, to: SquareIndex, isKing: boolean): SquareIndex {
+  if (!isKing) return to;
   if (from === 4) {
     if (to === 6) return 7 as SquareIndex;
     if (to === 2) return 0 as SquareIndex;
@@ -227,6 +232,17 @@ export function createBoardModel(
     return new Uint8Array(stageBuffer);
   };
 
+  /**
+   * `true` when the piece currently on `sq` is a king (either color).
+   * Used to gate castling-target normalization: any other piece sliding
+   * from e1/e8 (e.g. a rook playing Re1-c1) must keep its true destination.
+   */
+  const isKingOn = (sq: SquareIndex): boolean => {
+    engine.readBoard(stageBuffer);
+    const cell = stageBuffer[sq];
+    return cell === BOARD_CELL_WK || cell === BOARD_CELL_BK;
+  };
+
   const computeLegalTargets = (fromBoard: Uint8Array): ReadonlySet<SquareIndex> => {
     if (selected === null) return EMPTY_SET;
     const pieceOnSquare = fromBoard[selected];
@@ -317,7 +333,7 @@ export function createBoardModel(
     to: SquareIndex,
     promotion?: PieceType,
   ): PackedMove | null => {
-    const resolvedTo = normalizeCastlingTarget(from, to);
+    const resolvedTo = normalizeCastlingTarget(from, to, isKingOn(from));
     let m = engine.makeMove(from, resolvedTo, promotion);
     if (m === null && resolvedTo !== to) {
       m = engine.makeMove(from, to, promotion);
@@ -460,7 +476,7 @@ export function createBoardModel(
   };
 
   const isLegal = (from: SquareIndex, to: SquareIndex, promotion?: PieceType): boolean => {
-    const resolvedTo = normalizeCastlingTarget(from, to);
+    const resolvedTo = normalizeCastlingTarget(from, to, isKingOn(from));
     const hash = engine.hash();
     const cached = legalMoveIndex.get(hash, from);
     if (cached !== undefined && promotion === undefined) {
