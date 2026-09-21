@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1](https://github.com/itshak/gigaboard/compare/v1.4.0...v1.4.1) (2026-09-22)
+
+### Bug Fixes
+
+* **board-model:** guard `process.env` access for WebKit/Safari/browser environments where `process` is undefined
+
 ## [1.4.0](https://github.com/itshak/gigaboard/compare/v1.3.4...v1.4.0) (2026-09-22)
 
 ### Features

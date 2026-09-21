@@ -212,7 +212,9 @@ export function createBoardModel(
   engine: EngineAdapter,
   options: BoardModelOptions = {},
 ): BoardModel {
-  const freezeSnapshots = options.freezeSnapshots ?? process.env["NODE_ENV"] !== "production";
+  const freezeSnapshots =
+    options.freezeSnapshots ??
+    (typeof process !== "undefined" && process.env?.["NODE_ENV"] !== "production");
   const legalMoveIndex = createLegalMoveIndex(options.legalMoveIndex ?? {});
   const arrowModel = createArrowModel();
   const premoveBuffer = createPremoveBuffer();
