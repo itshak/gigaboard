@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createArrowModel, makeArrow, type SquareIndex } from "../../src/core/index.js";
+import { type Arrow, createArrowModel, makeArrow, type SquareIndex } from "../../src/core/index.js";
 
 const a = (from: number, to: number, color = "green") =>
   makeArrow(from as SquareIndex, to as SquareIndex, color);
@@ -202,6 +202,61 @@ describe("createArrowModel", () => {
       m.setManaged([a(0, 7)]);
       m.setManaged([a(0, 7)]);
       expect(m.lastChanged).toBe(false);
+    });
+  });
+
+  describe("badge labels (engine eval pills)", () => {
+    const pill = (
+      from: number,
+      to: number,
+      text: string,
+      extra?: Partial<Arrow["label"]>,
+    ): Arrow => ({
+      from: from as SquareIndex,
+      to: to as SquareIndex,
+      color: "rgba(0, 80, 180, 0.8)",
+      brush: "blue",
+      label: {
+        text,
+        fill: "#fff",
+        background: "rgba(20, 14, 10, 0.94)",
+        fontSize: 3.4,
+        anchor: "label",
+        ...extra,
+      },
+      managed: true as const,
+    });
+
+    it("eval text participates in identity (changed text = changed arrow)", () => {
+      const m = createArrowModel();
+      m.setManaged([pill(12, 28, "+0.3")]);
+      expect(m.lastChanged).toBe(true);
+      m.setManaged([pill(12, 28, "+0.4")]);
+      expect(m.lastChanged).toBe(true);
+      expect(m.arrows[0]?.label?.text).toBe("+0.4");
+    });
+
+    it("identical pills are a no-op across commits", () => {
+      const m = createArrowModel();
+      m.setManaged([pill(12, 28, "+0.3")]);
+      const snap = m.arrows;
+      m.setManaged([pill(12, 28, "+0.3")]);
+      expect(m.lastChanged).toBe(false);
+      expect(m.arrows).toBe(snap);
+    });
+
+    it("styling-only fields do not fork identity (still additive)", () => {
+      const m = createArrowModel();
+      m.setManaged([pill(12, 28, "+0.3")]);
+      // Same text, different background/fontSize/anchor → same key.
+      m.setManaged([pill(12, 28, "+0.3", { background: "#000", fontSize: 7 })]);
+      expect(m.lastChanged).toBe(false);
+    });
+
+    it("plain arrows still have exactly three own properties", () => {
+      const m = createArrowModel();
+      m.add(a(12, 28));
+      expect(Object.keys(m.arrows[0] as object).sort()).toEqual(["color", "from", "to"]);
     });
   });
 });

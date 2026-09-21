@@ -105,7 +105,7 @@ export const BOARD_CELL_BK = 12 as BoardCell;
 
 /** Narrow a number into a `SquareIndex`. Validates in dev, no-op at runtime. */
 export function toSquareIndex(n: number): SquareIndex {
-  if (process.env["NODE_ENV"] !== "production") {
+  if (typeof process !== "undefined" && process.env?.["NODE_ENV"] !== "production") {
     if (!Number.isInteger(n) || n < 0 || n > 63) {
       throw new RangeError(`SquareIndex out of range: ${n}`);
     }
@@ -146,12 +146,43 @@ export function pieceTypeOf(cell: BoardCell): PieceType {
  * Optional text label rendered alongside an arrow. Positioned at the
  * endpoint by default; use `ArrowShape["labelCenter"]` to anchor it on
  * `"orig"` (source square) or at the arrow's midpoint instead.
+ *
+ * When `background` is set the renderer draws an opaque rounded pill
+ * behind the glyph (engine eval bubbles). The pill — background AND
+ * glyph — always renders at full opacity, never faded with the arrow.
  */
 export interface ArrowLabel {
   readonly text: string;
   /** CSS color for the label glyph. Defaults to the arrow's `color`. */
   readonly fill?: string;
+  /** CSS color for the pill background. Unset = bare text (legacy). */
+  readonly background?: string;
+  /** Label font size in viewBox units. Defaults to the renderer default. */
+  readonly fontSize?: number;
+  /**
+   * Anchor point for the label. Default `"label"` (midpoint).
+   * `"dest"` anchors near the arrowhead; `"orig"` near the source square.
+   */
+  readonly anchor?: "orig" | "dest" | "label";
+  /** Optional stroke/border color for the pointer head capsule. */
+  readonly borderColor?: string;
+  /** Pointing head geometry style (default "aero_chisel"). */
+  readonly headStyle?:
+    | "aero_chisel"
+    | "chamfer_arrow"
+    | "blunt_wedge"
+    | "stealth"
+    | "bullet"
+    | "hex"
+    | "needle"
+    | "notch";
+  /** Text rotation mode along arrow axis: "auto" (default: flips 180° when left-facing), "strict", or "flat". */
+  readonly textRotation?: "auto" | "strict" | "flat";
+  /** Enable tactile 3D faceted lighting and cylindrical shaft relief (default true when headStyle is "stealth"). */
+  readonly style3d?: boolean;
 }
+
+export type ArrowHeadStyle = NonNullable<ArrowLabel["headStyle"]>;
 
 /**
  * Arbitrary inline SVG payload rendered on top of the canvas overlay.
@@ -206,6 +237,12 @@ export interface Arrow {
    * (analysis boards, pawn-structure overlays).
    */
   readonly below?: boolean;
+  /**
+   * When `true`, enables split-Z rendering for arrows with integrated pointing heads:
+   * the shaft renders beneath pieces (`below`), while the arrowhead and evaluation
+   * capsule render on top of pieces (`above`).
+   */
+  readonly splitZ?: boolean;
   /**
    * Marks an arrow as owned by the application rather than the user.
    * "Managed" arrows survive the two reflex-clearing hooks

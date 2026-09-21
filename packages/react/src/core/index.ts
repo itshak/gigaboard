@@ -52,6 +52,7 @@ export type {
   AnimDescriptor,
   Arrow,
   ArrowCustomSvg,
+  ArrowHeadStyle,
   ArrowLabel,
   BoardCell,
   BoardSnapshot,

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0](https://github.com/itshak/gigaboard/compare/v1.3.4...v1.4.0) (2026-09-22)
+
+### Features
+
+* **arrows:** integrated Aero-Chisel tactical arrows with dynamic evaluation centering and tactile 3D lighting
+* **arrows:** sculpted Aero-Sharp chisel pointer for non-evaluation moves with +3.7u shaft clearance
+* **arrows:** Russian Г-shape knight routing with collinear file/rank collision evasion
+* **arrows:** split-Z and Apple elevation filter with userSpaceOnUse bounds
+
 ## [1.3.4](https://github.com/itshak/gigaboard/compare/v1.3.3...v1.3.4) (2026-09-09)
 
 

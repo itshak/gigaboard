@@ -46,7 +46,7 @@ export function planAnimations(
   next: Readonly<Uint8Array>,
   move: PackedMove | null,
 ): AnimDescriptor[] {
-  if (process.env["NODE_ENV"] !== "production") {
+  if (typeof process !== "undefined" && process.env?.["NODE_ENV"] !== "production") {
     if (prev.length !== 64 || next.length !== 64) {
       throw new RangeError("planAnimations: board buffers must be length 64");
     }

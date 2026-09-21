@@ -62,7 +62,7 @@ import {
   useMemo,
   useRef,
 } from "react";
-import type { Arrow, BoardModel } from "../core/index.js";
+import type { Arrow, ArrowHeadStyle, BoardModel } from "../core/index.js";
 import { useBoardSlice } from "../hooks/use-board-subscription.js";
 import type { Orientation, ResolvedArrowPalette } from "../types.js";
 
@@ -271,6 +271,7 @@ function redraw(
 
   const sqSize = cssWidth / 8;
   for (const arrow of arrows) {
+    if (arrow.label?.background !== undefined) continue;
     drawArrow(ctx, arrow.from, arrow.to, resolveColor(arrow, palette), sqSize, orientation, false);
   }
   if (preview !== null) {
@@ -280,6 +281,7 @@ function redraw(
 
 /* ====================================================== decorations */
 
+/** ViewBox span (0..100) for the SVG decoration overlay. */
 /**
  * Anchor-point for label/customSvg rendering, returned in viewport
  * percent (0..100) so the SVG overlay can position nodes without a
@@ -295,8 +297,343 @@ function anchorPct(
   const b = squareCentrePct(to, orientation);
   if (center === "orig") return a;
   if (center === "dest") return b;
-  // "label" → arrow midpoint.
   return { cx: (a.cx + b.cx) / 2, cy: (a.cy + b.cy) / 2 };
+}
+
+/** Geometry needed to paint an aerodynamic pointing head with integrated text. */
+export interface AeroHeadGeometry {
+  readonly path: string;
+  readonly tipLen: number;
+  readonly dockLen: number;
+  readonly frontLen: number;
+  readonly cabinW: number;
+}
+
+/**
+ * Compute aerodynamic arrowhead geometry with dynamic rectangular auto-centering:
+ * - The evaluation text is mathematically 100% centered at (0, 0).
+ * - The rectangular cabin extends dynamically from -cabinW to +cabinW based on text length.
+ * - The forward nose taper begins strictly AFTER +cabinW, so outer digits like `+32.3` or `#18`
+ *   never clip or cramp into the beveled nose cone!
+ */
+export function computeDynamicAeroGeometry(
+  text: string | undefined,
+  style: ArrowHeadStyle | undefined,
+  fontSize: number,
+  isTerminal = true,
+): AeroHeadGeometry {
+  const resolvedStyle = style ?? "aero_chisel";
+  const hasText = Boolean(text && text.trim().length > 0);
+
+  if (!hasText) {
+    // Sculpted Aero-Sharp pointer: compact, athletic chisel arrowhead
+    // for non-evaluation moves, idle engine states, and user-drawn arrows.
+    // Total length: 4.6u (tipX = 2.8, dockLen = 1.8), giving +3.7u shaft clearance on 1-square moves.
+    const tipX = 2.8;
+    const shoulderX = 0.2;
+    const rearX = -1.2;
+    const dockX = -1.8;
+    const halfH = 2.2;
+    const path = `M ${rearX},${-halfH} L ${shoulderX},${-halfH} L ${tipX},0 L ${shoulderX},${halfH} L ${rearX},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${rearX},${-halfH} Z`;
+    return {
+      path,
+      tipLen: tipX,
+      dockLen: -dockX,
+      frontLen: tipX,
+      cabinW: 0,
+    };
+  }
+
+  const charWidth = fontSize * 0.6;
+  const textWidth = text!.length * charWidth;
+  const halfTextW = textWidth / 2;
+
+  // Equal padding around the text
+  const padX = 0.75;
+  const cabinW = Math.max(3.2, halfTextW + padX);
+  const halfH = Math.max(2.3, fontSize * 0.9);
+
+  const rearInset = 0.65;
+  const dockX = -cabinW - rearInset;
+
+  let frontLen = 0;
+  let path = "";
+
+  if (resolvedStyle === "aero_chisel") {
+    if (isTerminal) {
+      // Modern 60° beveled chisel nose closing within 1.25u forward
+      const noseLead = 1.25;
+      const tipX = cabinW + noseLead;
+      frontLen = tipX;
+      path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} L ${tipX},0 L ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;
+    } else {
+      frontLen = cabinW + rearInset;
+      path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} C ${frontLen},${-halfH} ${frontLen},${halfH} ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;
+    }
+  } else if (resolvedStyle === "chamfer_arrow") {
+    if (isTerminal) {
+      const tipX = cabinW + 1.4;
+      frontLen = tipX;
+      path = `M ${-cabinW},-1.2 L ${-cabinW + 1.2},${-halfH} L ${cabinW},${-halfH} L ${tipX},0 L ${cabinW},${halfH} L ${-cabinW + 1.2},${halfH} L ${-cabinW},1.2 Z`;
+    } else {
+      frontLen = cabinW + 0.8;
+      path = `M ${-cabinW},-1.2 L ${-cabinW + 1.2},${-halfH} L ${cabinW - 1.2},${-halfH} L ${cabinW},-1.2 L ${cabinW},1.2 L ${cabinW - 1.2},${halfH} L ${-cabinW + 1.2},${halfH} L ${-cabinW},1.2 Z`;
+    }
+  } else if (resolvedStyle === "blunt_wedge") {
+    if (isTerminal) {
+      const tipX = cabinW + 1.1;
+      frontLen = tipX;
+      path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} L ${tipX},${-halfH * 0.35} L ${tipX},${halfH * 0.35} L ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;
+    } else {
+      frontLen = cabinW + rearInset;
+      path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} C ${frontLen},${-halfH} ${frontLen},${halfH} ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;
+    }
+  } else if (resolvedStyle === "stealth") {
+    const wingBack = cabinW + 2.3;
+    const wingY = halfH + 0.35;
+    const shoulderX = cabinW * 0.35;
+    const tipX = cabinW + 3.6;
+    frontLen = tipX;
+    path = `M ${dockX.toFixed(2)},0 L ${(-wingBack).toFixed(2)},${(-wingY).toFixed(2)} L ${(-cabinW).toFixed(2)},${(-halfH).toFixed(2)} L ${shoulderX.toFixed(2)},${(-halfH).toFixed(2)} L ${tipX.toFixed(2)},0 L ${shoulderX.toFixed(2)},${halfH.toFixed(2)} L ${(-cabinW).toFixed(2)},${halfH.toFixed(2)} L ${(-wingBack).toFixed(2)},${wingY.toFixed(2)} Z`;
+  } else {
+    const noseLead = 1.25;
+    const tipX = cabinW + noseLead;
+    frontLen = tipX;
+    path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} L ${tipX},0 L ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;
+  }
+
+  return {
+    path,
+    tipLen: frontLen,
+    dockLen: -dockX,
+    frontLen,
+    cabinW,
+  };
+}
+
+/**
+ * Select the optimal Russian Г-shape corner for knight moves to avoid collisions
+ * with friendly pawns and co-linear arrows along the file/rank.
+ */
+function chooseKnightCorner(
+  fromIndex: number,
+  toIndex: number,
+  allArrows: readonly Arrow[],
+  orientation: Orientation,
+): Point {
+  const a = squareCentrePct(fromIndex, orientation);
+  const b = squareCentrePct(toIndex, orientation);
+
+  const dx = b.cx - a.cx;
+  const dy = b.cy - a.cy;
+
+  // Candidate 1: step along rank to toIndex's file, then along file to toIndex (b.cx, a.cy)
+  const corner1 = { x: b.cx, y: a.cy };
+
+  // Candidate 2: step along file to toIndex's rank, then along rank to toIndex (a.cx, b.cy)
+  const corner2 = { x: a.cx, y: b.cy };
+
+  // If another arrow shares the origin file (e.g. pawn on g7 moving while knight on g8 moves),
+  // step off the file immediately (corner1) so the knight path does not collide with the pawn ray!
+  const fromFile = fromIndex & 7;
+  const hasColinearArrowOnFile = allArrows.some(
+    (other) => other.from !== fromIndex && (other.from & 7) === fromFile,
+  );
+
+  if (hasColinearArrowOnFile) {
+    return corner1;
+  }
+
+  return Math.abs(dx) > Math.abs(dy) ? corner1 : corner2;
+}
+
+/** Compute flight vectors, pointing clearance, and cabin geometry for integrated eval arrows. */
+function computeIntegratedArrowVectors(
+  arrow: Arrow,
+  orientation: Orientation,
+  allArrows: readonly Arrow[],
+) {
+  const label = arrow.label;
+  if (!label || label.background === undefined) return null;
+
+  const a = squareCentrePct(arrow.from, orientation);
+  const b = squareCentrePct(arrow.to, orientation);
+  if (arrow.from === arrow.to) return null;
+
+  const isKnight = isKnightMove(arrow.from, arrow.to);
+  const fontSize = label.fontSize ?? 2.45;
+  const geom = computeDynamicAeroGeometry(label.text, label.headStyle, fontSize, true);
+
+  let startUnit: Point | null;
+  let finalUnit: Point | null;
+  let corner: Point | null = null;
+
+  if (!isKnight) {
+    const u = unitVector({ x: a.cx, y: a.cy }, { x: b.cx, y: b.cy });
+    if (u === null) return null;
+    startUnit = u;
+    finalUnit = u;
+  } else {
+    corner = chooseKnightCorner(arrow.from, arrow.to, allArrows, orientation);
+    startUnit = unitVector({ x: a.cx, y: a.cy }, corner);
+    finalUnit = unitVector(corner, { x: b.cx, y: b.cy });
+    if (startUnit === null || finalUnit === null) return null;
+  }
+
+  // Pointing clearance: leaves >= 1/3 of destination square (4.17%) open after the arrow tip
+  // In 100x100 coordinates with 12.5% squares, center + 2.08% stops 4.17% before far edge
+  const tip = {
+    x: b.cx + finalUnit.x * 2.08,
+    y: b.cy + finalUnit.y * 2.08,
+  };
+
+  const headCenter = {
+    x: tip.x - finalUnit.x * geom.frontLen,
+    y: tip.y - finalUnit.y * geom.frontLen,
+  };
+
+  const shaftEnd = {
+    x: headCenter.x - finalUnit.x * geom.dockLen,
+    y: headCenter.y - finalUnit.y * geom.dockLen,
+  };
+
+  const dist = Math.hypot(b.cx - a.cx, b.cy - a.cy);
+  const startOffset = dist < 18 ? 0.5 : 2.4;
+  const shaftStart = {
+    x: a.cx + startUnit.x * startOffset,
+    y: a.cy + startUnit.y * startOffset,
+  };
+
+  const angleRad = Math.atan2(finalUnit.y, finalUnit.x);
+  const angleDeg = (angleRad * 180) / Math.PI;
+
+  let textRot = 0;
+  const rotMode = label.textRotation ?? "auto";
+  if (rotMode === "flat") {
+    textRot = -angleDeg;
+  } else if (rotMode === "auto") {
+    const norm = ((angleDeg % 360) + 360) % 360;
+    if (norm > 90 && norm < 270) {
+      textRot = 180;
+    }
+  }
+
+  const shaftD =
+    corner !== null
+      ? `M ${shaftStart.x} ${shaftStart.y} L ${corner.x} ${corner.y} L ${shaftEnd.x} ${shaftEnd.y}`
+      : `M ${shaftStart.x} ${shaftStart.y} L ${shaftEnd.x} ${shaftEnd.y}`;
+
+  const shaftLen =
+    (shaftEnd.x - shaftStart.x) * startUnit.x + (shaftEnd.y - shaftStart.y) * startUnit.y;
+  const showShaft = isKnight || shaftLen > 0.2;
+
+  return {
+    label,
+    fontSize,
+    geom,
+    headCenter,
+    shaftD,
+    showShaft,
+    angleDeg,
+    textRot,
+  };
+}
+
+/** Render the shaft of an integrated arrow (with trench casing and contact shadow). */
+function renderIntegratedShaft(
+  arrow: Arrow,
+  color: string,
+  orientation: Orientation,
+  key: string,
+  allArrows: readonly Arrow[],
+): ReactElement | null {
+  const v = computeIntegratedArrowVectors(arrow, orientation, allArrows);
+  if (v === null || !v.showShaft) return null;
+
+  const is3d = v.label.style3d !== false;
+  const filterId = is3d ? "url(#gb-apple-elevation)" : "url(#gb-arrow-shadow)";
+
+  return (
+    <g key={`${key}-shaft`} filter={filterId}>
+      {/* Trench casing under-stroke */}
+      <path
+        d={v.shaftD}
+        fill="none"
+        stroke={is3d ? "rgba(44, 27, 20, 0.75)" : color}
+        strokeWidth={is3d ? "3.2" : "2.2"}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Core stroke */}
+      <path
+        d={v.shaftD}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* 3D highlight micro-spine */}
+      {is3d && (
+        <path
+          d={v.shaftD}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.3)"
+          strokeWidth="0.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </g>
+  );
+}
+
+/** Render the Aero-Chisel arrowhead pod with dynamic centered numerical evaluation. */
+function renderIntegratedHead(
+  arrow: Arrow,
+  _color: string,
+  orientation: Orientation,
+  key: string,
+  allArrows: readonly Arrow[],
+): ReactElement | null {
+  const v = computeIntegratedArrowVectors(arrow, orientation, allArrows);
+  if (v === null) return null;
+
+  const is3d = v.label.style3d !== false;
+  const filterId = is3d ? "url(#gb-apple-elevation)" : "url(#gb-arrow-shadow)";
+  const headFill =
+    v.label.background === "#F59E0B" && is3d ? "url(#gb-apple-amber-grad)" : v.label.background;
+  const headStroke = v.label.borderColor ?? "#78350F";
+
+  return (
+    <g key={`${key}-head`} filter={filterId}>
+      <g transform={`translate(${v.headCenter.x}, ${v.headCenter.y}) rotate(${v.angleDeg})`}>
+        <path
+          d={v.geom.path}
+          fill={headFill}
+          stroke={headStroke}
+          strokeWidth="0.7"
+          strokeLinejoin="round"
+        />
+        {Boolean(v.label.text && v.label.text.trim().length > 0) && (
+          <text
+            x={0}
+            y={0}
+            transform={v.textRot !== 0 ? `rotate(${v.textRot})` : undefined}
+            fill={v.label.fill ?? "#000000"}
+            fontSize={v.fontSize}
+            fontWeight="800"
+            fontFamily="'JetBrains Mono', ui-monospace, monospace"
+            textAnchor="middle"
+            dominantBaseline="central"
+            style={{ userSelect: "none" }}
+          >
+            {v.label.text}
+          </text>
+        )}
+      </g>
+    </g>
+  );
 }
 
 /* ====================================================== component */
@@ -391,7 +728,69 @@ export const ArrowsLayer = memo(
               ...(layerZIndex !== undefined ? { zIndex: layerZIndex } : {}),
             }}
           >
+            <defs>
+              <filter
+                id="gb-arrow-shadow"
+                filterUnits="userSpaceOnUse"
+                x="-20"
+                y="-20"
+                width="140"
+                height="140"
+              >
+                <feDropShadow
+                  dx="0"
+                  dy="1.2"
+                  stdDeviation="1.2"
+                  floodColor="#000000"
+                  floodOpacity="0.55"
+                />
+              </filter>
+              <filter
+                id="gb-apple-elevation"
+                filterUnits="userSpaceOnUse"
+                x="-20"
+                y="-20"
+                width="140"
+                height="140"
+              >
+                <feDropShadow
+                  dx="0"
+                  dy="2.8"
+                  stdDeviation="2.2"
+                  floodColor="#000000"
+                  floodOpacity="0.4"
+                />
+                <feDropShadow
+                  dx="0"
+                  dy="1.0"
+                  stdDeviation="0.7"
+                  floodColor="#000000"
+                  floodOpacity="0.6"
+                />
+              </filter>
+              <linearGradient id="gb-apple-amber-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#FBBF24" stopOpacity="1" />
+                <stop offset="60%" stopColor="#F59E0B" stopOpacity="1" />
+                <stop offset="100%" stopColor="#D97706" stopOpacity="1" />
+              </linearGradient>
+            </defs>
+            {/* Pass 1: Integrated arrow shafts (rendered before heads for Dual Aero overlap) */}
             {arrows.map((arrow) => {
+              if (arrow.label?.background === undefined) return null;
+              const key = `${arrow.from}-${arrow.to}-${arrow.color}-${arrow.brush ?? ""}`;
+              const color = resolveColor(arrow, palette);
+              return renderIntegratedShaft(arrow, color, orientation, key, arrows);
+            })}
+            {/* Pass 2: Integrated arrow pointing heads */}
+            {arrows.map((arrow) => {
+              if (arrow.label?.background === undefined) return null;
+              const key = `${arrow.from}-${arrow.to}-${arrow.color}-${arrow.brush ?? ""}`;
+              const color = resolveColor(arrow, palette);
+              return renderIntegratedHead(arrow, color, orientation, key, arrows);
+            })}
+            {/* Pass 3: Non-integrated labels and customSvg */}
+            {arrows.map((arrow) => {
+              if (arrow.label?.background !== undefined) return null;
               const key = `${arrow.from}-${arrow.to}-${arrow.color}-${arrow.brush ?? ""}`;
               const color = resolveColor(arrow, palette);
               const nodes: ReactElement[] = [];

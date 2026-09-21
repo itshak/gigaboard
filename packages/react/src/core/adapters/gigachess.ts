@@ -168,7 +168,7 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
   };
 
   const readBoard = (out: Uint8Array): void => {
-    if (process.env["NODE_ENV"] !== "production") {
+    if (typeof process !== "undefined" && process.env?.["NODE_ENV"] !== "production") {
       if (out.length !== 64) {
         throw new RangeError("readBoard: out.length must be 64");
       }

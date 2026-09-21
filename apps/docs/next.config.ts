@@ -10,12 +10,7 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: [
-    "@gigaboard/core",
-    "gigaboard",
-    "@gigaboard/pieces",
-    "@gigaboard/themes",
-  ],
+  transpilePackages: ["@gigaboard/core", "gigaboard", "@gigaboard/pieces", "@gigaboard/themes"],
   experimental: {
     typedRoutes: true,
   },
