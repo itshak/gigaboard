@@ -54,6 +54,25 @@ describe("integrated aero-chisel arrows", () => {
         expect(geom.path).toContain(" Z");
       }
     });
+
+    it("scales pointing head and cabin proportionally for larger font sizes", () => {
+      const baseline = computeDynamicAeroGeometry("+0.4", "aero_chisel", 2.45, true);
+      const medium = computeDynamicAeroGeometry("+0.4", "aero_chisel", 3.15, true);
+      const large = computeDynamicAeroGeometry("+0.4", "aero_chisel", 3.85, true);
+
+      // Cabin and total head length scale upward with font size
+      expect(medium.cabinW).toBeGreaterThan(baseline.cabinW);
+      expect(large.cabinW).toBeGreaterThan(medium.cabinW);
+      expect(medium.tipLen).toBeGreaterThan(baseline.tipLen);
+      expect(large.tipLen).toBeGreaterThan(medium.tipLen);
+      expect(medium.dockLen).toBeGreaterThan(baseline.dockLen);
+      expect(large.dockLen).toBeGreaterThan(medium.dockLen);
+
+      // Non-eval pointer also scales when fontSize > 2.45
+      const nonEvalBase = computeDynamicAeroGeometry("", "aero_chisel", 2.45, true);
+      const nonEvalLarge = computeDynamicAeroGeometry("", "aero_chisel", 3.85, true);
+      expect(nonEvalLarge.tipLen).toBeGreaterThan(nonEvalBase.tipLen);
+    });
   });
 
   describe("rendering on board", () => {

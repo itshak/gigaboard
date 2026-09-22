@@ -328,12 +328,13 @@ export function computeDynamicAeroGeometry(
   if (!hasText) {
     // Sculpted Aero-Sharp pointer: compact, athletic chisel arrowhead
     // for non-evaluation moves, idle engine states, and user-drawn arrows.
-    // Total length: 4.6u (tipX = 2.8, dockLen = 1.8), giving +3.7u shaft clearance on 1-square moves.
-    const tipX = 2.8;
-    const shoulderX = 0.2;
-    const rearX = -1.2;
-    const dockX = -1.8;
-    const halfH = 2.2;
+    // Total length: 4.6u at 2.45u baseline, scaling with fontSize when provided.
+    const scale = Math.max(1, fontSize / 2.45);
+    const tipX = 2.8 * scale;
+    const shoulderX = 0.2 * scale;
+    const rearX = -1.2 * scale;
+    const dockX = -1.8 * scale;
+    const halfH = 2.2 * scale;
     const path = `M ${rearX},${-halfH} L ${shoulderX},${-halfH} L ${tipX},0 L ${shoulderX},${halfH} L ${rearX},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${rearX},${-halfH} Z`;
     return {
       path,
@@ -348,12 +349,14 @@ export function computeDynamicAeroGeometry(
   const textWidth = text!.length * charWidth;
   const halfTextW = textWidth / 2;
 
-  // Equal padding around the text
-  const padX = 0.75;
-  const cabinW = Math.max(3.2, halfTextW + padX);
+  const scale = Math.max(1, fontSize / 2.45);
+  // Equal padding around the text (0.75 at baseline, scaling with fontSize)
+  const padX = 0.75 * scale;
+  const cabinW = Math.max(3.2 * scale, halfTextW + padX);
   const halfH = Math.max(2.3, fontSize * 0.9);
 
-  const rearInset = 0.65;
+  // Scaled rear dock socket
+  const rearInset = 0.65 * scale;
   const dockX = -cabinW - rearInset;
 
   let frontLen = 0;
@@ -361,8 +364,8 @@ export function computeDynamicAeroGeometry(
 
   if (resolvedStyle === "aero_chisel") {
     if (isTerminal) {
-      // Modern 60° beveled chisel nose closing within 1.25u forward
-      const noseLead = 1.25;
+      // Modern 60° beveled chisel nose closing forward (1.25 at baseline, scaling with fontSize)
+      const noseLead = 1.25 * scale;
       const tipX = cabinW + noseLead;
       frontLen = tipX;
       path = `M ${-cabinW},${-halfH} L ${cabinW},${-halfH} L ${tipX},0 L ${cabinW},${halfH} L ${-cabinW},${halfH} C ${dockX},${halfH} ${dockX},${-halfH} ${-cabinW},${-halfH} Z`;

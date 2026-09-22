@@ -16,6 +16,14 @@ Gigaboard arrows carrying `label` with `background` and `headStyle: "aero_chisel
 - **WHEN** an arrow points leftward (angle between 90° and 270°)
 - **THEN** the text rotates 180° so the numeral remains right-side up for natural reading orientation.
 
+### Requirement: Proportional Arrowhead Scaling for Adjustable Evaluation Font Sizes
+
+When an arrow carries `label.fontSize` larger than the 2.45u baseline (e.g. 3.15u or 3.85u), Gigaboard SHALL proportionally scale the cabin width, cabin height, 60° beveled nose lead (`noseLead = 1.25 * (fontSize / 2.45)`), and concave dock socket (`rearInset = 0.65 * (fontSize / 2.45)`), preserving the aerodynamic 60° chisel silhouette and centered text alignment. When `!hasText`, the sculpted Aero-Sharp chisel pointer SHALL also scale with `Math.max(1, fontSize / 2.45)`.
+
+#### Scenario: Enlarged font size scales Aero-Chisel head
+- **WHEN** an arrow carries `label: { text: "+0.4", fontSize: 3.15 }` or `fontSize: 3.85`
+- **THEN** the cabin width, height, and nose lead expand proportionally, maintaining the sharp 60° beveled nose without flattening into a blunt wedge.
+
 ### Requirement: Sculpted Aero-Sharp Pointer for Non-Evaluation Arrows
 
 When an arrow has empty or absent label text (`!label.text || label.text.trim() === ""`), Gigaboard SHALL render a compact 4.6u sculpted Aero-Sharp chisel pointer sharing identical material, gradient, dock joint, and drop-shadow styling, leaving $+3.7\text{u}$ extra shaft clearance on short/1-square moves without rendering an empty text cabin.
