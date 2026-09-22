@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.3](https://github.com/itshak/gigaboard/compare/v1.4.2...v1.4.3) (2026-09-22)
+
+### Bug Fixes
+
+* **arrow-model:** `setManaged`/`setAll` replace the stored instance when styling changes under a matching identity key (e.g. a `label.fontSize`-only change now commits and repaints instead of being silently dropped)
+
 ## [1.4.1](https://github.com/itshak/gigaboard/compare/v1.4.0...v1.4.1) (2026-09-22)
 
 ### Bug Fixes

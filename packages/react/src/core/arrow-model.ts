@@ -6,7 +6,7 @@
  * responsible for drawing; the model is responsible for *which arrows exist*.
  */
 
-import type { Arrow, SquareIndex } from "./types.js";
+import type { Arrow, ArrowCustomSvg, ArrowLabel, SquareIndex } from "./types.js";
 
 /** The arrow-set API. */
 export interface ArrowModel {
@@ -40,17 +40,18 @@ export interface ArrowModel {
    * Atomic replace of the **managed** subset. User-drawn arrows are
    * untouched. Every incoming arrow is stamped `managed: true` — callers
    * don't have to set the flag explicitly, and the method's name carries
-   * the intent. Identity preservation works the same way as
-   * {@link setAll}: arrows whose identity key already exists are reused
-   * from the stored frozen instances so consumer `Object.is` checks stay
-   * cheap across commits.
+   * the intent. Entries whose identity key already exists keep their
+   * slot (never duplicated); when their styling differs the stored
+   * instance is replaced so the change commits and repaints, while
+   * visually-identical re-submits reuse the stored frozen instance so
+   * consumer `Object.is` checks stay cheap across commits.
    */
   setManaged(arrows: readonly Arrow[]): void;
   /**
-   * Replace the entire arrow set in one atomic step. Preserves identity
-   * for arrows whose `(from, to, color)` tuple was already present —
-   * freshly-provided arrows are frozen and keyed; removed ones are
-   * dropped. Single `lastChanged` flag covers the whole batch.
+   * Replace the entire arrow set in one atomic step. Entries whose
+   * identity key already exists keep their slot (never duplicated);
+   * changed styling replaces the stored instance in place, identical
+   * re-submits reuse it. Single `lastChanged` flag covers the batch.
    */
   setAll(arrows: readonly Arrow[]): void;
   /** Whether the last call actually changed the state. */
@@ -97,6 +98,47 @@ function freezeArrow(a: Arrow): Arrow {
 }
 
 const EMPTY_ARROWS: readonly Arrow[] = Object.freeze([]);
+
+/**
+ * Visual-payload equality for two arrows that already share an identity
+ * key. Everything the key covers (`from`/`to`/`color`/`brush`/`below`,
+ * `label.text`, `customSvg.html`) is equal by construction — this only
+ * compares the styling fields the key deliberately leaves out, plus the
+ * `managed` ownership flag.
+ *
+ * Needed so programmatic owners (engine eval pills, analysis hints) get
+ * live updates: a `label.fontSize`-only change must repaint, not vanish
+ * into the identity-preserving fast path.
+ */
+function labelsEqual(x: ArrowLabel | undefined, y: ArrowLabel | undefined): boolean {
+  if (x === y) return true;
+  if (x === undefined || y === undefined) return false;
+  return (
+    x.text === y.text &&
+    x.fill === y.fill &&
+    x.background === y.background &&
+    x.fontSize === y.fontSize &&
+    x.anchor === y.anchor &&
+    x.borderColor === y.borderColor &&
+    x.headStyle === y.headStyle &&
+    x.textRotation === y.textRotation &&
+    x.style3d === y.style3d
+  );
+}
+
+function customSvgsEqual(x: ArrowCustomSvg | undefined, y: ArrowCustomSvg | undefined): boolean {
+  if (x === y) return true;
+  if (x === undefined || y === undefined) return false;
+  return x.html === y.html && x.center === y.center;
+}
+
+function arrowVisualsEqual(stored: Arrow, incoming: Arrow): boolean {
+  return (
+    stored.managed === incoming.managed &&
+    labelsEqual(stored.label, incoming.label) &&
+    customSvgsEqual(stored.customSvg, incoming.customSvg)
+  );
+}
 
 /** Create an empty arrow model. */
 export function createArrowModel(): ArrowModel {
@@ -171,8 +213,10 @@ export function createArrowModel(): ArrowModel {
   const setManaged = (arrows: readonly Arrow[]): void => {
     // Build the next managed-key set. Existing managed entries not in
     // the incoming list are dropped; user-drawn entries are never
-    // touched. Identity of re-appearing managed entries is preserved —
-    // we reuse the stored frozen instance instead of re-freezing.
+    // touched. A re-appearing entry whose styling changed (e.g. an
+    // engine pill with a new `label.fontSize`) replaces the stored
+    // frozen instance so the change commits and repaints — same key,
+    // so nothing ever forks into duplicates.
     const nextKeys = new Set<string>();
     let mutated = false;
     for (let i = 0; i < arrows.length; i++) {
@@ -183,7 +227,8 @@ export function createArrowModel(): ArrowModel {
       const key = arrowKey(marked);
       if (nextKeys.has(key)) continue;
       nextKeys.add(key);
-      if (!byKey.has(key)) {
+      const stored = byKey.get(key);
+      if (stored === undefined || !arrowVisualsEqual(stored, marked)) {
         byKey.set(key, freezeArrow(marked));
         mutated = true;
       }
@@ -202,10 +247,10 @@ export function createArrowModel(): ArrowModel {
 
   const setAll = (arrows: readonly Arrow[]): void => {
     // Build the next key set so we can detect adds / removes / churn
-    // without re-walking the incoming list twice. Identity of existing
-    // entries is preserved: if the incoming arrow already matches a
-    // stored one, we reuse the stored frozen instance — keeps consumer
-    // `Object.is` checks cheap across commits.
+    // without re-walking the incoming list twice. Stored instances are
+    // reused while their visuals are unchanged (keeps consumer
+    // `Object.is` checks cheap across commits); changed visuals replace
+    // the entry in place under the same key — never a duplicate.
     const nextKeys = new Set<string>();
     let mutated = false;
     for (let i = 0; i < arrows.length; i++) {
@@ -214,7 +259,8 @@ export function createArrowModel(): ArrowModel {
       const key = arrowKey(a);
       if (nextKeys.has(key)) continue;
       nextKeys.add(key);
-      if (!byKey.has(key)) {
+      const stored = byKey.get(key);
+      if (stored === undefined || !arrowVisualsEqual(stored, a)) {
         byKey.set(key, freezeArrow(a));
         mutated = true;
       }

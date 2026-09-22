@@ -248,9 +248,30 @@ describe("createArrowModel", () => {
     it("styling-only fields do not fork identity (still additive)", () => {
       const m = createArrowModel();
       m.setManaged([pill(12, 28, "+0.3")]);
-      // Same text, different background/fontSize/anchor → same key.
+      // Same text, different background/fontSize/anchor → same key, so
+      // still exactly one arrow — but the new styling replaces the
+      // stored instance and commits, or live setting changes (e.g. an
+      // eval-pill font-size switch) would never repaint.
       m.setManaged([pill(12, 28, "+0.3", { background: "#000", fontSize: 7 })]);
+      expect(m.arrows).toHaveLength(1);
+      expect(m.lastChanged).toBe(true);
+      expect(m.arrows[0]?.label?.background).toBe("#000");
+      expect(m.arrows[0]?.label?.fontSize).toBe(7);
+    });
+
+    it("fontSize-only change commits (live eval-pill size feedback)", () => {
+      const m = createArrowModel();
+      m.setManaged([pill(12, 28, "+0.3", { fontSize: 2.45 })]);
+      const snap = m.arrows;
+      // Identical re-submit stays a no-op with a stable array identity.
+      m.setManaged([pill(12, 28, "+0.3", { fontSize: 2.45 })]);
       expect(m.lastChanged).toBe(false);
+      expect(m.arrows).toBe(snap);
+      // Size-only change: same single arrow, new visuals, committed.
+      m.setManaged([pill(12, 28, "+0.3", { fontSize: 3.85 })]);
+      expect(m.arrows).toHaveLength(1);
+      expect(m.lastChanged).toBe(true);
+      expect(m.arrows[0]?.label?.fontSize).toBe(3.85);
     });
 
     it("plain arrows still have exactly three own properties", () => {
