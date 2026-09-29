@@ -59,6 +59,10 @@ function announcementFor(
 ): string {
   const { from, to, kind, promotion } = decodePackedMove(lastMove);
 
+  // A pass moves no piece and has no from/to — announce the pass rather
+  // than reading the sentinel as an h8→h8 move.
+  if (kind === "pass") return "Passes.";
+
   if (kind === "castle") {
     const isKingside = (to & 7) > (from & 7);
     return isKingside ? "Castles kingside." : "Castles queenside.";

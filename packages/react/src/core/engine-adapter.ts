@@ -23,8 +23,30 @@ export interface EngineAdapter {
    */
   makeMove(from: SquareIndex, to: SquareIndex, promotion?: PieceType): PackedMove | null;
 
-  /** Undo the most recent move. Returns the undone move, or `null` if none. */
+  /**
+   * Undo the most recent move. Returns the undone move, or `null` if none.
+   *
+   * A pass undoes to {@link NULL_MOVE_WORD}, mirroring what
+   * {@link EngineAdapter.makeNullMove} produced.
+   */
   undo(): PackedMove | null;
+
+  /**
+   * Play a pass (null move): the position's pieces are untouched, the
+   * side to move flips, the en-passant square clears, and both clocks
+   * advance — a pass completes a **full** move, whoever passed, so the
+   * fullmove number always increments.
+   *
+   * Returns {@link NULL_MOVE_WORD} on success, or `null` when the pass is
+   * refused. A pass is legal **iff** the side to move is not in check: a
+   * pass answers no check, so a checked side cannot pass.
+   *
+   * @remarks
+   * Optional: an adapter that cannot represent a pass simply omits it and
+   * every pass attempt is refused. This is the tolerance path only —
+   * gigaboard never originates a pass from a user gesture.
+   */
+  makeNullMove?(): PackedMove | null;
 
   /**
    * Legal moves from a single origin square (`from` provided) or all legal

@@ -37,7 +37,7 @@ import type {
   Premove,
   SquareIndex,
 } from "./types.js";
-import { BOARD_CELL_BK, BOARD_CELL_WK } from "./types.js";
+import { BOARD_CELL_BK, BOARD_CELL_WK, isNullMove } from "./types.js";
 
 /** Frozen empty set singleton — returned when nothing is selected. */
 const EMPTY_SET: ReadonlySet<SquareIndex> = Object.freeze(
@@ -114,6 +114,20 @@ export interface BoardModel {
   selectSquare(index: SquareIndex | null): void;
   /** Attempt a move. Returns the packed move on success, `null` on illegal. */
   tryMove(from: SquareIndex, to: SquareIndex, promotion?: PieceType): PackedMove | null;
+  /**
+   * Play a pass (null move) as a **tolerance** path: returns
+   * {@link NULL_MOVE_WORD} on success, or `null` when the adapter has no
+   * pass capability or the pass is illegal (the side to move is in check —
+   * a pass answers no check).
+   *
+   * @remarks
+   * A pass flips the side to move and advances both clocks, but it moves no
+   * piece, so it schedules **no** animation and leaves the board bytes
+   * untouched. No user gesture, selection, or drag routes here — this is
+   * only for feeding an externally supplied pass (e.g. a CBH `moves2`
+   * stream) into the board.
+   */
+  pass(): PackedMove | null;
   /** Undo the most recent move. */
   undo(): PackedMove | null;
   /** Redo the most recently undone move. */
@@ -341,6 +355,12 @@ export function createBoardModel(
       m = engine.makeMove(from, to, promotion);
     }
     if (m === null) return null;
+    // A pass is never a from→to pair, so the gesture path can neither
+    // request nor produce one. The explicit check on the engine's return
+    // value makes "gigaboard never *originates* a pass" structural rather
+    // than incidental: even if a future adapter were to hand back the
+    // sentinel from `makeMove`, it could not escape through `tryMove`.
+    if (isNullMove(m)) return null;
     // A fresh move invalidates the redo line.
     redoStack.length = 0;
     history.push(m);
@@ -359,6 +379,28 @@ export function createBoardModel(
     return m;
   };
 
+  const pass = (): PackedMove | null => {
+    // Tolerate the pass, never originate one. Adapters without the
+    // capability simply refuse.
+    if (engine.makeNullMove === undefined) return null;
+    const m = engine.makeNullMove();
+    if (m === null) return null;
+    // A pass invalidates the redo line, exactly like a real move.
+    redoStack.length = 0;
+    history.push(m);
+    lastMove = m;
+    // A pass is a full turn: any pending selection belonged to the side that
+    // just passed, so it is dropped rather than left pointing at a piece the
+    // opponent now owns. This is also what keeps the legality ring off —
+    // with `selected === null`, `computeLegalTargets` yields the empty set,
+    // so no legal-target affordance is painted for a pass.
+    selected = null;
+    // Commit with the sentinel so the planner takes the null branch and
+    // emits zero descriptors — a pass animates nothing.
+    commitWith(m);
+    return m;
+  };
+
   const undo = (): PackedMove | null => {
     const m = engine.undo();
     if (m === null) return null;
@@ -373,11 +415,7 @@ export function createBoardModel(
   const redo = (): PackedMove | null => {
     const m = redoStack.pop();
     if (m === undefined) return null;
-    const from = ((m as unknown as number) & 0x3f) as SquareIndex;
-    const to = moveTo(m);
-    const promoBits = ((m as unknown as number) >> 12) & 0x0f;
-    const promotion = promoBits > 0 ? (promoBits as PieceType) : undefined;
-    const applied = engine.makeMove(from, to, promotion);
+    const applied = replayPackedMove(m);
     if (applied === null) {
       // Out-of-sync — don't crash; drop the bad entry.
       return null;
@@ -387,6 +425,20 @@ export function createBoardModel(
     selected = null;
     commitWith(applied);
     return applied;
+  };
+
+  /**
+   * Re-apply a packed move pulled off the redo stack. A pass is re-applied
+   * as a pass: its word has no from/to fields, so decoding it as a
+   * from→to pair would attempt a phantom h8→h8 move instead.
+   */
+  const replayPackedMove = (m: PackedMove): PackedMove | null => {
+    if (isNullMove(m)) return engine.makeNullMove?.() ?? null;
+    const from = ((m as unknown as number) & 0x3f) as SquareIndex;
+    const to = moveTo(m);
+    const promoBits = ((m as unknown as number) >> 12) & 0x0f;
+    const promotion = promoBits > 0 ? (promoBits as PieceType) : undefined;
+    return engine.makeMove(from, to, promotion);
   };
 
   const goto = (ply: number): void => {
@@ -404,11 +456,7 @@ export function createBoardModel(
     while (history.length < ply) {
       const m = redoStack.pop();
       if (m === undefined) break;
-      const from = ((m as unknown as number) & 0x3f) as SquareIndex;
-      const to = moveTo(m);
-      const promoBits = ((m as unknown as number) >> 12) & 0x0f;
-      const promotion = promoBits > 0 ? (promoBits as PieceType) : undefined;
-      const applied = engine.makeMove(from, to, promotion);
+      const applied = replayPackedMove(m);
       if (applied === null) break;
       history.push(applied);
     }
@@ -596,6 +644,7 @@ export function createBoardModel(
 
     selectSquare,
     tryMove,
+    pass,
     undo,
     redo,
     goto,

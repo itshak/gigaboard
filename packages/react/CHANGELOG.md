@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.4](https://github.com/itshak/gigaboard/compare/v1.4.3...v1.4.4) (2026-09-29)
+
+### Features
+
+* **null-move:** tolerate the CBH null move (pass) as the `u16` sentinel `0xffff` (UCI `"0000"`, PGN/SAN `"--"` / `"Z0"`). `model.pass()` plays a pass that flips the turn and advances both clocks — the fullmove number always increments, since a pass completes a full move — and is refused while the side to move is in check. A pass moves no piece, so it schedules no animation, paints no last-move tint or legal-target ring, and is announced as "Passes.". A pass is never originated by a click, drag, keyboard, or selection path.
+
 ## [1.4.3](https://github.com/itshak/gigaboard/compare/v1.4.2...v1.4.3) (2026-09-22)
 
 ### Bug Fixes

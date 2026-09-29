@@ -15,7 +15,7 @@
  */
 
 import type { AnimDescriptor, BoardCell, PackedMove, SquareIndex } from "./types.js";
-import { Color, colorOf, isEmptyCell, PieceType, pieceTypeOf } from "./types.js";
+import { Color, colorOf, isEmptyCell, isNullMove, PieceType, pieceTypeOf } from "./types.js";
 
 /** Bit layout of a packed `Move` in 16-bit Move2 wire format. */
 const MOVE_FROM_MASK = 0x3f;
@@ -53,6 +53,11 @@ export function planAnimations(
   }
 
   if (move !== null) {
+    // A pass moves no piece, so it animates nothing. The word unpacks to
+    // `from = to = 63, promo = 15` — nonsense that would otherwise fall
+    // through to the fast path and schedule a phantom glide on h8 — so the
+    // sentinel is caught here, before any decoding.
+    if (isNullMove(move)) return [];
     return planFromMove(prev, next, move);
   }
   return planFromDiff(prev, next);
@@ -189,13 +194,21 @@ function planFromDiff(prev: Readonly<Uint8Array>, next: Readonly<Uint8Array>): A
 /**
  * Lightweight, side-effect-free inspector. Used by tests to decompose a
  * packed move without pulling an engine as a runtime dep.
+ *
+ * @remarks
+ * A pass reports `kind: "pass"`. Its word has no from/to fields, so `from`
+ * and `to` come back as square 0 and must not be read — gate on `kind`.
  */
 export function decodePackedMove(m: PackedMove): {
   from: SquareIndex;
   to: SquareIndex;
-  kind: "normal" | "promotion" | "en-passant" | "castle";
+  kind: "normal" | "promotion" | "en-passant" | "castle" | "pass";
   promotion: PieceType | null;
 } {
+  if (isNullMove(m)) {
+    return { from: 0 as SquareIndex, to: 0 as SquareIndex, kind: "pass", promotion: null };
+  }
+
   const from = (m & MOVE_FROM_MASK) as SquareIndex;
   const to = ((m >> MOVE_TO_SHIFT) & MOVE_TO_MASK) as SquareIndex;
   const promoCode = (m >> MOVE_PROMO_SHIFT) & MOVE_PROMO_MASK;

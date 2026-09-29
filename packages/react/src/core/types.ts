@@ -54,6 +54,55 @@ export function unpackMove(move: PackedMove | number): {
 }
 
 /**
+ * The null-move (pass) sentinel — a `u16` word of `0xffff` in the 16-bit
+ * Move2 wire format.
+ *
+ * @remarks
+ * CBH `moves2` streams store a pass turn as an ordinary move word, so the
+ * word itself has to be distinguishable from a real move. `0xffff` is
+ * unambiguous: a packed word only reaches it via `from = to = 63` with
+ * promotion code 15, and Move2 promotion codes are `0..4`. No legal word
+ * collides.
+ *
+ * Spellings: UCI is `"0000"`; PGN/SAN is `"--"` and also accepts `"Z0"`.
+ * See {@link NULL_MOVE_UCI}, {@link NULL_MOVE_SAN}, {@link isNullMoveUci}
+ * and {@link isNullMoveSan}.
+ *
+ * Gigaboard **tolerates** a pass but never originates one: no gesture,
+ * selection, or drag can produce this word. See {@link isNullMove}.
+ */
+export const NULL_MOVE_WORD = 0xffff as PackedMove;
+
+/** UCI spelling of a pass. */
+export const NULL_MOVE_UCI = "0000";
+
+/** PGN/SAN spelling of a pass. */
+export const NULL_MOVE_SAN = "--";
+
+/** Accepted input spellings of a pass: the SAN form plus the legacy `Z0`. */
+export const NULL_MOVE_SANS: readonly string[] = Object.freeze([NULL_MOVE_SAN, "Z0"]);
+
+/**
+ * `true` when `word` is the null-move (pass) sentinel.
+ *
+ * Callers gate on this **before** unpacking — `unpackMove` reads the
+ * sentinel as `from = to = 63, promo = 15`, which is meaningless.
+ */
+export function isNullMove(word: PackedMove | number): boolean {
+  return ((word as number) & 0xffff) === 0xffff;
+}
+
+/** `true` when `text` is the UCI spelling of a pass (`"0000"`). */
+export function isNullMoveUci(text: string): boolean {
+  return text.trim().toLowerCase() === NULL_MOVE_UCI;
+}
+
+/** `true` when `text` is an accepted PGN/SAN spelling of a pass (`"--"` or `"Z0"`). */
+export function isNullMoveSan(text: string): boolean {
+  return NULL_MOVE_SANS.includes(text.trim());
+}
+
+/**
  * 64-bit Zobrist key represented as two 32-bit unsigned integers (zero-BigInt).
  */
 export type ZobristKey = {

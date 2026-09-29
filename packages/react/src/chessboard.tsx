@@ -37,6 +37,7 @@ import {
   type BoardCell,
   colorOf,
   isEmptyCell,
+  isNullMoveUci,
   type PieceType,
   pieceTypeOf,
   type SquareIndex,
@@ -95,6 +96,16 @@ const ILLEGAL_FLASH_HOLD_MS = 320;
 const DEFAULT_POSITION_SYNC_DURATION_MS = 60;
 const DEFAULT_POSITION_SYNC_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
 const UCI_TRANSITION_RE = /^([a-h][1-8])([a-h][1-8])([nbrq])?$/i;
+
+/**
+ * A pass is spelled `"0000"` in UCI. It never matches {@link UCI_TRANSITION_RE}
+ * — there is no square to glide between — so the transition contributes no
+ * square animations and no feedback descriptor. Recognised explicitly rather
+ * than left to fall through on the regex miss, so the intent is pinned.
+ */
+function isNullTransition(transition: PositionTransition): boolean {
+  return isNullMoveUci(transition.uci);
+}
 
 interface SquareTransition {
   readonly from: string;
@@ -169,6 +180,8 @@ function castleRookTransition(from: string, to: string): SquareTransition | null
 }
 
 function transitionSquares(transition: PositionTransition): SquareTransition[] {
+  // A pass moves nothing: no square animations.
+  if (isNullTransition(transition)) return [];
   const parsed = UCI_TRANSITION_RE.exec(transition.uci.trim().toLowerCase());
   if (parsed === null) return [];
 
@@ -184,6 +197,9 @@ function transitionSquares(transition: PositionTransition): SquareTransition[] {
 }
 
 function parseTransitionMove(transition: PositionTransition): ParsedTransitionMove | null {
+  // A pass has no from/to; reporting `null` keeps it out of capture /
+  // promotion / castle classification.
+  if (isNullTransition(transition)) return null;
   const parsed = UCI_TRANSITION_RE.exec(transition.uci.trim().toLowerCase());
   if (parsed === null) return null;
   const from = parsed[1];

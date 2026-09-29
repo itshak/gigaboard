@@ -35,7 +35,7 @@
  */
 
 import { type RefObject, useEffect } from "react";
-import type { BoardModel, SquareIndex } from "../core/index.js";
+import { type BoardModel, isNullMove, type SquareIndex } from "../core/index.js";
 
 /** Values written to `data-gb-last-move`. */
 type LastMoveState = "from" | "to";
@@ -129,7 +129,10 @@ export function useLastMoveController(
 
       let from: SquareIndex | null = null;
       let to: SquareIndex | null = null;
-      if (lastMove !== null) {
+      // A pass moves no piece, so it has no from/to to tint. Its sentinel
+      // word would otherwise decode to h8→h8 and paint a highlight on a
+      // square that never changed.
+      if (lastMove !== null && !isNullMove(lastMove)) {
         from = (lastMove & 0x3f) as SquareIndex;
         to = ((lastMove >> 6) & 0x3f) as SquareIndex;
       }

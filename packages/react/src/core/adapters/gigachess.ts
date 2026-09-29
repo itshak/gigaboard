@@ -6,11 +6,25 @@
  * and canonical King-captures-Rook castling representation (Move2).
  */
 
-import { ensureMagicTablesLoaded, ensureZobristLoaded, makeSan, type Role } from "gigachess";
+import {
+  ensureMagicTablesLoaded,
+  ensureZobristLoaded,
+  isEmpty,
+  kingAttackers,
+  makeSan,
+  opposite,
+  type Role,
+} from "gigachess";
 import { Chess } from "gigachess/chessjs";
 import type { EngineAdapter } from "../engine-adapter.js";
 import type { PackedMove, PieceType, SquareIndex, ZobristKey } from "../types.js";
-import { Color, encodeBoardCell, packMove, unpackMove } from "../types.js";
+import {
+  Color,
+  encodeBoardCell,
+  NULL_MOVE_WORD,
+  packMove,
+  unpackMove,
+} from "../types.js";
 
 // Eagerly trigger background loading of magic and zobrist tables
 void ensureMagicTablesLoaded().catch(() => {});
@@ -66,12 +80,42 @@ function promoChar(piece?: PieceType): string | undefined {
 }
 
 /**
+ * A pass leaves the pieces untouched, so its undo record is only the state
+ * a pass actually mutates: the turn, the en-passant square, the two clocks,
+ * and the cached checkers / Zobrist halves. Castling rights are never
+ * touched by a pass, and no piece is moved, so there is nothing to restore
+ * there — the same shape as the Rust `make_null_move_with` undo record.
+ */
+interface NullUndo {
+  readonly turn: number;
+  readonly epSquare: number | null;
+  readonly halfmoves: number;
+  readonly fullmoves: number;
+  readonly checkersLo: number;
+  readonly checkersHi: number;
+  readonly zobristLo: number;
+  readonly zobristHi: number;
+}
+
+/**
  * Create a gigachess-backed engine adapter synchronously.
  *
  * @param fen Optional starting FEN.
  */
 export function createGigachessAdapter(fen?: string): EngineAdapter {
   const chess = fen === undefined ? new Chess() : new Chess(fen);
+
+  // `Chess` owns its move history and has no notion of a pass, so passes
+  // are tracked here in a stack that mirrors the ply order. An entry is
+  // either a pass (with its undo record) or a marker that a real move owns
+  // the corresponding `Chess` history slot. `undo()` walks the stack from
+  // the top so a pass and the real move beneath it unmade in the right
+  // order — LIFO exactly like `Board::unmake_move` / `unmake_null_move`.
+  const plyStack: Array<NullUndo | null> = [];
+
+  const clearPlyStack = (): void => {
+    plyStack.length = 0;
+  };
 
   const makeMove = (
     from: SquareIndex,
@@ -88,6 +132,7 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
         ...(promo ? { promotion: promo } : {}),
       });
       if (res === null) return null;
+      plyStack.push(null);
 
       // Canonical King-captures-Rook encoding for castling
       if (res.flags.includes("k")) {
@@ -113,6 +158,21 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
   };
 
   const undo = (): PackedMove | null => {
+    const top = plyStack.pop();
+    if (top === undefined) return null;
+    // A pass owns the top slot — restore the state it mutated and hand back
+    // the sentinel so callers see the same word `makeNullMove` produced.
+    if (top !== null) {
+      const board = chess.boardInstance;
+      board.turn = top.turn;
+      board.epSquare = top.epSquare;
+      board.halfmoves = top.halfmoves;
+      board.fullmoves = top.fullmoves;
+      board.checkers = { lo: top.checkersLo, hi: top.checkersHi };
+      board._zobristLo = top.zobristLo;
+      board._zobristHi = top.zobristHi;
+      return NULL_MOVE_WORD;
+    }
     const res = chess.undo();
     if (res === null) return null;
     if (res.flags.includes("k")) {
@@ -183,6 +243,50 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
     }
   };
 
+  /**
+   * Play a pass. Mirrors the Rust `Board::make_null_move_with`: the pieces
+   * stay, the en-passant square lapses, both clocks advance, the fullmove
+   * number increments whoever passed (a pass is a *full* move, not a
+   * half-move), and the side to move flips.
+   *
+   * Refused when the side to move is in check — a pass answers no check.
+   * The legality test asks the bitboards directly via `kingAttackers`
+   * rather than reading `board.checkers`, so a pass can't be waved through
+   * on a stale cache.
+   */
+  const makeNullMove = (): PackedMove | null => {
+    const board = chess.boardInstance;
+    const us = board.turn;
+    if (!isEmpty(kingAttackers(board, us))) return null;
+
+    plyStack.push({
+      turn: us,
+      epSquare: board.epSquare,
+      halfmoves: board.halfmoves,
+      fullmoves: board.fullmoves,
+      checkersLo: board.checkers.lo,
+      checkersHi: board.checkers.hi,
+      zobristLo: board._zobristLo,
+      zobristHi: board._zobristHi,
+    });
+
+    const them = opposite(us);
+    board.epSquare = null;
+    board.halfmoves = board.halfmoves + 1;
+    // A pass is a move, not a half-move: the number advances whoever passed.
+    board.fullmoves = board.fullmoves + 1;
+    board.turn = them;
+    // No piece moved, so the only Zobrist contributions that change are the
+    // lapsed en-passant square and the flipped turn. Zeroing the cached
+    // halves makes the next `zobrist()` read recompute from the bitboards.
+    board._zobristLo = 0;
+    board._zobristHi = 0;
+    // Refresh the checkers cache for the new side to move so `inCheck()`
+    // stays branch-free and correct after the flip.
+    board.checkers = kingAttackers(board, them);
+    return NULL_MOVE_WORD;
+  };
+
   const san = (move: PackedMove): string => {
     const { from, to, promo } = unpackMove(move);
     const role = promoRole(promo);
@@ -199,6 +303,7 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
   return {
     makeMove,
     undo,
+    makeNullMove,
     legalMoves,
     readBoard,
     fen: () => chess.fen(),
@@ -207,8 +312,19 @@ export function createGigachessAdapter(fen?: string): EngineAdapter {
     inCheck: () => chess.inCheck(),
     san,
     isGameOver: () => chess.isGameOver(),
-    load: (f: string): void => chess.load(f),
-    reset: (): void => chess.reset(),
-    dispose: (): void => {},
+    // Loading or resetting replaces the position and drops the engine's
+    // history, so the mirrored ply stack has to go with it — otherwise a
+    // later `undo()` would unmake a ply that no longer exists.
+    load: (f: string): void => {
+      chess.load(f);
+      clearPlyStack();
+    },
+    reset: (): void => {
+      chess.reset();
+      clearPlyStack();
+    },
+    dispose: (): void => {
+      clearPlyStack();
+    },
   };
 }
