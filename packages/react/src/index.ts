@@ -7,6 +7,7 @@
  * Server-only entry (static SSR board, zero client JS): `gigaboard/server`.
  */
 
+export { BoardEditor, type BoardEditorProps, formatFenPlacement } from "./board-editor.js";
 // ---- Components ----
 export { Chessboard } from "./chessboard.js";
 export type {
@@ -73,7 +74,7 @@ export {
   useMoveSound,
 } from "./hooks/use-move-sound.js";
 // ---- Geometry helpers ----
-export { getPointAtSquareCentre, getSquareAtPoint } from "./lib/geometry.js";
+export { algebraicOf, getPointAtSquareCentre, getSquareAtPoint, squareOf } from "./lib/geometry.js";
 export type { HapticFeedbackOptions, HapticInput, TriggerOptions } from "./lib/haptics.js";
 export { triggerHaptic, warmupHaptics } from "./lib/haptics.js";
 export type { MoveFeedbackKey } from "./lib/move-feedback.js";
@@ -99,4 +100,4 @@ export type {
 } from "./types.js";
 
 /** Package version — keep in sync with `package.json`. */
-export const PACKAGE_VERSION = "1.3.3";
+export const PACKAGE_VERSION = "1.5.0";

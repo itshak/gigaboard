@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/itshak/gigaboard/compare/v1.4.4...v1.5.0) (2026-10-07)
+
+### Features
+
+* **board-editor:** add first-class accessible `BoardEditor` component with `role="application"`, JAWS/NVDA single-key shortcut support (`p`/`P`, `k`/`K`, `n`/`N`, etc.), orientation-aware square navigation, piece removal (`Backspace`/`Delete`), live announcements, and high-contrast focus indicator.
+* **geometry:** export `algebraicOf` and `squareOf` square name helpers.
+
 ## [1.4.4](https://github.com/itshak/gigaboard/compare/v1.4.3...v1.4.4) (2026-09-29)
 
 ### Features

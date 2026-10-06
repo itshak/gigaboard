@@ -1,6 +1,6 @@
 {
   "name": "gigaboard",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "description": "Ultra-fast React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
   "license": "MIT",
   "author": "Yahor Barkouski (forked as gigaboard)",
@@ -164,7 +164,7 @@
     {
       "name": "gigaboard (ESM)",
       "path": "dist/index.js",
-      "limit": "24 KB",
+      "limit": "28 KB",
       "gzip": true,
       "ignore": [
         "react",

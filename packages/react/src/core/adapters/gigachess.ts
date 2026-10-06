@@ -18,13 +18,7 @@ import {
 import { Chess } from "gigachess/chessjs";
 import type { EngineAdapter } from "../engine-adapter.js";
 import type { PackedMove, PieceType, SquareIndex, ZobristKey } from "../types.js";
-import {
-  Color,
-  encodeBoardCell,
-  NULL_MOVE_WORD,
-  packMove,
-  unpackMove,
-} from "../types.js";
+import { Color, encodeBoardCell, NULL_MOVE_WORD, packMove, unpackMove } from "../types.js";
 
 // Eagerly trigger background loading of magic and zobrist tables
 void ensureMagicTablesLoaded().catch(() => {});

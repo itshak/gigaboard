@@ -82,3 +82,12 @@ export function algebraicOf(square: SquareIndex): string {
   const rank = square >> 3;
   return `${String.fromCharCode(0x61 + file)}${rank + 1}`;
 }
+
+/** Square index for an algebraic name (`"a1"`, `"h8"`, …), or `null` if invalid. */
+export function squareOf(algebraic: string): SquareIndex | null {
+  if (algebraic.length !== 2) return null;
+  const file = algebraic.charCodeAt(0) - 0x61;
+  const rank = algebraic.charCodeAt(1) - 0x31;
+  if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
+  return ((rank << 3) | file) as SquareIndex;
+}
