@@ -245,12 +245,18 @@ export interface BoardEditorProps {
   focusedSquare?: SquareIndex;
   /** Square focus callback. */
   onSquareFocus?: (square: SquareIndex, cell: BoardCell, algebraic: string) => void;
+  /** Optional container element id. */
+  id?: string;
   /** Clear board callback. */
   onClear?: () => void;
   /** Set starting position callback. */
   onSetStartingPosition?: () => void;
   /** Toggle side to move callback. */
   onToggleSideToMove?: () => void;
+  /** Callback when editor receives container focus. */
+  onFocus?: (e: React.FocusEvent<HTMLDivElement>) => void;
+  /** Callback when editor loses container focus. */
+  onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
 }
 
 export function BoardEditor({
@@ -270,9 +276,12 @@ export function BoardEditor({
   getSquareAriaLabel,
   focusedSquare: propFocusedSquare,
   onSquareFocus,
+  id,
   onClear,
   onSetStartingPosition,
   onToggleSideToMove,
+  onFocus,
+  onBlur,
 }: BoardEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const liveRegionRef = useRef<HTMLDivElement>(null);
@@ -620,6 +629,7 @@ export function BoardEditor({
   return (
     <div
       ref={containerRef}
+      id={id}
       role="application"
       // biome-ignore lint/a11y/noNoninteractiveTabindex: role="application" container owns keyboard focus
       tabIndex={0}
@@ -631,8 +641,14 @@ export function BoardEditor({
           setHasKeyboardFocus(true);
           announceSquare(focusedSquare);
         }
+        onFocus?.(e);
       }}
-      onBlur={() => setHasKeyboardFocus(false)}
+      onBlur={(e) => {
+        if (e.target === e.currentTarget) {
+          setHasKeyboardFocus(false);
+        }
+        onBlur?.(e);
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -714,6 +730,41 @@ export function BoardEditor({
           );
         })}
       </div>
+
+      {/* Visual square focus indicator for keyboard/active navigation (sighted users) */}
+      {hasKeyboardFocus && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            gridTemplateColumns: "repeat(8, 1fr)",
+            gridTemplateRows: "repeat(8, 1fr)",
+            pointerEvents: "none",
+            zIndex: 10,
+          }}
+        >
+          {(() => {
+            const { col, row } = gridCoord(focusedSquare, orientation);
+            return (
+              <div
+                data-gb-editor-focus-square={algebraicOf(focusedSquare)}
+                style={{
+                  gridColumnStart: col,
+                  gridRowStart: row,
+                  outline: "3px solid var(--gb-editor-sq-focus, #f59e0b)",
+                  outlineOffset: "-3px",
+                  boxShadow:
+                    "inset 0 0 0 1.5px rgba(0, 0, 0, 0.75), 0 0 8px rgba(245, 158, 11, 0.7)",
+                  borderRadius: "2px",
+                  pointerEvents: "none",
+                }}
+              />
+            );
+          })()}
+        </div>
+      )}
 
       {/* Dragging Piece Floating Overlay */}
       {dragging && containerRef.current ? (

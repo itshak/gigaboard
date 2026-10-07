@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.1](https://github.com/itshak/gigaboard/compare/v1.5.0...v1.5.1) (2026-10-07)
+
+### Features
+
+* **board-editor:** add `id`, `onFocus`, and `onBlur` props to `BoardEditorProps`. Render dedicated high-contrast visual square focus indicator overlay (`[data-gb-editor-focus-square]`) for keyboard navigation and sighted accessibility.
+
 ## [1.5.0](https://github.com/itshak/gigaboard/compare/v1.4.4...v1.5.0) (2026-10-07)
 
 ### Features

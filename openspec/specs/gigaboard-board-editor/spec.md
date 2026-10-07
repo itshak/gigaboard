@@ -73,3 +73,14 @@ Global shortcut keys SHALL allow:
 #### Scenario: Reset starting setup
 - **WHEN** user presses `s`
 - **THEN** all pieces reset to the standard initial position and "Reset to starting position" is announced.
+
+### Requirement: Visual Active Square Focus Indicator and Container Props
+
+The `BoardEditor` SHALL accept optional `id`, `onFocus`, and `onBlur` properties. When the board container has active focus, it SHALL render a dedicated visual square focus indicator overlay (`data-gb-editor-focus-square`) at the active square, ensuring sighted keyboard users can visually track which square they are navigating and placing pieces on.
+
+#### Scenario: Visual square indicator moves with keyboard focus
+- **WHEN** the board editor has keyboard focus
+- **THEN** a high-contrast focus indicator overlay is visible around the active square and moves with arrow key navigation.
+- **WHEN** the board editor loses focus
+- **THEN** the active square focus indicator overlay is hidden.
+

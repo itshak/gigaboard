@@ -246,4 +246,34 @@ describe("BoardEditor", () => {
     fireEvent.keyDown(editor, { key: "P" });
     expect(onPieceChange).toHaveBeenCalledWith(28, 1, "e4");
   });
+
+  it("supports id, onFocus, onBlur, and renders visual square focus indicator for sighted users", () => {
+    const onFocus = vi.fn();
+    const onBlur = vi.fn();
+    render(<BoardEditor id="custom-board-editor" onFocus={onFocus} onBlur={onBlur} />);
+    const editor = screen.getByRole("application");
+    expect(editor.id).toBe("custom-board-editor");
+
+    // Initially blurred: no visual focus square indicator
+    expect(document.querySelector("[data-gb-editor-focus-square]")).toBeNull();
+
+    // Focus editor
+    fireEvent.focus(editor);
+    expect(onFocus).toHaveBeenCalled();
+
+    // Visual focus square indicator appears at e4
+    const focusSqE4 = document.querySelector('[data-gb-editor-focus-square="e4"]');
+    expect(focusSqE4).not.toBeNull();
+
+    // Move to e5 with ArrowUp
+    fireEvent.keyDown(editor, { key: "ArrowUp" });
+    const focusSqE5 = document.querySelector('[data-gb-editor-focus-square="e5"]');
+    expect(focusSqE5).not.toBeNull();
+    expect(document.querySelector('[data-gb-editor-focus-square="e4"]')).toBeNull();
+
+    // Blur editor: indicator disappears
+    fireEvent.blur(editor);
+    expect(onBlur).toHaveBeenCalled();
+    expect(document.querySelector("[data-gb-editor-focus-square]")).toBeNull();
+  });
 });
