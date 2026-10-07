@@ -84,3 +84,9 @@ The `BoardEditor` SHALL accept optional `id`, `onFocus`, and `onBlur` properties
 - **WHEN** the board editor loses focus
 - **THEN** the active square focus indicator overlay is hidden.
 
+#### Scenario: Container attribute and focus callback forwarding
+- **WHEN** `BoardEditor` is rendered with `id="position-board-grid"` and `onFocus` / `onBlur` handlers
+- **THEN** the root `role="application"` container carries `id="position-board-grid"`
+- **AND** focus and blur events on the editor trigger the respective callbacks.
+
+
