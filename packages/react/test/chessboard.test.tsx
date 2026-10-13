@@ -214,4 +214,18 @@ describe("<Chessboard/>", () => {
     fireEvent.keyDown(grid, { key: "ArrowUp" });
     expect(onFocusSpy).toHaveBeenCalledWith(20, expect.any(Number));
   });
+
+  it("injects legal target styles with prominent quiet dots and visible capture cutouts", () => {
+    renderBoard(model, { showLegalTargets: "dots" });
+    const styleEl = document.getElementById("gb-selection-styles");
+    expect(styleEl).not.toBeNull();
+    const css = styleEl?.textContent ?? "";
+    expect(css).toContain('data-gb-selection="legal-quiet"');
+    expect(css).toContain('data-gb-selection="legal-capture"');
+    // Ensure capture in dots mode uses the outer transparent-center cutout rather than a covered center dot
+    expect(css).toContain(
+      '[data-gb-target-style="dots"] [data-gb-square][data-gb-selection="legal-capture"]::before',
+    );
+    expect(css).toContain("transparent 0 78%, var(--gb-legal-target-capture) 80%");
+  });
 });

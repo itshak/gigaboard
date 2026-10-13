@@ -50,6 +50,15 @@ The chessboard component SHALL support click-to-move (click source square, then 
 - **WHEN** user picks up piece on `e2`, drags it, and drops it back on `e2` (or releases on an illegal square)
 - **THEN** the piece on `e2` remains selected with legal target highlights active, allowing an immediate click on a target square to execute the move
 
+### Requirement: Legal Move Affordance Visibility SHALL Never Be Occluded by Pieces
+
+When a square is selected, all legal destination squares SHALL display clear visual affordances indicating move legality (`data-gb-selection="legal-quiet"` for non-capture moves, and `"legal-capture"` for occupied squares). Non-capture destinations SHALL render centered circular dots (`radial-gradient`), while capture destinations SHALL render an outer indicator around the piece (corner cutouts in `"dots"` mode or a ring around the piece in `"rings"` mode), ensuring captured pieces never obscure legal target indicators.
+
+#### Scenario: Visual affordance on empty and occupied target squares
+- **WHEN** user selects a piece capable of quiet moves and captures
+- **THEN** quiet destinations render centered circular dots and occupied destinations render an outer indicator around the enemy piece
+
+
 ### Requirement: Compositor Animation SHALL Smoothly Coordinate King and Rook Glides
 
 When castling is triggered by either gesture, the animation planner SHALL output a `castle` descriptor with `kingFrom`, `kingTo` (normalized landing square `g1`/`c1`), `rookFrom`, and `rookTo` (normalized landing square `f1`/`d1`), and execute simultaneous WAAPI compositor glides for both pieces.

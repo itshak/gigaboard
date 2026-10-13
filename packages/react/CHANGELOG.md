@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.2](https://github.com/itshak/gigaboard/compare/v1.5.1...v1.5.2) (2026-10-13)
+
+### Bug Fixes
+
+* **selection:** enhance legal move target indicator visibility across themes; render prominent quiet move dots and ensure occupied capture squares render outer corner cutouts and rings so indicators are never hidden beneath enemy pieces.
+
 ## [1.5.1](https://github.com/itshak/gigaboard/compare/v1.5.0...v1.5.1) (2026-10-07)
 
 ### Features

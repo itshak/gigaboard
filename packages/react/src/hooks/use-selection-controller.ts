@@ -89,16 +89,19 @@ function injectSelectionStyles(): void {
   background: var(--gb-selected);
 }
 [data-gb-square][data-gb-selection="legal-quiet"]::before {
-  background-image: radial-gradient(var(--gb-legal-target) 22%, transparent 24%);
+  background-image: radial-gradient(var(--gb-legal-target) 19%, transparent 21%);
 }
 [data-gb-square][data-gb-selection="legal-capture"]::before {
-  background-image: radial-gradient(transparent 0 75%, var(--gb-legal-target-capture) 77% 83%, transparent 85%);
+  background-image: radial-gradient(transparent 0 78%, var(--gb-legal-target-capture) 80%);
+}
+[data-gb-target-style="rings"] [data-gb-square][data-gb-selection="legal-capture"]::before {
+  background-image: radial-gradient(transparent 0 70%, var(--gb-legal-target-capture) 72% 84%, transparent 86%);
 }
 [data-gb-target-style="dots"] [data-gb-square][data-gb-selection="legal-quiet"]::before {
-  background-image: radial-gradient(var(--gb-legal-target) 14%, transparent 16%);
+  background-image: radial-gradient(var(--gb-legal-target) 19%, transparent 21%);
 }
 [data-gb-target-style="dots"] [data-gb-square][data-gb-selection="legal-capture"]::before {
-  background-image: radial-gradient(var(--gb-legal-target-capture) 20%, transparent 22%);
+  background-image: radial-gradient(transparent 0 78%, var(--gb-legal-target-capture) 80%);
 }
 `;
   document.head.appendChild(style);
