@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.3](https://github.com/itshak/gigaboard/compare/v1.5.2...v1.5.3) (2026-10-29)
+
+### Bug Fixes
+
+* **deps:** accept gigachess 0.5 (`^0.4.1 || ^0.5.0`), so an app on gigachess 0.5 shares one copy with the board instead of bundling a second 0.4. The board uses no API that 0.5 changed.
+
 ## [1.5.2](https://github.com/itshak/gigaboard/compare/v1.5.1...v1.5.2) (2026-10-13)
 
 ### Bug Fixes
