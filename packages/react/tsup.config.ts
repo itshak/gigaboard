@@ -12,6 +12,7 @@ export default defineConfig({
     "pieces/merida": "src/pieces/sets/merida.ts",
     "pieces/alpha": "src/pieces/sets/alpha.ts",
     "pieces/chesscom": "src/pieces/sets/chesscom.ts",
+    "pieces/giga-crownless": "src/pieces/sets/giga-crownless.ts",
     themes: "src/themes/index.ts",
     "themes/blue": "src/themes/blue.ts",
     "themes/brown": "src/themes/brown.ts",

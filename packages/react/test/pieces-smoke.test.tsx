@@ -9,6 +9,7 @@ import {
   createImagePieceSet,
   merida,
   neo,
+  gigaCrownless,
   PACKAGE_VERSION,
   pieceSets,
 } from "../src/pieces/index.js";
@@ -63,6 +64,26 @@ describe("@gigaboard/pieces", () => {
     expect(inspect(alpha, BOARD_CELL_KEY.wP)?.src).toContain("/alpha/");
     expect(inspect(merida, BOARD_CELL_KEY.wP)?.src).toContain("/neo_wood/");
     expect(inspect(neo, BOARD_CELL_KEY.wP)?.src).toContain("/neo/");
+  });
+
+  it("gigaCrownless contains twelve original, offline SVGs and a cross-free diamond king", () => {
+    const pieces = Array.from({ length: 12 }, (_, i) => inspect(gigaCrownless, i + 1));
+    const sources = pieces.map((piece) => piece?.src ?? "");
+    expect(new Set(sources).size).toBe(12);
+    for (const src of sources) {
+      expect(src.startsWith("data:image/svg+xml,")).toBe(true);
+      const svg = decodeURIComponent(src.slice("data:image/svg+xml,".length));
+      expect(svg).toContain('viewBox="0 0 64 64"');
+      expect(svg).not.toContain("http://www.w3.org/1999/xlink");
+    }
+    const king = decodeURIComponent(sources[5].split(",")[1]);
+    const blackKing = decodeURIComponent(sources[11].split(",")[1]);
+    const queen = decodeURIComponent(sources[4].split(",")[1]);
+    expect(king).toContain('<polygon points="32,6 39,13 32,20 25,13"/>');
+    expect(blackKing).toContain('<polygon points="32,6 39,13 32,20 25,13"/>');
+    expect(king).not.toContain("<text");
+    expect(queen).toContain('<circle cx="13" cy="16"');
+    expect(queen).not.toContain("<polygon");
   });
 
   it("createImagePieceSet builds a custom set from a URL table", () => {

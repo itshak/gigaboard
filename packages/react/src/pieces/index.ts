@@ -17,6 +17,7 @@
  * import { alpha } from "gigaboard/pieces/alpha";
  * import { cburnett } from "gigaboard/pieces/cburnett";
  * import { merida } from "gigaboard/pieces/merida";
+ * import { gigaCrownless } from "gigaboard/pieces/giga-crownless";
  * ```
  *
  * Or bring the whole registry (useful when building a piece-set picker):
@@ -42,6 +43,7 @@ import { cburnett } from "./sets/cburnett.js";
 import { chesscom } from "./sets/chesscom.js";
 import { merida } from "./sets/merida.js";
 import { neo } from "./sets/neo.js";
+import { gigaCrownless } from "./sets/giga-crownless.js";
 
 export type {
   PieceRenderer,
@@ -52,7 +54,7 @@ export {
   chesscomPieceUrls,
   createImagePieceSet,
 } from "./create-image-piece-set.js";
-export { alpha, cburnett, chesscom, merida, neo };
+export { alpha, cburnett, chesscom, merida, neo, gigaCrownless };
 
 /** Registry of every built-in set. Handy when building piece-set pickers. */
 export const pieceSets = Object.freeze({
@@ -61,6 +63,7 @@ export const pieceSets = Object.freeze({
   chesscom,
   merida,
   neo,
+  gigaCrownless,
 });
 
 /** Union of built-in piece-set names. */

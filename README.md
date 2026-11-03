@@ -146,6 +146,7 @@ Available piece sets (`gigaboard/pieces/*`):
 * `merida` (wood-tinted tournament set)
 * `alpha` (minimalist mobile silhouettes)
 * `chesscom` (explicit alias for neo)
+* `giga-crownless` (original, self-contained SVG set; diamond king with no cross)
 
 Available themes (`gigaboard/themes/*` — 22 tree-shakable palettes):
 * **Classic**: `green` (default chess.com), `brown` (tournament wood), `blue` (modern cool contrast), `wood` (warm board), `chesscomGreen`, `chesscomBlue`, `ic`
