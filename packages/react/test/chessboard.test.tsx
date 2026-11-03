@@ -36,7 +36,7 @@ describe("<Chessboard/>", () => {
     document.documentElement.dir = "rtl";
     try {
       const { container } = renderBoard(model);
-      const board = container.querySelector('[data-gb-orientation]');
+      const board = container.querySelector("[data-gb-orientation]");
       expect(board?.getAttribute("dir")).toBe("ltr");
       expect(board?.getAttribute("data-gb-orientation")).toBe("white");
       expect(document.documentElement.dir).toBe("rtl");

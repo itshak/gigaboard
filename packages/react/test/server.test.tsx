@@ -26,7 +26,11 @@ describe("<StaticChessboard/> (server)", () => {
   });
 
   it("isolates static coordinate geometry from RTL parents", () => {
-    const html = renderToStaticMarkup(<div dir="rtl"><StaticChessboard fen={STARTING_FEN} /></div>);
+    const html = renderToStaticMarkup(
+      <div dir="rtl">
+        <StaticChessboard fen={STARTING_FEN} />
+      </div>,
+    );
     expect(html).toContain('dir="ltr"');
     expect(html).toContain('data-piece-square="e1"');
   });
