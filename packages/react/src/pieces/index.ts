@@ -41,9 +41,9 @@
 import { alpha } from "./sets/alpha.js";
 import { cburnett } from "./sets/cburnett.js";
 import { chesscom } from "./sets/chesscom.js";
+import { gigaDiagram } from "./sets/giga-diagram.js";
 import { merida } from "./sets/merida.js";
 import { neo } from "./sets/neo.js";
-import { gigaDiagram } from "./sets/giga-diagram.js";
 
 export type {
   PieceRenderer,
@@ -54,7 +54,7 @@ export {
   chesscomPieceUrls,
   createImagePieceSet,
 } from "./create-image-piece-set.js";
-export { alpha, cburnett, chesscom, merida, neo, gigaDiagram };
+export { alpha, cburnett, chesscom, gigaDiagram, merida, neo };
 
 /** Registry of every built-in set. Handy when building piece-set pickers. */
 export const pieceSets = Object.freeze({

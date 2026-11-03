@@ -15,8 +15,12 @@ describe("BoardEditor", () => {
   });
 
   it("keeps the editor coordinate grid LTR inside an RTL host", () => {
-    const { container } = render(<div dir="rtl"><BoardEditor /></div>);
-    expect(container.querySelector('[data-gb-editor]')?.getAttribute("dir")).toBe("ltr");
+    const { container } = render(
+      <div dir="rtl">
+        <BoardEditor />
+      </div>,
+    );
+    expect(container.querySelector("[data-gb-editor]")?.getAttribute("dir")).toBe("ltr");
     expect(container.firstElementChild?.getAttribute("dir")).toBe("rtl");
   });
 

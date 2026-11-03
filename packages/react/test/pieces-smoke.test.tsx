@@ -7,9 +7,9 @@ import {
   chesscom,
   chesscomPieceUrls,
   createImagePieceSet,
+  gigaDiagram,
   merida,
   neo,
-  gigaDiagram,
   PACKAGE_VERSION,
   pieceSets,
 } from "../src/pieces/index.js";
@@ -83,14 +83,15 @@ describe("@gigaboard/pieces", () => {
   it("gigaDiagram white and black pieces have identical geometry for every role", () => {
     for (const role of ["P", "N", "B", "R", "Q", "K"] as const) {
       const stripPalette = (svg: string) =>
-        svg.replace(/aria-label="[^"]*"/, "")
+        svg
+          .replace(/aria-label="[^"]*"/, "")
           .replace(/<title>[^<]*<\/title>/, "")
           .replace(/<style>[\s\S]*?<\/style>/, "");
       expect(stripPalette(gigaDiagramSvg(role, "w"))).toBe(stripPalette(gigaDiagramSvg(role, "b")));
     }
     const king = gigaDiagramSvg("K", "w");
     expect(king).toContain("scale(0.910000 0.912088)");
-    expect(king).not.toContain("stroke-width=\"6\"");
+    expect(king).not.toContain('stroke-width="6"');
   });
 
   it("createImagePieceSet builds a custom set from a URL table", () => {
