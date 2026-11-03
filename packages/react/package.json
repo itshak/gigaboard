@@ -1,6 +1,6 @@
 {
   "name": "gigaboard",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "description": "Ultra-fast React chessboard with owned state, byte-scoped subscriptions, refs-only drag, polished default theme and pieces, sounds, arrows, premoves, and SSR static rendering.",
   "license": "MIT",
   "author": "Yahor Barkouski (forked as gigaboard)",
@@ -128,7 +128,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/sounds && cp src/sounds/*.mp3 dist/sounds/",
+    "build": "tsup && mkdir -p dist/sounds dist/pieces-svg/giga-diagram && cp src/sounds/*.mp3 dist/sounds/ && cp src/pieces/svg/giga-diagram/*.svg dist/pieces-svg/giga-diagram/",
     "dev": "tsup --watch",
     "lint": "biome check src test",
     "typecheck": "tsc --noEmit",

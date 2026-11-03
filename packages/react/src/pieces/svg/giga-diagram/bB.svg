@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" aria-label="Black Bishop">
+<title>Black Bishop — Giga Diagram</title>
+<style>
+.main{fill:#4e5053;stroke:none}
+.edge{fill:none;stroke:#090b0c;stroke-width:3.8;stroke-linejoin:round;stroke-linecap:round}
+.shade{fill:#2d2f31}
+.highlight{fill:#898b8f}
+.medium{fill:#616367}
+.detail-fill{fill:#0b0d0e}
+.detail-line{fill:none;stroke:#0b0d0e;stroke-width:2.1;stroke-linecap:round}
+.slash{fill:none;stroke:#0b0d0e;stroke-width:6;stroke-linecap:round}
+</style>
+<g transform="translate(50 94) scale(1.000000 0.893617) translate(-50 -94)"><defs><clipPath id="body"><path d="M50 18 C58 23 72 38 72 52 C72 63 66 69 68 79 H32 C34 69 28 63 28 52 C28 38 42 23 50 18Z"/></clipPath></defs>
+<path d="M50 18 C58 23 72 38 72 52 C72 63 66 69 68 79 H32 C34 69 28 63 28 52 C28 38 42 23 50 18Z" class="main"/>
+<g clip-path="url(#body)"><path d="M52 20 C63 32 74 41 71 55 C69 70 67 75 68 81 H46 C55 59 60 40 52 20Z" class="shade"/><path d="M43 27 C35 36 32 46 34 52 C35 56 38 48 40 41Z" class="highlight"/></g>
+<path d="M50 18 C58 23 72 38 72 52 C72 63 66 69 68 79 H32 C34 69 28 63 28 52 C28 38 42 23 50 18Z" class="edge"/><circle cx="50" cy="10" r="8.8" class="main"/>
+<path d="M50 1.1999999999999993 A8.8 8.8 0 0 1 50 18.8 Q51.32 16.336 54.224000000000004 11.936 A8.8 8.8 0 0 0 50 1.1999999999999993Z" class="shade"/>
+<ellipse cx="47.184" cy="6.656" rx="2.9920000000000004" ry="1.6720000000000002" transform="rotate(-29 47.184 6.656)" class="highlight"/>
+<circle cx="50" cy="10" r="8.8" class="edge"/><path d="M54 26 L45 51" class="slash"/><defs><clipPath id="foot"><path d="M30 79 H70 Q75 79 75 84 V87 Q75 92 70 92 H30 Q25 92 25 87 V84 Q25 79 30 79Z"/></clipPath></defs>
+<path d="M30 79 H70 Q75 79 75 84 V87 Q75 92 70 92 H30 Q25 92 25 87 V84 Q25 79 30 79Z" class="main"/>
+<g clip-path="url(#foot)"><path d="M52.5 79 H75 V92 H62.5Z" class="shade"/><path d="M31 82 H53 L46.5 84 H31Z" class="highlight"/></g>
+<path d="M30 79 H70 Q75 79 75 84 V87 Q75 92 70 92 H30 Q25 92 25 87 V84 Q25 79 30 79Z" class="edge"/></g>
+</svg>
