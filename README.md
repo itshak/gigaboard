@@ -146,6 +146,24 @@ Available piece sets (`gigaboard/pieces/*`):
 * `merida` (wood-tinted tournament set)
 * `alpha` (minimalist mobile silhouettes)
 * `chesscom` (explicit alias for neo)
+* `giga-diagram` (original cross-free SVG diagrams; ivory/charcoal with matched geometry)
+
+
+### Giga Diagram (new in 1.6.0)
+
+The original, self-contained **Giga Diagram V4** vector set uses the same six
+shapes for White and Black (different palettes only). It includes a wider,
+**cross-free king**, five-point queen without interior diamond, and
+Neo-inspired on-board proportions.
+
+```tsx
+import { gigaDiagram } from "gigaboard/pieces/giga-diagram";
+<Chessboard game={game} pieces={gigaDiagram} />;
+```
+
+The twelve raw SVG sources ship in `dist/pieces-svg/giga-diagram/`.
+The renderer uses data URLs so it works offline without separate asset paths.
+With strict CSP, allow `img-src data:`.
 
 Available themes (`gigaboard/themes/*` — 22 tree-shakable palettes):
 * **Classic**: `green` (default chess.com), `brown` (tournament wood), `blue` (modern cool contrast), `wood` (warm board), `chesscomGreen`, `chesscomBlue`, `ic`

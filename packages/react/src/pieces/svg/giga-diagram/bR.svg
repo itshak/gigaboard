@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" aria-label="Black Rook">
+<title>Black Rook — Giga Diagram</title>
+<style>
+.main{fill:#4e5053;stroke:none}
+.edge{fill:none;stroke:#090b0c;stroke-width:3.8;stroke-linejoin:round;stroke-linecap:round}
+.shade{fill:#2d2f31}
+.highlight{fill:#898b8f}
+.medium{fill:#616367}
+.detail-fill{fill:#0b0d0e}
+.detail-line{fill:none;stroke:#0b0d0e;stroke-width:2.1;stroke-linecap:round}
+.slash{fill:none;stroke:#0b0d0e;stroke-width:6;stroke-linecap:round}
+</style>
+<g transform="translate(50 94) scale(1.040000 1.164179) translate(-50 -94)"><defs><clipPath id="body"><path d="M25 29 H35 V39 H44 V29 H56 V39 H65 V29 H75 V48 L69 55 L72 79 H28 L31 55 L25 48Z"/></clipPath></defs>
+<path d="M25 29 H35 V39 H44 V29 H56 V39 H65 V29 H75 V48 L69 55 L72 79 H28 L31 55 L25 48Z" class="main"/>
+<g clip-path="url(#body)"><path d="M58 30 H75 V50 L69 56 L72 80 H54 L60 52Z" class="shade"/><path d="M29 35 H33 V43 H29Z M33 58 L31 73 H36 L38 58Z" class="highlight"/></g>
+<path d="M25 29 H35 V39 H44 V29 H56 V39 H65 V29 H75 V48 L69 55 L72 79 H28 L31 55 L25 48Z" class="edge"/><defs><clipPath id="foot"><path d="M25 79 H75 Q80 79 80 84 V87 Q80 92 75 92 H25 Q20 92 20 87 V84 Q20 79 25 79Z"/></clipPath></defs>
+<path d="M25 79 H75 Q80 79 80 84 V87 Q80 92 75 92 H25 Q20 92 20 87 V84 Q20 79 25 79Z" class="main"/>
+<g clip-path="url(#foot)"><path d="M53 79 H80 V92 H65Z" class="shade"/><path d="M26 82 H53.6 L45.8 84 H26Z" class="highlight"/></g>
+<path d="M25 79 H75 Q80 79 80 84 V87 Q80 92 75 92 H25 Q20 92 20 87 V84 Q20 79 25 79Z" class="edge"/></g>
+</svg>

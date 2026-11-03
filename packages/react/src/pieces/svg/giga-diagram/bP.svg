@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" aria-label="Black Pawn">
+<title>Black Pawn — Giga Diagram</title>
+<style>
+.main{fill:#4e5053;stroke:none}
+.edge{fill:none;stroke:#090b0c;stroke-width:3.8;stroke-linejoin:round;stroke-linecap:round}
+.shade{fill:#2d2f31}
+.highlight{fill:#898b8f}
+.medium{fill:#616367}
+.detail-fill{fill:#0b0d0e}
+.detail-line{fill:none;stroke:#0b0d0e;stroke-width:2.1;stroke-linecap:round}
+.slash{fill:none;stroke:#0b0d0e;stroke-width:6;stroke-linecap:round}
+</style>
+<g transform="translate(50 94) scale(1.130000 1.161616) translate(-50 -94)"><defs><clipPath id="body"><path d="M44 58 H56 C56 68 61 75 68 82 L70 86 H30 L32 82 C39 75 44 68 44 58Z"/></clipPath></defs>
+<path d="M44 58 H56 C56 68 61 75 68 82 L70 86 H30 L32 82 C39 75 44 68 44 58Z" class="main"/>
+<g clip-path="url(#body)"><path d="M51 58 H57 C57 69 63 77 70 87 H50 Q59 75 55 66Z" class="shade"/><path d="M43 65 C41 70 39 73 35 78 L35 83 L40 78Z" class="highlight"/></g>
+<path d="M44 58 H56 C56 68 61 75 68 82 L70 86 H30 L32 82 C39 75 44 68 44 58Z" class="edge"/><circle cx="50" cy="48" r="11.5" class="main"/>
+<path d="M50 36.5 A11.5 11.5 0 0 1 50 59.5 Q51.725 56.28 55.519999999999996 50.53 A11.5 11.5 0 0 0 50 36.5Z" class="shade"/>
+<ellipse cx="46.32" cy="43.63" rx="3.91" ry="2.185" transform="rotate(-29 46.32 43.63)" class="highlight"/>
+<circle cx="50" cy="48" r="11.5" class="edge"/><defs><clipPath id="foot"><path d="M33 84 H67 Q71 84 71 88 V88 Q71 92 67 92 H33 Q29 92 29 88 V88 Q29 84 33 84Z"/></clipPath></defs>
+<path d="M33 84 H67 Q71 84 71 88 V88 Q71 92 67 92 H33 Q29 92 29 88 V88 Q29 84 33 84Z" class="main"/>
+<g clip-path="url(#foot)"><path d="M52.1 84 H71 V92 H60.5Z" class="shade"/><path d="M34 87 H52.52 L47.06 89 H34Z" class="highlight"/></g>
+<path d="M33 84 H67 Q71 84 71 88 V88 Q71 92 67 92 H33 Q29 92 29 88 V88 Q29 84 33 84Z" class="edge"/></g>
+</svg>

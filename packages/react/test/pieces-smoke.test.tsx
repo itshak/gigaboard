@@ -7,11 +7,13 @@ import {
   chesscom,
   chesscomPieceUrls,
   createImagePieceSet,
+  gigaDiagram,
   merida,
   neo,
   PACKAGE_VERSION,
   pieceSets,
 } from "../src/pieces/index.js";
+import { gigaDiagramSvg } from "../src/pieces/sets/giga-diagram.js";
 
 /** Pull the `src` and `alt` from the renderer's output without needing react-dom. */
 function inspect(set: ReturnType<typeof createImagePieceSet>, cell: number) {
@@ -63,6 +65,33 @@ describe("@gigaboard/pieces", () => {
     expect(inspect(alpha, BOARD_CELL_KEY.wP)?.src).toContain("/alpha/");
     expect(inspect(merida, BOARD_CELL_KEY.wP)?.src).toContain("/neo_wood/");
     expect(inspect(neo, BOARD_CELL_KEY.wP)?.src).toContain("/neo/");
+  });
+
+  it("gigaDiagram ships 12 distinct, self-contained SVG images", () => {
+    const urls = Array.from({ length: 12 }, (_, n) => inspect(gigaDiagram, n + 1)?.src ?? "");
+    expect(new Set(urls).size).toBe(12);
+    for (const url of urls) {
+      expect(url.startsWith("data:image/svg+xml,")).toBe(true);
+      const svg = decodeURIComponent(url.split(",")[1]);
+      expect(svg).toContain('viewBox="0 0 100 100"');
+      expect(svg).toContain("<path");
+      expect(svg).not.toContain("<image ");
+    }
+    expect(gigaDiagram({ cell: 0, square: 0 })).toBeNull();
+  });
+
+  it("gigaDiagram white and black pieces have identical geometry for every role", () => {
+    for (const role of ["P", "N", "B", "R", "Q", "K"] as const) {
+      const stripPalette = (svg: string) =>
+        svg
+          .replace(/aria-label="[^"]*"/, "")
+          .replace(/<title>[^<]*<\/title>/, "")
+          .replace(/<style>[\s\S]*?<\/style>/, "");
+      expect(stripPalette(gigaDiagramSvg(role, "w"))).toBe(stripPalette(gigaDiagramSvg(role, "b")));
+    }
+    const king = gigaDiagramSvg("K", "w");
+    expect(king).toContain("scale(0.910000 0.912088)");
+    expect(king).not.toContain('stroke-width="6"');
   });
 
   it("createImagePieceSet builds a custom set from a URL table", () => {
