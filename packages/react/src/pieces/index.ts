@@ -69,4 +69,4 @@ export const pieceSets = Object.freeze({
 /** Union of built-in piece-set names. */
 export type PieceSetName = keyof typeof pieceSets;
 
-export const PACKAGE_VERSION = "1.6.0";
+export const PACKAGE_VERSION = "1.3.3";
