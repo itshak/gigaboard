@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0](https://github.com/itshak/gigaboard/compare/v1.5.4...v1.6.0) (2026-11-04)
+
+### Features
+
+* **pieces:** add the approved Giga Diagram V4 piece set as the optional `gigaboard/pieces/giga-diagram` export, with all twelve self-contained SVG pieces and matched geometry for both colors. Includes the RTL coordinate isolation from 1.5.4.
+
 ## [1.5.4](https://github.com/itshak/gigaboard/compare/v1.5.3...v1.5.4) (2026-11-03)
 
 ### Bug Fixes
