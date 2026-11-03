@@ -32,6 +32,19 @@ describe("<Chessboard/>", () => {
     model.dispose();
   });
 
+  it("isolates chess coordinates from an RTL document without changing orientation", () => {
+    document.documentElement.dir = "rtl";
+    try {
+      const { container } = renderBoard(model);
+      const board = container.querySelector('[data-gb-orientation]');
+      expect(board?.getAttribute("dir")).toBe("ltr");
+      expect(board?.getAttribute("data-gb-orientation")).toBe("white");
+      expect(document.documentElement.dir).toBe("rtl");
+    } finally {
+      document.documentElement.removeAttribute("dir");
+    }
+  });
+
   it("renders a grid with all 64 squares labelled", () => {
     renderBoard(model);
     // A known corner + centre sample suffices; getByRole would find them all

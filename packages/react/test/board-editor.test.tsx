@@ -14,6 +14,12 @@ describe("BoardEditor", () => {
     expect(editor.getAttribute("aria-keyshortcuts")).toContain("p P");
   });
 
+  it("keeps the editor coordinate grid LTR inside an RTL host", () => {
+    const { container } = render(<div dir="rtl"><BoardEditor /></div>);
+    expect(container.querySelector('[data-gb-editor]')?.getAttribute("dir")).toBe("ltr");
+    expect(container.firstElementChild?.getAttribute("dir")).toBe("rtl");
+  });
+
   it("navigates cell by cell with arrow keys", () => {
     const onSquareFocus = vi.fn();
     const onAnnounce = vi.fn();

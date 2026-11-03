@@ -112,6 +112,7 @@ export function StaticChessboard(props: StaticChessboardProps): ReactNode {
       style={containerStyle}
       data-gb-orientation={orientation}
       data-gb-static="true"
+      dir="ltr"
     >
       {/* 8×8 grid of static squares — no event handlers, no tabindex. */}
       <div

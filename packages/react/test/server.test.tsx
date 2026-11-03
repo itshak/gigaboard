@@ -25,6 +25,12 @@ describe("<StaticChessboard/> (server)", () => {
     expect(cellMatches.length).toBe(64);
   });
 
+  it("isolates static coordinate geometry from RTL parents", () => {
+    const html = renderToStaticMarkup(<div dir="rtl"><StaticChessboard fen={STARTING_FEN} /></div>);
+    expect(html).toContain('dir="ltr"');
+    expect(html).toContain('data-piece-square="e1"');
+  });
+
   it("places pieces on every file of rank 2 and 7 (starting position)", () => {
     const html = renderToStaticMarkup(<StaticChessboard fen={STARTING_FEN} />);
     for (const file of ["a", "b", "c", "d", "e", "f", "g", "h"]) {

@@ -657,6 +657,7 @@ export function BoardEditor({
       className={className}
       style={containerStyle}
       data-gb-editor="true"
+      dir="ltr"
       data-gb-orientation={orientation}
     >
       {/* 8x8 Board Grid */}

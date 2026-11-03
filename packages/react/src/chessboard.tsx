@@ -944,6 +944,7 @@ export function Chessboard(props: ChessboardProps) {
     <div
       ref={containerRef}
       className={className}
+      dir="ltr"
       style={containerStyle}
       data-gb-orientation={orientation}
       data-gb-target-style={showLegalTargets === false ? "off" : showLegalTargets}

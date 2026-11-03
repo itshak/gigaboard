@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.4](https://github.com/itshak/gigaboard/compare/v1.5.3...v1.5.4) (2026-11-03)
+
+### Bug Fixes
+
+* **rtl:** isolate interactive, editor and static chess coordinate grids from RTL document direction. Piece squares, backgrounds, pointer geometry and keyboard coordinates retain the orientation selected by the chessboard rather than mirroring in Hebrew/Arabic interfaces.
+
 ## [1.5.3](https://github.com/itshak/gigaboard/compare/v1.5.2...v1.5.3) (2026-10-29)
 
 ### Bug Fixes
