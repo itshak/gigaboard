@@ -22,6 +22,9 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
       - name: Install Playwright browsers
+        # Resolve the binary from the docs workspace; invoking bun x from the
+        # root installs the latest CLI, mismatching the locked test runtime.
+        working-directory: apps/docs
         run: bun x playwright install --with-deps
       - name: Build packages + docs
         run: bun run turbo build
