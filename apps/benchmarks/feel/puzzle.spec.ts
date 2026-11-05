@@ -14,7 +14,7 @@ test("40-ply chess sequence uses real pointer input and preserves game state", a
     const [from, to] = GAME_40[i]!;
     if (i % 2 === 0) await drag(page, from, to, 5);
     else await clickMove(page, from, to);
-    chess.move({ from, to, promotion: "q" });
+    chess.move({ from, to });
     await expect.poll(async () =>
       samePosition(await page.evaluate(() => window.__gbFeelLab__?.fen() ?? ""))
     ).toBe(samePosition(chess.fen()));
@@ -34,7 +34,7 @@ test("100 repeatable rapid scenarios spanning the 40 legal game positions", asyn
   const chess = new Chess(START_FEN);
   for (const [from, to] of GAME_40) {
     situations.push({ fen: chess.fen(), from, to });
-    chess.move({ from, to, promotion: "q" });
+    chess.move({ from, to });
   }
   const started = Date.now();
   for (let i = 0; i < 100; i++) {
@@ -42,7 +42,7 @@ test("100 repeatable rapid scenarios spanning the 40 legal game positions", asyn
     await reset(page, s.fen);
     await drag(page, s.from, s.to, 3);
     const oracle = new Chess(s.fen);
-    oracle.move({ from: s.from, to: s.to, promotion: "q" });
+    oracle.move({ from: s.from, to: s.to });
     await expect.poll(async () =>
       samePosition(await page.evaluate(() => window.__gbFeelLab__?.fen() ?? ""))
     ).toBe(samePosition(oracle.fen()));
@@ -61,8 +61,10 @@ test("keyboard-only board move remains available", async ({ page }) => {
   await page.keyboard.press("Enter");
   await page.locator('[data-square="e4"]').focus();
   await page.keyboard.press("Enter");
+  const expected = new Chess(START_FEN);
+  expected.move("e4");
   await expect.poll(async () =>
     samePosition(await page.evaluate(() => window.__gbFeelLab__?.fen() ?? ""))
-  ).toBe(samePosition(new Chess().move("e4") ? new Chess("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1").fen() : ""));
+  ).toBe(samePosition(expected.fen()));
   expect(await page.evaluate(() => window.__gbFeelLab__?.moveCount())).toBe(1);
 });
