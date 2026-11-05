@@ -26,7 +26,7 @@ import {
 import { neo } from "gigaboard/pieces/neo";
 import { green } from "gigaboard/themes/green";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { installFeelLab, type FeelLabAPI } from "./harness/feel-harness.js";
+import { installFeelLab, type FeelLabAPI } from "../feel/harness.js";
 import {
   type BenchMetrics,
   type GbBench,
@@ -55,7 +55,9 @@ export function App() {
   const testSound = feelEnabled && search.get("sound") === "1";
   const testDuration = feelEnabled ? Number(search.get("animation") ?? "0") : 0;
   const testGhost = feelEnabled ? search.get("ghost") : null;
-  const reportMove = useCallback(() => { feelRef.current?.onMove(); }, []);
+  const reportMove = useCallback(() => {
+    feelRef.current?.onMove();
+  }, []);
 
   // Ready promise for Playwright. Resolves once the interactive model is
   // live and the harness API is attached. Scenarios that need a real
@@ -162,7 +164,9 @@ export function App() {
           sound={testSound}
           onMove={feelEnabled ? reportMove : undefined}
           animation={{ durationMs: testDuration }}
-          {...(testGhost !== null ? { theme: { ...green, "--gb-drag-ghost-opacity": testGhost } } : {})}
+          {...(testGhost !== null
+            ? { theme: { ...green, "--gb-drag-ghost-opacity": testGhost } }
+            : {})}
         />
       </div>
     </main>
