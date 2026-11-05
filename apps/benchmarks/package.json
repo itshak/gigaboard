@@ -15,7 +15,10 @@
     "lint": "biome check src scripts bench",
     "typecheck": "tsc --noEmit",
     "test": "echo \"(benchmarks don't run under test; see 'bun run bench')\" && exit 0",
-    "clean": "rm -rf dist .turbo bench-results"
+    "clean": "rm -rf dist .turbo bench-results",
+    "feel:ci": "playwright test --config ./playwright.feel.config.ts",
+    "feel:bench": "playwright test --config ./playwright.feel.config.ts --repeat-each=3",
+    "feel:compare": "node ./feel/compare.mjs"
   },
   "dependencies": {
     "chess.js": "^1.4.0",
