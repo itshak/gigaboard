@@ -1,0 +1,50 @@
+name: GigaBoard FeelLab (nonvisual correctness)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/benchmarks/**"
+      - "packages/react/**"
+      - ".github/workflows/feel-lab.yml"
+      - "openspec/changes/automated-board-feel-lab/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/benchmarks/**"
+      - "packages/react/**"
+      - ".github/workflows/feel-lab.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: feel-lab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-correctness:
+    name: Browser visual and interaction correctness
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - name: Install workspace
+        run: bun install --frozen-lockfile
+      - name: Build workspace dependencies
+        run: bun run turbo build
+      - name: Install Playwright Chromium and WebKit
+        run: bunx playwright install --with-deps chromium webkit
+      - name: Run automatic nonvisual FeelLab checks
+        run: bun --cwd apps/benchmarks run feel:ci
+      - name: Preserve accessible text reports on success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gigaboard-feellab-report
+          path: |
+            apps/benchmarks/feel-results/
+            apps/benchmarks/test-results/
+          if-no-files-found: warn
+          retention-days: 14
