@@ -59,7 +59,10 @@ test("100 repeatable rapid scenarios spanning the 40 legal game positions", asyn
 test("keyboard-only board move remains available", async ({ page }) => {
   await page.locator('[data-square="e2"]').focus();
   await page.keyboard.press("Enter");
-  await page.locator('[data-square="e4"]').focus();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator('[data-square="e3"]')).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator('[data-square="e4"]')).toBeFocused();
   await page.keyboard.press("Enter");
   const expected = new Chess(START_FEN);
   expected.move("e4");
