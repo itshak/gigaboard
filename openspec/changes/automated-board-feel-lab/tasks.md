@@ -2,6 +2,8 @@
 
 Each task is intended to be independently reviewable and completable in one coding session. Deliver measurement infrastructure before changing shipped board behavior.
 
+> **Implementation status, November 5, 2026: IN PROGRESS.** Browser-side Playwright assertions, test-only instrumentation, pixel-diff oracle, a basic mutation test, rapid move scenarios, accessible reports, and a browser GitHub Actions workflow have been committed to `main`. The runnable suite has **not been verified in this environment**. Native macOS frame capture, an external BlindBase adapter, cross-clock calibration, distinct tactical puzzles, calibrated performance gating, and full accessibility/i18n coverage are outstanding. **Do not archive this change or claim all requirements satisfied.**
+
 ## 1. Inventory and baseline contract
 
 - [ ] 1.1 Audit `apps/benchmarks`, `BENCH.md`, current GigaBoard drag/click/animation/sound hooks, current tests, and existing OpenSpec ADRs. Record what timings are genuine vs synthetic, and preserve existing benchmark suite results.
@@ -10,7 +12,7 @@ Each task is intended to be independently reviewable and completable in one codi
 
 ## 2. Browser interaction correctness
 
-- [ ] 2.1 Add `feel:ci` runner using existing production Playwright fixture; keep browser-driven `page.mouse` input distinct from synthetic `dispatchEvent` microbenchmarks; ensure Chromium and WebKit correctness jobs.
+- [x] 2.1 Add `feel:ci` runner using existing production Playwright fixture; keep browser-driven `page.mouse` input distinct from synthetic `dispatchEvent` microbenchmarks; ensure Chromium and WebKit correctness jobs.
 - [ ] 2.2 Instrument pointer down/move/up, drag activation, transform writes, model acceptance, callback start/end, ghost hide and next-move acceptance with test-only performance markers; confirm no instrumentation in published bundles.
 - [ ] 2.3 Add deterministic tests for pickup/threshold boundaries, click vs drag, pointercancel, out-of-board drop, illegal move, same-square release, rapid repeat, lost focus, orientation, board sizes and drag artifacts.
 - [ ] 2.4 Add click-to-move and real move callbacks tests, including 0/5/15/40ms controlled callback loads, no stale ghost, exact move count/FEN, first-move vs warmed cases.
@@ -41,7 +43,7 @@ Each task is intended to be independently reviewable and completable in one codi
 ## 6. Accessibility, nonvisual reporting, reliability gates
 
 - [ ] 6.1 Add keyboard-only and ARIA/LiveRegion assertions (navigation, Enter/Space, Escape, promotion, focus, cue ordering, reduced-motion); test en/ru/he announcement paths where applicable.
-- [ ] 6.2 Produce versioned `results.json` + `environment.json`, plain-text console summary and structured accessible `report.md` with failure causes, baseline deltas, confidence, exact reproduction command and no color-only states.
+- [x] 6.2 Produce versioned `results.json` + `environment.json`, plain-text console summary and structured accessible `report.md` with failure causes, baseline deltas, confidence, exact reproduction command and no color-only states.
 - [ ] 6.3 Implement deterministic `feel:ci` correctness gate, and a separate controlled-host `feel:bench` / `feel:compare` performance gate using repeated alternating A/B runs, host metadata, calibrated budgets and explicit `INCONCLUSIVE`/`NOT_RUN`.
 - [ ] 6.4 Add CI jobs with production builds, test artifact retention policies, native runner opt-in and failed/missing-permission diagnostics. Explicitly disclose missing native coverage; never report it as PASS.
 - [ ] 6.5 Add mutation-based validation of the gates themselves; prove a 4px pickup delay, 1-frame presentation stall, ghost leak, missed next move and first-use audio regression are detected in supported measured modes.
