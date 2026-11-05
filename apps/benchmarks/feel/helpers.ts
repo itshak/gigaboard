@@ -41,7 +41,7 @@ export async function reset(page: Page, fen = START_FEN): Promise<void> {
 
 export async function assertMove(page: Page, from: string, to: string, fen = START_FEN): Promise<void> {
   const expected = new Chess(fen);
-  const move = expected.move({ from, to, promotion: "q" });
+  const move = expected.move({ from, to });
   if (!move) throw new Error("Invalid test fixture: " + from + to);
   await expect.poll(async () => page.evaluate(() => window.__gbFeelLab__?.fen())).toBeTruthy();
   const got = await page.evaluate(() => window.__gbFeelLab__?.fen() ?? "");
