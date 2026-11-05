@@ -1,3 +1,46 @@
+## GigaBoard FeelLab: automatic perceived-responsiveness checks
+
+**Status (November 2026): initial browser implementation, native tests still pending and not certified.**
+
+In addition to the historical Chromium head-to-head microbenchmarks below,
+`apps/benchmarks/feel/` now contains a standalone automatic quality suite:
+
+```sh
+bun --cwd apps/benchmarks run feel:ci
+bun --cwd apps/benchmarks run feel:bench
+bun --cwd apps/benchmarks run feel:compare -- BASELINE.json CANDIDATE.json
+```
+
+This new suite drives genuine browser input through Playwright's mouse/keyboard
+API, checks model state against independent `chess.js` outcomes, detects
+floating-piece pixel changes automatically, and tests drag pickup, pointer
+tracking geometry, drop/ghost cleanup, callback pressure, sound initialization,
+animation variants, keyboard accessibility, and rapid next-move readiness.
+It includes a mutation test that deliberately hides the dragged ghost to prove
+that the screenshot oracle detects a missing piece. A 40-ply game and 100
+repeated legal-position scenarios exercise both pointer paths. Optional
+`FEELLAB_STRESS=1` enables the 1,000-attempt stress test.
+
+**Do not confuse tests:** The in-page `performance.now()` events measure JS
+or DOM events; the pixel oracle uses actual screenshots to validate rendering
+correctness, but screenshots are not suitable for high-frequency motion timing.
+Task wall time includes browser automation overhead. None of these results
+is physical mouse-to-photon latency. Mac ScreenCaptureKit, native WKWebView,
+and full installed BlindBase verification are *not yet implemented/verified*
+and remain explicitly marked `NOT_RUN` in generated reports.
+
+The suite emits accessible text in `apps/benchmarks/feel-results/report.md`,
+plus versioned `results.json` and `environment.json`. A dedicated
+`.github/workflows/feel-lab.yml` correctness job runs browser checks without
+requiring visual inspection. Timing regression budgets must be separately
+calibrated for a controlled host; shared CI is not a trustworthy source of
+absolute low-latency comparisons.
+
+See [the nonvisual operator guide](apps/benchmarks/feel/README.md) and
+[OpenSpec change](openspec/changes/automated-board-feel-lab/proposal.md).
+
+---
+
 # Ultra Chess React — Benchmarks
 
 > Head-to-head numbers against the two boards Ultra Chess React is
