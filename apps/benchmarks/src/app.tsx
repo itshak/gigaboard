@@ -25,7 +25,8 @@ import {
 } from "gigaboard/core";
 import { neo } from "gigaboard/pieces/neo";
 import { green } from "gigaboard/themes/green";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { installFeelLab, type FeelLabAPI } from "./harness/feel-harness.js";
 import {
   type BenchMetrics,
   type GbBench,
@@ -48,6 +49,13 @@ function sqIndex(s: string): SquareIndex {
 
 export function App() {
   const [model, setModel] = useState<BoardModel | null>(null);
+  const feelRef = useRef<FeelLabAPI | null>(null);
+  const search = new URLSearchParams(window.location.search);
+  const feelEnabled = search.get("feel") === "1";
+  const testSound = feelEnabled && search.get("sound") === "1";
+  const testDuration = feelEnabled ? Number(search.get("animation") ?? "0") : 0;
+  const testGhost = feelEnabled ? search.get("ghost") : null;
+  const reportMove = useCallback(() => { feelRef.current?.onMove(); }, []);
 
   // Ready promise for Playwright. Resolves once the interactive model is
   // live and the harness API is attached. Scenarios that need a real
@@ -114,10 +122,22 @@ export function App() {
       },
       squareCentre: squareCentreByDataAttr,
     };
+    if (feelEnabled && boardRoot !== null) {
+      const liveBoard = boardRoot.querySelector<HTMLElement>("[data-gb-orientation]");
+      if (liveBoard !== null) {
+        const feel = installFeelLab(model, liveBoard);
+        feelRef.current = feel;
+        window.__gbFeelLab__ = feel;
+      }
+    }
     window.__gbBench__ = api;
     window.__ucrBench__ = api;
     readyRef.current?.resolve();
-  }, [model]);
+    return () => {
+      feelRef.current?.dispose();
+      feelRef.current = null;
+    };
+  }, [model, feelEnabled]);
 
   return (
     <main
@@ -139,8 +159,10 @@ export function App() {
           fallbackFen={STARTING_FEN}
           theme={green}
           pieces={neo}
-          sound={false}
-          animation={{ durationMs: 0 }}
+          sound={testSound}
+          onMove={reportMove}
+          animation={{ durationMs: testDuration }}
+          {...(testGhost !== null ? { theme: { ...green, "--gb-drag-ghost-opacity": testGhost } } : {})}
         />
       </div>
     </main>
