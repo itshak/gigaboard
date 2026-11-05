@@ -160,7 +160,7 @@ export function App() {
           theme={green}
           pieces={neo}
           sound={testSound}
-          onMove={reportMove}
+          onMove={feelEnabled ? reportMove : undefined}
           animation={{ durationMs: testDuration }}
           {...(testGhost !== null ? { theme: { ...green, "--gb-drag-ghost-opacity": testGhost } } : {})}
         />
