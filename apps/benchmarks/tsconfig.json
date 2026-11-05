@@ -13,6 +13,8 @@
     "scripts/**/*.mjs",
     "bench/**/*.ts",
     "bench/**/*.tsx",
+    "feel/**/*.ts",
+    "playwright.feel.config.ts",
     "playwright.config.ts",
     "vite.config.ts",
     "vitest.bench.config.ts"
