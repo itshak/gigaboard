@@ -41,7 +41,9 @@ budget. A browser test result does not provide macOS WKWebView certification.
 
 - Native Playwright pointer pickup at the current 4px drag threshold.
 - First visible DOM activation, pointer delivery and drop callback markers.
-- A 15ms deliberately slow application callback and ghost cleanup order.
+- Controlled 0, 5, 15 and 40ms application callback loads and ghost cleanup order.
+- Automated origin-opacity, animation-duration and sound-pool initialization checks.
+- Optional 1,000-gesture stress run: set FEELLAB_STRESS=1 and select its spec.
 - Independent screenshot pixel changes as a piece enters an empty square.
 - A mutation test that hides a floating piece and ensures the pixel
   detector would reject the missing visual.
@@ -58,8 +60,7 @@ The scenario wall times include driver overhead.
 ## Follow-on OpenSpec implementation
 
 See `tasks.md` for remaining work: full 100 distinct tactical puzzles,
-1,000-attempt stress suite, configurable A/B pickup thresholds, isolated
-sound/animation variants, controlled-host performance regressions,
+configurable A/B pickup thresholds, controlled-host performance regressions,
 ScreenCaptureKit native frame oracle, BlindBase adapter, full automated
 accessibility/i18n coverage, and verified Mac-specific execution.
 
