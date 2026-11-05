@@ -3,7 +3,7 @@
  * never imported by or bundled in the published gigaboard library.
  * Times are browser event/DOM-write proxies, NOT physical input-to-photon latency.
  */
-import type { BoardModel } from "gigaboard/core";
+import { createDragController, type BoardModel, type SquareIndex } from "gigaboard/core";
 
 export interface FeelEvent {
   readonly kind: string;
@@ -22,6 +22,8 @@ export interface FeelLabAPI {
   setCallbackDelay(ms: number): void;
   onMove(): void;
   moveCount(): number;
+  /** Pure state-machine probe, not a rendered A/B test. */
+  thresholdProbe(distancePx: number, samples: number[]): number | null;
   dispose(): void;
 }
 
@@ -76,6 +78,15 @@ export function installFeelLab(model: BoardModel, board: HTMLElement): FeelLabAP
     events: () => events.slice(),
     fen: () => model.engine.fen(),
     moveCount: () => moves,
+    thresholdProbe(distancePx, samples) {
+      const controller = createDragController({ activationDistance: distancePx });
+      controller.pointerDown(12 as SquareIndex, 1, 0, 0);
+      for (let i = 0; i < samples.length; i++) {
+        const event = controller.pointerMove(1, samples[i] ?? 0, 0);
+        if (event?.kind === "drag-start") return i;
+      }
+      return null;
+    },
     resetEvents() { events = []; moves = 0; },
     setCallbackDelay(ms) {
       if (!Number.isFinite(ms) || ms < 0 || ms > 100) throw new RangeError("callback delay must be in [0,100]");
