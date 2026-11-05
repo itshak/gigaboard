@@ -29,7 +29,7 @@ export async function changedPixels(
   return page.evaluate(async ({ b64a, b64b, region, threshold }) => {
     const decode = async (encoded: string): Promise<ImageData> => {
       const bytes = Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0));
-      const bitmap = await createImageBitmap(new Blob([bytes], { type: "image/png" }));
+      const bitmap = await createImageBitmap(new Blob([bytes.buffer as ArrayBuffer], { type: "image/png" }));
       const canvas = document.createElement("canvas");
       canvas.width = bitmap.width;
       canvas.height = bitmap.height;
