@@ -276,7 +276,10 @@ export function useMoveSound(
       prevPly = snap.historyPly;
 
       const key = classifyMoveFeedback(
-        model.lastAnimations, snap, perspectiveRef.current, cuePolicy,
+        model.lastAnimations,
+        snap,
+        perspectiveRef.current,
+        cuePolicy,
       );
       triggerMoveSound(key);
     });

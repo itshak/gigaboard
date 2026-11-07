@@ -8,38 +8,51 @@ const snapshot = {
 };
 
 describe("move-sound cue ordering policies", () => {
-  it("keeps the existing default classification for all board users", () => {
-    expect(classifyMoveFeedback([{ kind: "capture" }], snapshot, undefined))
-      .toBe("moveCheck");
-    expect(classifyMoveFeedback([{ kind: "capture" }], {
-      ...snapshot, isGameOver: true,
-    }, undefined)).toBe("gameEnd");
+  it("keeps default classification for other board users", () => {
+    const checkCapture = classifyMoveFeedback([{ kind: "capture" }], snapshot, undefined);
+    const endedCapture = classifyMoveFeedback(
+      [{ kind: "capture" }],
+      { ...snapshot, isGameOver: true },
+      undefined,
+    );
+    expect(checkCapture).toBe("moveCheck");
+    expect(endedCapture).toBe("gameEnd");
   });
 
-  it("preserves BlindBase SAN capture priority, including capture-checkmate", () => {
+  it("preserves SAN capture priority on capture-checkmate and promotions", () => {
     for (const kinds of [
       [{ kind: "capture" }],
       [{ kind: "capture" }, { kind: "promotion" }],
       [{ kind: "en-passant" }],
     ]) {
-      expect(classifyMoveFeedback(kinds, {
-        ...snapshot, isGameOver: true,
-      }, undefined, "san-priority")).toBe("capture");
+      const cue = classifyMoveFeedback(
+        kinds,
+        { ...snapshot, isGameOver: true },
+        undefined,
+        "san-priority",
+      );
+      expect(cue).toBe("capture");
     }
   });
 
-  it("preserves castle, promotion and check cues without duplicating endings", () => {
-    expect(classifyMoveFeedback([{ kind: "castle" }], snapshot, undefined, "san-priority"))
-      .toBe("castle");
-    expect(classifyMoveFeedback([{ kind: "promotion" }], snapshot, undefined, "san-priority"))
-      .toBe("promote");
-    expect(classifyMoveFeedback([], {
-      ...snapshot, isGameOver: true,
-    }, undefined, "san-priority")).toBe("moveCheck");
+  it("preserves castle, promotion and check cues on mate", () => {
+    const castle = classifyMoveFeedback(
+      [{ kind: "castle" }], snapshot, undefined, "san-priority",
+    );
+    const promote = classifyMoveFeedback(
+      [{ kind: "promotion" }], snapshot, undefined, "san-priority",
+    );
+    const mate = classifyMoveFeedback(
+      [], { ...snapshot, isGameOver: true }, undefined, "san-priority",
+    );
+    expect(castle).toBe("castle");
+    expect(promote).toBe("promote");
+    expect(mate).toBe("moveCheck");
   });
 
-  it("does not mislabel stalemate as a check or force a game-end cue", () => {
+  it("does not mislabel stalemate as check or game-end cue", () => {
     const terminal = { ...snapshot, inCheck: false, isGameOver: true };
-    expect(classifyMoveFeedback([], terminal, undefined, "san-priority")).toBe("moveSelf");
+    const cue = classifyMoveFeedback([], terminal, undefined, "san-priority");
+    expect(cue).toBe("moveSelf");
   });
 });
