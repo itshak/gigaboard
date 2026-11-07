@@ -107,6 +107,12 @@ export interface MoveSoundOptions {
    * No sound is played for initial position hydration.
    */
   readonly trigger?: "model" | "position";
+  /**
+   * "san-priority" preserves an application's SAN-based cue precedence:
+   * capture before promotion/check, mate as check, stalemate as normal move.
+   * The default built-in classifier is unchanged.
+   */
+  readonly cuePolicy?: "default" | "san-priority";
   /** Per-key URL overrides. Missing keys fall back to {@link DEFAULT_MOVE_SOUND_SOURCES}. */
   readonly sources?: MoveSoundSources;
   /**
@@ -165,6 +171,7 @@ export function useMoveSound(
     prewarm = false,
     onCue,
     trigger = "model",
+    cuePolicy = "default",
     sources,
     perspective,
   } = options;
@@ -268,10 +275,12 @@ export function useMoveSound(
       }
       prevPly = snap.historyPly;
 
-      const key = classifyMoveFeedback(model.lastAnimations, snap, perspectiveRef.current);
+      const key = classifyMoveFeedback(
+        model.lastAnimations, snap, perspectiveRef.current, cuePolicy,
+      );
       triggerMoveSound(key);
     });
-  }, [enabled, model, trigger, triggerMoveSound]);
+  }, [enabled, model, trigger, cuePolicy, triggerMoveSound]);
 
   return triggerMoveSound;
 }

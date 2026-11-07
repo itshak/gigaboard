@@ -504,7 +504,12 @@ export function Chessboard(props: ChessboardProps) {
         previousFeedbackFen !== positionFen
       ) {
         triggerMoveSound(
-          classifyMoveFeedback(game.lastAnimations, previousSnapshot, soundOptions.perspective),
+          classifyMoveFeedback(
+            game.lastAnimations,
+            previousSnapshot,
+            soundOptions.perspective,
+            soundOptions.cuePolicy,
+          ),
         );
       }
       return;
@@ -532,7 +537,12 @@ export function Chessboard(props: ChessboardProps) {
     const feedbackSnapshot =
       positionTransition?.direction === "backward" ? previousSnapshot : snapshot;
     triggerMoveSound(
-      classifyMoveFeedback(feedbackDescriptors, feedbackSnapshot, soundOptions.perspective),
+      classifyMoveFeedback(
+        feedbackDescriptors,
+        feedbackSnapshot,
+        soundOptions.perspective,
+        soundOptions.cuePolicy,
+      ),
     );
     triggerMoveHaptic(
       classifyMoveFeedback(feedbackDescriptors, feedbackSnapshot, hapticOptions.perspective),
@@ -547,6 +557,7 @@ export function Chessboard(props: ChessboardProps) {
     preserveUserArrowsOnPositionSync,
     orientation,
     soundOptions.perspective,
+    soundOptions.cuePolicy,
     soundOptions.trigger,
     triggerMoveHaptic,
     triggerMoveSound,

@@ -27,19 +27,19 @@ export const DEFAULT_MOVE_HAPTIC_PATTERNS: Readonly<Record<MoveFeedbackKey, Hapt
 /**
  * Classify the feedback cue that should fire for the given committed move.
  *
- * Priority (highest wins):
- *   1. `gameEnd` if the engine reports `isGameOver`.
- *   2. `promote` / `castle` because structural moves get their own cue.
- *   3. `moveCheck` if the side-to-move is now in check.
- *   4. `capture` if any descriptor is a capture.
- *   5. `moveSelf` / `moveOpponent` otherwise.
+ * Default priority: gameEnd, promote/castle, check, capture, normal move.
+ * When `cuePolicy` is `"san-priority"`, use BlindBase's historical SAN
+ * sound precedence: capture (even capture+promotion or capture+check),
+ * castle, promotion, check/mate, normal move. A stalemate is a normal move,
+ * not a misleading "check" / game-end cue.
  */
 export function classifyMoveFeedback(
   animations: ReadonlyArray<{ readonly kind: string }>,
   snapshot: { readonly isGameOver: boolean; readonly inCheck: boolean; readonly turn: 0 | 1 },
   perspective: 0 | 1 | undefined,
+  cuePolicy: "default" | "san-priority" = "default",
 ): MoveFeedbackKey {
-  if (snapshot.isGameOver) return "gameEnd";
+  if (cuePolicy === "default" && snapshot.isGameOver) return "gameEnd";
 
   let sawPromotion = false;
   let sawCastle = false;
@@ -50,6 +50,7 @@ export function classifyMoveFeedback(
     else if (d.kind === "capture" || d.kind === "en-passant") sawCapture = true;
   }
 
+  if (cuePolicy === "san-priority" && sawCapture) return "capture";
   if (sawPromotion) return "promote";
   if (sawCastle) return "castle";
   if (snapshot.inCheck) return "moveCheck";
