@@ -87,6 +87,61 @@ describe("useMoveSound", () => {
     }
   });
 
+
+  it("prewarms the built-in pool only when explicitly requested", async () => {
+    const model = await makeBoardModel();
+    try {
+      render(<SoundProbe model={model} options={{ preload: "auto", prewarm: true }} />);
+      expect(AudioStub.instances.length).toBe(28);
+      expect(AudioStub.instances.every((audio) => audio.preload === "auto")).toBe(true);
+      expect(AudioStub.plays).toHaveLength(0);
+      act(() => {
+        model.tryMove(12 as never, 28 as never);
+      });
+      expect(AudioStub.instances.length).toBe(28);
+      expect(AudioStub.plays).toHaveLength(1);
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("delegates to a themed Web Audio backend without allocating its HTMLAudio pool", async () => {
+    const model = await makeBoardModel();
+    const cues: Array<{ key: string; volume: number }> = [];
+    try {
+      render(<SoundProbe model={model} options={{
+        volume: 0.25,
+        prewarm: true,
+        onCue: (key, volume) => cues.push({ key, volume }),
+      }} />);
+      act(() => {
+        model.tryMove(12 as never, 28 as never);
+      });
+      expect(cues).toEqual([{ key: "moveSelf", volume: 0.25 }]);
+      expect(AudioStub.instances.length).toBe(0);
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("does not play unconfirmed local moves in position-confirmed mode", async () => {
+    const model = await makeBoardModel();
+    const cues: string[] = [];
+    try {
+      render(<SoundProbe model={model} options={{
+        trigger: "position",
+        onCue: (key) => cues.push(key),
+      }} />);
+      act(() => {
+        model.tryMove(12 as never, 28 as never);
+      });
+      expect(cues).toEqual([]);
+      expect(AudioStub.instances.length).toBe(0);
+    } finally {
+      model.dispose();
+    }
+  });
+
   it("allocates nothing when disabled", async () => {
     const model = await makeBoardModel();
     try {

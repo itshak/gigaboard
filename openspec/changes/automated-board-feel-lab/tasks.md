@@ -104,3 +104,20 @@ counts. Chromium also uses CDP browser-driven touch input to contrast fixed 2px
 with the adaptive touch branch (6px) without treating JS-dispatched synthetic
 events as real user input. This remains a correctness and ergonomic safety
 screen; it does not measure native application feel or a user's own jitter.
+
+## Sound integration audit and staged ownership (November 8, 2026)
+
+- BlindBase owns a predecoded Web Audio pool shared with move speech and iOS
+  audio-session focus, four selectable CC0/local themes, per-category volume,
+  master mute, UI/engine/feedback cues and explicit illegal-move feedback.
+  GigaBoard's lazy HTMLAudio pool cannot replace this backend without a
+  regression. Its built-in chess.com sound assets have a redistribution warning.
+- Add GigaBoard `sound.onCue` for host-supplied backends, optional native pool
+  prewarming, and `sound.trigger = "position"` for apps that approve/reject
+  moves against controlled `positionFen`. Never sound a rejected local move.
+- Host integration must move move-*event ownership* to GigaBoard while keeping
+  app speech, illegal/training/engine/UI events in the existing audio engine.
+  Verify browser-native controlled FEN confirmations and no duplicate cues
+  before removing app-originated move cues. Cross-repo deployment requires an
+  npm package release and a BlindBase lockfile update; neither is implied by
+  simply merging GigaBoard source.

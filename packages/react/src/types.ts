@@ -422,7 +422,8 @@ export interface ChessboardProps {
   /**
    * Move-sound effects. Pass `true` (default) to enable the built-in
    * chess.com-style cue set, `false` to disable, or a {@link MoveSoundOptions}
-   * object to configure volume, per-key URL overrides, or viewer perspective.
+   * object to configure volume, per-key URL overrides, viewer perspective,
+   * prewarming, or host-provided Web Audio playback.
    *
    * The seven cues ship as local MP3 assets inside this package; no runtime
    * CDN dependency. Autoplay policies apply on every major browser — the

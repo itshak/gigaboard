@@ -84,8 +84,29 @@ export interface MoveSoundOptions {
   readonly enabled?: boolean;
   /** Output volume, `0`–`1`. Default `1`. */
   readonly volume?: number;
-  /** Audio preload mode used when the lazy pool is first created. Default `"none"`. */
+  /** HTMLAudio preload mode. Default "none" (no background network work). */
   readonly preload?: "none" | "metadata" | "auto";
+  /**
+   * Opt-in eager creation/preload of the built-in audio pool on mount,
+   * without attempting autoplay. Effective only for the built-in player;
+   * injected players remain responsible for their own warmup.
+   */
+  readonly prewarm?: boolean;
+  /**
+   * Inject a host-owned playback backend. GigaBoard classifies and triggers
+   * exactly one board cue; the host owns audio assets, Web Audio context,
+   * theme, mute, volumes, audio focus and speech coordination. No built-in
+   * HTMLAudio pool is allocated when this callback is provided.
+   */
+  readonly onCue?: (key: MoveSoundKey, volume: number) => void;
+  /**
+   * "model" (default): play on local engine model commits, with controlled
+   * position syncs supported as before. "position": defer ALL move cues
+   * until the controlled `positionFen` prop changes. This is necessary for
+   * apps that may reject or roll back a local move after onMove is called.
+   * No sound is played for initial position hydration.
+   */
+  readonly trigger?: "model" | "position";
   /** Per-key URL overrides. Missing keys fall back to {@link DEFAULT_MOVE_SOUND_SOURCES}. */
   readonly sources?: MoveSoundSources;
   /**
@@ -137,11 +158,22 @@ export function useMoveSound(
   model: BoardModel | null,
   options: MoveSoundOptions = {},
 ): TriggerMoveSound {
-  const { enabled = true, volume = 1, preload = "none", sources, perspective } = options;
+  const {
+    enabled = true,
+    volume = 1,
+    preload = "none",
+    prewarm = false,
+    onCue,
+    trigger = "model",
+    sources,
+    perspective,
+  } = options;
 
   const poolsRef = useRef<Record<MoveSoundKey, Pool> | null>(null);
   const sourcesRef = useRef<Readonly<Record<MoveSoundKey, string>>>(DEFAULT_MOVE_SOUND_SOURCES);
   const preloadRef = useRef(preload);
+  const onCueRef = useRef(onCue);
+  onCueRef.current = onCue;
 
   // Keep a latest-value ref for volume so the pool doesn't tear down
   // every time the slider moves — we just update each element's volume
@@ -175,10 +207,25 @@ export function useMoveSound(
     }
   }, [enabled]);
 
+  // Opt-in warmup for the built-in HTMLAudio backend. Keeping it passive
+  // avoids blocking the first visual commit; no play() gesture is attempted.
+  useEffect(() => {
+    if (!enabled || !prewarm || onCue) return;
+    if (typeof window === "undefined" || typeof Audio === "undefined") return;
+    if (poolsRef.current === null) {
+      poolsRef.current = createPools(sourcesRef.current, preloadRef.current);
+    }
+  }, [enabled, prewarm, onCue, preload, sources]);
+
   const triggerMoveSound = useCallback<TriggerMoveSound>(
     (key) => {
       if (!enabled) return;
       if (typeof window === "undefined") return; // SSR guard.
+      const effectiveVolume = Math.max(0, Math.min(1, volumeRef.current));
+      if (onCueRef.current) {
+        onCueRef.current(key, effectiveVolume);
+        return;
+      }
       if (typeof Audio === "undefined") return; // happy-dom lacks Audio.
 
       const pools = poolsRef.current ?? createPools(sourcesRef.current, preloadRef.current);
@@ -190,7 +237,7 @@ export function useMoveSound(
       pool.cursor = (pool.cursor + 1) % pool.elements.length;
       const el = pool.elements[pool.cursor];
       if (el === undefined) return;
-      el.volume = Math.max(0, Math.min(1, volumeRef.current));
+      el.volume = effectiveVolume;
       el.currentTime = 0;
       // Some browsers reject autoplay before a user gesture. Swallow the
       // rejection — once the user interacts, subsequent plays succeed.
@@ -206,7 +253,7 @@ export function useMoveSound(
   // chess.com). The subscription is cheap: one `subscribe` per enabled
   // mount and zero re-renders.
   useEffect(() => {
-    if (!enabled || model === null) return;
+    if (!enabled || model === null || trigger === "position") return;
 
     let prevPly = model.getSnapshot().historyPly;
 
@@ -221,7 +268,7 @@ export function useMoveSound(
       const key = classifyMoveFeedback(model.lastAnimations, snap, perspectiveRef.current);
       triggerMoveSound(key);
     });
-  }, [enabled, model, triggerMoveSound]);
+  }, [enabled, model, trigger, triggerMoveSound]);
 
   return triggerMoveSound;
 }

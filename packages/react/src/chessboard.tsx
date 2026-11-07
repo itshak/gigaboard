@@ -495,6 +495,18 @@ export function Chessboard(props: ChessboardProps) {
     const previousSnapshot = game.getSnapshot();
     if (game.engine.fen() === positionFen && managedArrows === undefined) {
       lastControlledFeedbackFenRef.current = positionFen;
+      // The host confirmed a local input by publishing the accepted FEN.
+      // In controlled mode the model subscription was intentionally silent,
+      // so play now, even when no further engine sync is required.
+      if (
+        soundOptions.trigger === "position" &&
+        previousFeedbackFen !== null &&
+        previousFeedbackFen !== positionFen
+      ) {
+        triggerMoveSound(
+          classifyMoveFeedback(game.lastAnimations, previousSnapshot, soundOptions.perspective),
+        );
+      }
       return;
     }
     const positionChanged = syncPositionFen(
@@ -535,6 +547,7 @@ export function Chessboard(props: ChessboardProps) {
     preserveUserArrowsOnPositionSync,
     orientation,
     soundOptions.perspective,
+    soundOptions.trigger,
     triggerMoveHaptic,
     triggerMoveSound,
   ]);
