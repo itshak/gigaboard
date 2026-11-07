@@ -36,14 +36,18 @@ describe("move-sound cue ordering policies", () => {
   });
 
   it("preserves castle, promotion and check cues on mate", () => {
-    const castle = classifyMoveFeedback(
-      [{ kind: "castle" }], snapshot, undefined, "san-priority",
-    );
+    const castle = classifyMoveFeedback([{ kind: "castle" }], snapshot, undefined, "san-priority");
     const promote = classifyMoveFeedback(
-      [{ kind: "promotion" }], snapshot, undefined, "san-priority",
+      [{ kind: "promotion" }],
+      snapshot,
+      undefined,
+      "san-priority",
     );
     const mate = classifyMoveFeedback(
-      [], { ...snapshot, isGameOver: true }, undefined, "san-priority",
+      [],
+      { ...snapshot, isGameOver: true },
+      undefined,
+      "san-priority",
     );
     expect(castle).toBe("castle");
     expect(promote).toBe("promote");
