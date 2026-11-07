@@ -100,3 +100,17 @@ heuristic passed the same jitter oracle, reducing pickup *movement* from
 the 4px default to 2px. The browser sweep recommends the fixed **2px**
 profile for optional user acceptance, not automatic production adoption.
 No measured physical-display timing improvement may be claimed.
+
+## 2px follow-up validation
+
+The `@twopx` Playwright group now validates the 2px candidate against the 4px
+default in **Chromium and WebKit**: 1px horizontal/vertical/diagonal click
+jitter, click-to-move, exact activation at 2px vs 4px, and a full 40-ply mixed
+click/drag game with castling. A Chromium-specific test drives actual browser
+CDP touch input and compares fixed 2px with the touch-aware adaptive 6px
+threshold. Touch testing here does **not** substitute for a physical device.
+
+From `apps/benchmarks` run `bun x playwright test --config ./playwright.feel.config.ts --grep @twopx`.
+The tests run in the GitHub FeelLab correctness workflow on every push and
+PR, as part of `bun run feel:ci`. Native macOS responsiveness and the
+subjective BlindBase feel assessment still require a separate stage.

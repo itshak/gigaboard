@@ -91,3 +91,16 @@ Each task is intended to be independently reviewable and completable in one codi
   a proof of improvement in human-perceived responsiveness, nor a screen
   presentation timing measurement. 4.3 and 4.4 remain open for complete
   callback/cleanup A/B and robust distributions/effect sizes.
+
+## 2px candidate validation gate — November 8, 2026
+
+The next pass explicitly tests the 2px threshold against the 4px baseline in
+both Chromium and WebKit. Browser-driven mouse jitter on a click (stationary,
+1px axial, and 1px diagonal) must not falsely reveal a drag ghost; click-to-move
+must still complete. Crossing 2px must activate the experimental ghost earlier
+than 4px, while both boards must accept the same drag. A 40-ply mixed drag/click
+game (including castling) must preserve independently verified FEN and callback
+counts. Chromium also uses CDP browser-driven touch input to contrast fixed 2px
+with the adaptive touch branch (6px) without treating JS-dispatched synthetic
+events as real user input. This remains a correctness and ergonomic safety
+screen; it does not measure native application feel or a user's own jitter.
