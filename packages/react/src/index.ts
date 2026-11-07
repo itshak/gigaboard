@@ -107,4 +107,4 @@ export type {
 export const SUPPORTS_CONFIRMED_BOARD_SOUND = true as const;
 
 /** Package version — keep in sync with `package.json`. */
-export const PACKAGE_VERSION = "1.5.0";
+export const PACKAGE_VERSION = "1.7.0";
