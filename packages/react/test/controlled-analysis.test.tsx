@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/react";
+import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Chessboard } from "../src/chessboard.js";
 import { makeArrow, type SquareIndex } from "../src/core/index.js";
@@ -148,6 +148,73 @@ describe("controlled analysis board", () => {
         intensity: undefined,
         mobileOnly: false,
       });
+    } finally {
+      model.dispose();
+    }
+  });
+
+
+  it("plays a controlled move once only after the host confirms its FEN", async () => {
+    const model = await makeBoardModel();
+    const cues: string[] = [];
+    const sound = {
+      trigger: "position" as const,
+      onCue: (key: string) => cues.push(key),
+    };
+    const startingFen = model.engine.fen();
+
+    try {
+      const { rerender } = render(
+        <Chessboard game={model} positionFen={startingFen} sound={sound} />,
+      );
+      // A local input can be rejected by BlindBase (e.g. wrong puzzle move).
+      act(() => {
+        model.tryMove(E2, E4);
+      });
+      expect(cues).toEqual([]);
+      // A rejected move rolls back without a confirmed position change.
+      act(() => {
+        model.load(startingFen);
+      });
+      rerender(<Chessboard game={model} positionFen={startingFen} sound={sound} />);
+      expect(cues).toEqual([]);
+
+      // The next move succeeds and the host publishes the confirmed FEN.
+      act(() => {
+        model.tryMove(E2, E4);
+      });
+      expect(cues).toEqual([]);
+      rerender(
+        <Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />,
+      );
+      expect(cues).toEqual(["moveSelf"]);
+
+      rerender(
+        <Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />,
+      );
+      expect(cues).toEqual(["moveSelf"]);
+    } finally {
+      model.dispose();
+    }
+  });
+
+  it("emits a single controlled cue after an externally supplied position change", async () => {
+    const model = await makeBoardModel();
+    const cues: string[] = [];
+    const sound = {
+      trigger: "position" as const,
+      onCue: (key: string) => cues.push(key),
+    };
+
+    try {
+      const { rerender } = render(
+        <Chessboard game={model} positionFen={model.engine.fen()} sound={sound} />,
+      );
+      expect(cues).toEqual([]);
+      rerender(<Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />);
+      expect(cues).toEqual(["moveSelf"]);
+      rerender(<Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />);
+      expect(cues).toEqual(["moveSelf"]);
     } finally {
       model.dispose();
     }
