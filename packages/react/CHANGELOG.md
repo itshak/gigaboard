@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.7.0](https://github.com/itshak/gigaboard/compare/v1.6.0...v1.7.0) (2026-11-07)
+
+
+### Features
+
+* **feellab:** add touch-aware adaptive drag threshold experiment ([7ef3f24](https://github.com/itshak/gigaboard/commit/7ef3f24bbe30fb8bd7d0dcd1cb9d8768c49ddbe1))
+* **feellab:** expose opt-in board pickup timing and activation threshold for A/B tests ([14ee8df](https://github.com/itshak/gigaboard/commit/14ee8df1e981bd24b5719663c3009e60f397bedf))
+* **sound:** allow SAN-compatible capture-first audio cue priority ([7d450e1](https://github.com/itshak/gigaboard/commit/7d450e1e73205d3e723f8ab7af305808fbeddd39))
+* **sound:** expose capability marker for safe cross-version app migration ([6c69ce9](https://github.com/itshak/gigaboard/commit/6c69ce93688ccf0fa40ee37aea94e3b0028a2aa3))
+* **sound:** support host Web Audio backends and confirmed controlled-position cues ([5e4786e](https://github.com/itshak/gigaboard/commit/5e4786e90a380cca7254ff0418448071e1c43650))
+
+
+### Bug Fixes
+
+* **feellab:** restore click-to-move castling targets found by real Playwright CI ([9d69c55](https://github.com/itshak/gigaboard/commit/9d69c5526b715b3291c2541fc34e640b0dfc9360))
+* **sound:** keep warmup source dependencies and satisfy Biome formatting ([32e6176](https://github.com/itshak/gigaboard/commit/32e617647c4608981818a6737b8223be09c622ec))
+* **test:** format sound priority tests for Biome CI ([7b23803](https://github.com/itshak/gigaboard/commit/7b23803519a7b221b0594783d20edcf393043764))
+
 ## [1.6.0](https://github.com/itshak/gigaboard/compare/v1.5.4...v1.6.0) (2026-11-04)
 
 ### Features
