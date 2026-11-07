@@ -234,15 +234,30 @@ jobs:
             [[ -z "$dir" ]] && continue
             name=$(jq -r '.name' "$dir/package.json")
             version=$(jq -r '.version' "$dir/package.json")
-            for i in 1 2 3 4 5 6; do
-              if npm view "$name@$version" version >/dev/null 2>&1; then
+            # npm Trusted Publishing can accept an OIDC/provenance publish while
+            # registry ingestion is still pending. The CLI explicitly reports
+            # "Your package is being processed and may take a few minutes."
+            # Two minutes caused a false failure on 1.7.0, so allow eight.
+            published=""
+            for i in $(seq 1 24); do
+              published=$(npm view "$name@$version" version --prefer-online 2>/dev/null || true)
+              if [[ "$published" == "$version" ]]; then
                 echo "Verified on registry: $name@$version"
                 break
               fi
-              echo "Waiting for $name@$version to appear... ($i/6)"
+              echo "Waiting for npm to finish ingesting $name@$version... ($i/24)"
               sleep 20
             done
-            npm view "$name@$version" version
+            test "$published" = "$version" || {
+              echo "::error::npm did not expose $name@$version within eight minutes"
+              exit 1
+            }
+            integrity=$(npm view "$name@$version" dist.integrity --prefer-online)
+            [[ "$integrity" == sha512-* ]] || {
+              echo "::error::Registry response is missing the SHA-512 package integrity"
+              exit 1
+            }
+            echo "Verified package integrity: $name@$version $integrity"
           done
 
       - name: Create GitHub Release (tag push)
