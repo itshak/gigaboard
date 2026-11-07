@@ -400,14 +400,14 @@ describe("createBoardModel with createGigachessAdapter — Move2 and castling", 
 describe("click-to-move castling legal-target selection", () => {
   it("exposes normal king landing squares for white and black without losing canonical targets", () => {
     const placement = "r3k2r/8/8/8/8/8/8/R3K2R";
-    const white = createBoardModel(createGigachessAdapter(placement + " w KQkq - 0 1"));
+    const white = createBoardModel(createGigachessAdapter(`${placement} w KQkq - 0 1`));
     white.selectSquare(4 as SquareIndex);
     for (const target of [2, 6, 0, 7]) {
       expect(white.getSnapshot().legalTargets.has(target as SquareIndex)).toBe(true);
     }
     white.dispose();
 
-    const black = createBoardModel(createGigachessAdapter(placement + " b KQkq - 0 1"));
+    const black = createBoardModel(createGigachessAdapter(`${placement} b KQkq - 0 1`));
     black.selectSquare(60 as SquareIndex);
     for (const target of [58, 62, 56, 63]) {
       expect(black.getSnapshot().legalTargets.has(target as SquareIndex)).toBe(true);
