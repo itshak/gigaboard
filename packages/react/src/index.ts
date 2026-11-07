@@ -99,5 +99,12 @@ export type {
   UseChessGameOptions,
 } from "./types.js";
 
+/**
+ * Capability marker for apps migrating from app-owned SAN sounds to
+ * GigaBoard-confirmed board cues. Older package versions do not export it,
+ * so a runtime feature test can retain legacy audio with no silent moves.
+ */
+export const SUPPORTS_CONFIRMED_BOARD_SOUND = true as const;
+
 /** Package version — keep in sync with `package.json`. */
 export const PACKAGE_VERSION = "1.5.0";
