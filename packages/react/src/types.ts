@@ -250,6 +250,20 @@ export interface ChessboardProps {
   readonly allowDrag?: boolean;
 
   /**
+   * Optional drag activation distance in CSS pixels; defaults to 4px.
+   * Smaller thresholds can feel more responsive but can misclassify
+   * slight click jitter as dragging. FeelLab evaluates this trade-off.
+   */
+  readonly dragActivationDistance?: number;
+
+  /**
+   * Opt-in immediate ghost pickup on pointerdown. A plain click remains
+   * possible: pointer capture waits until the drag threshold is crossed.
+   * Defaults to false.
+   */
+  readonly dragPickupOnPointerDown?: boolean;
+
+  /**
    * Fine-grained predicate consulted at the drag-activation boundary —
    * returning `false` aborts the drag before the ghost appears. Use this
    * for per-piece gating that can't be modelled by `allowDrag` or the

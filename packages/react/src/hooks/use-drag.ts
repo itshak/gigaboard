@@ -70,6 +70,8 @@ export interface UseDragOptions {
   readonly enabled: boolean;
   /** The activation distance (pixels) for `pending → dragging`. */
   readonly activationDistance?: number;
+  /** Show piece on initial press, while preserving click vs drag semantics. */
+  readonly pickupOnPointerDown?: boolean;
   /** Callbacks — see hook docs above. */
   readonly onDragStart: (from: SquareIndex, cell: BoardCell) => void;
   readonly onDragEnd: () => void;
@@ -97,6 +99,7 @@ export function useDrag(options: UseDragOptions): void {
     dragLayerRef,
     enabled,
     activationDistance,
+    pickupOnPointerDown = false,
     onDragStart,
     onDragEnd,
     onDrop,
@@ -152,6 +155,19 @@ export function useDrag(options: UseDragOptions): void {
       onDragEnd();
     };
 
+    // Same imperative rendering path for normal threshold pickup and
+    // the opt-in immediate-pickup experiment.
+    const showDragGhost = (from: SquareIndex, cell: BoardCell, x: number, y: number): void => {
+      const originLabel = algebraicOf(from);
+      originEl = container.querySelector<HTMLElement>(`[data-piece-square="${originLabel}"]`);
+      if (originEl !== null) {
+        originEl.style.opacity = `var(${GHOST_OPACITY_VAR}, 0.35)`;
+      }
+      active = true;
+      dragLayerRef.current?.show(cell);
+      writeTransform(x, y);
+    };
+
     const onPointerDown = (e: PointerEvent): void => {
       // Primary button only. Right-clicks are reserved for arrows (M4).
       // Multi-touch is defended by drag-controller's pointerId tracking.
@@ -167,60 +183,44 @@ export function useDrag(options: UseDragOptions): void {
         return;
       }
       const consumed = controller.pointerDown(sq, e.pointerId, e.clientX, e.clientY);
-      if (consumed) activePointerId = e.pointerId;
+      if (consumed) {
+        activePointerId = e.pointerId;
+        if (pickupOnPointerDown) {
+          // Avoid pointer capture before drag activation: click-to-move
+          // must keep its normal square click event target.
+          showDragGhost(sq, cell as BoardCell, e.clientX, e.clientY);
+        }
+      }
     };
 
     const onPointerMove = (e: PointerEvent): void => {
       const evt = controller.pointerMove(e.pointerId, e.clientX, e.clientY);
-      if (evt === null) return;
+      if (evt === null) {
+        if (active && pickupOnPointerDown && activePointerId === e.pointerId) {
+          writeTransform(e.clientX, e.clientY);
+        }
+        return;
+      }
 
       if (evt.kind === "drag-start") {
         const cell = (game.getSnapshot().board[evt.from] ?? 0) as BoardCell;
         if (cell === 0) {
-          // Piece disappeared between down and move — treat as cancel.
           controller.cancel();
+          if (active) cleanup();
           return;
         }
-        // Fade the origin piece imperatively (no re-render). The target
-        // opacity is sourced from `--gb-drag-ghost-opacity` on the board
-        // container so themes control the look — `0` for chess.com's
-        // vanish-on-drag, `0.35` for lichess-style translucent ghost.
-        // Reading via `var(...)` inside the inline style keeps the value
-        // live: users can toggle the CSS var and the next drag reflects
-        // it without a remount.
-        const originLabel = algebraicOf(evt.from);
-        originEl = container.querySelector<HTMLElement>(`[data-piece-square="${originLabel}"]`);
-        if (originEl !== null) {
-          // Fallback `0.35` matches the lichess convention and keeps the
-          // behaviour correct when the caller swaps in a theme that
-          // doesn't define the variable (theme records replace — not
-          // merge with — the default theme).
-          originEl.style.opacity = `var(${GHOST_OPACITY_VAR}, 0.35)`;
-        }
-
-        active = true;
+        if (!active) showDragGhost(evt.from, cell, e.clientX, e.clientY);
+        else writeTransform(e.clientX, e.clientY);
         try {
           container.setPointerCapture(e.pointerId);
         } catch {
-          // Some test environments don't support pointer capture; ignore.
+          // Some test environments don't support pointer capture.
         }
-
-        // Show the ghost imperatively — no React state change, no
-        // `flushSync`, no synchronous re-render of `<Chessboard/>`.
-        // This is the fix that closes the 25 ms drag-peak gap with
-        // chessground in real Chromium.
-        dragLayerRef.current?.show(cell);
-        writeTransform(e.clientX, e.clientY);
-
-        // `onDragStart` still fires for callers that need to react
-        // (clear arrows, set `selectSquare` to show legal targets,
-        // analytics, haptic feedback, etc.) — but it no longer drives
-        // the drag-layer visibility.
         onDragStart(evt.from, cell);
         return;
       }
 
-      // drag-move: imperative only, no React involvement.
+      // drag-move: imperative only, zero React work.
       writeTransform(e.clientX, e.clientY);
     };
 
@@ -269,6 +269,7 @@ export function useDrag(options: UseDragOptions): void {
     dragLayerRef,
     enabled,
     activationDistance,
+    pickupOnPointerDown,
     onDragStart,
     onDragEnd,
     onDrop,

@@ -55,6 +55,11 @@ export function App() {
   const testSound = feelEnabled && search.get("sound") === "1";
   const testDuration = feelEnabled ? Number(search.get("animation") ?? "0") : 0;
   const testGhost = feelEnabled ? search.get("ghost") : null;
+  const configuredThreshold = feelEnabled ? search.get("threshold") : null;
+  const parsedThreshold = configuredThreshold === null ? 4 : Number(configuredThreshold);
+  const testThreshold = Number.isFinite(parsedThreshold) && parsedThreshold >= 0 &&
+    parsedThreshold <= 16 ? parsedThreshold : 4;
+  const testPickupOnDown = feelEnabled && search.get("pickup") === "down";
   const reportMove = useCallback(() => {
     feelRef.current?.onMove();
   }, []);
@@ -162,7 +167,11 @@ export function App() {
           theme={testGhost !== null ? { ...green, "--gb-drag-ghost-opacity": testGhost } : green}
           pieces={neo}
           sound={testSound}
-          {...(feelEnabled ? { onMove: reportMove } : {})}
+          {...(feelEnabled ? {
+            onMove: reportMove,
+            dragActivationDistance: testThreshold,
+            dragPickupOnPointerDown: testPickupOnDown,
+          } : {})}
           animation={{ durationMs: testDuration }}
         />
       </div>
