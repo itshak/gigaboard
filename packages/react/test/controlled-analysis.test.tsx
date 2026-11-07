@@ -153,7 +153,6 @@ describe("controlled analysis board", () => {
     }
   });
 
-
   it("plays a controlled move once only after the host confirms its FEN", async () => {
     const model = await makeBoardModel();
     const cues: string[] = [];
@@ -184,14 +183,10 @@ describe("controlled analysis board", () => {
         model.tryMove(E2, E4);
       });
       expect(cues).toEqual([]);
-      rerender(
-        <Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />,
-      );
+      rerender(<Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />);
       expect(cues).toEqual(["moveSelf"]);
 
-      rerender(
-        <Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />,
-      );
+      rerender(<Chessboard game={model} positionFen={AFTER_E4_FEN} sound={sound} />);
       expect(cues).toEqual(["moveSelf"]);
     } finally {
       model.dispose();

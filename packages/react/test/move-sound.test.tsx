@@ -87,7 +87,6 @@ describe("useMoveSound", () => {
     }
   });
 
-
   it("prewarms the built-in pool only when explicitly requested", async () => {
     const model = await makeBoardModel();
     try {
@@ -109,11 +108,16 @@ describe("useMoveSound", () => {
     const model = await makeBoardModel();
     const cues: Array<{ key: string; volume: number }> = [];
     try {
-      render(<SoundProbe model={model} options={{
-        volume: 0.25,
-        prewarm: true,
-        onCue: (key, volume) => cues.push({ key, volume }),
-      }} />);
+      render(
+        <SoundProbe
+          model={model}
+          options={{
+            volume: 0.25,
+            prewarm: true,
+            onCue: (key, volume) => cues.push({ key, volume }),
+          }}
+        />,
+      );
       act(() => {
         model.tryMove(12 as never, 28 as never);
       });
@@ -128,10 +132,15 @@ describe("useMoveSound", () => {
     const model = await makeBoardModel();
     const cues: string[] = [];
     try {
-      render(<SoundProbe model={model} options={{
-        trigger: "position",
-        onCue: (key) => cues.push(key),
-      }} />);
+      render(
+        <SoundProbe
+          model={model}
+          options={{
+            trigger: "position",
+            onCue: (key) => cues.push(key),
+          }}
+        />,
+      );
       act(() => {
         model.tryMove(12 as never, 28 as never);
       });

@@ -213,7 +213,10 @@ export function useMoveSound(
     if (!enabled || !prewarm || onCue) return;
     if (typeof window === "undefined" || typeof Audio === "undefined") return;
     if (poolsRef.current === null) {
-      poolsRef.current = createPools(sourcesRef.current, preloadRef.current);
+      poolsRef.current = createPools(
+        { ...DEFAULT_MOVE_SOUND_SOURCES, ...(sources ?? {}) },
+        preload,
+      );
     }
   }, [enabled, prewarm, onCue, preload, sources]);
 
