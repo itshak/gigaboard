@@ -251,10 +251,11 @@ export interface ChessboardProps {
 
   /**
    * Optional drag activation distance in CSS pixels; defaults to 4px.
+   * The "adaptive" heuristic uses 2px for mouse/pen and 6px for touch.
    * Smaller thresholds can feel more responsive but can misclassify
    * slight click jitter as dragging. FeelLab evaluates this trade-off.
    */
-  readonly dragActivationDistance?: number;
+  readonly dragActivationDistance?: number | "adaptive";
 
   /**
    * Opt-in immediate ghost pickup on pointerdown. A plain click remains

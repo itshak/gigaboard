@@ -69,7 +69,7 @@ export interface UseDragOptions {
   readonly dragLayerRef: RefObject<DragLayerHandle | null>;
   readonly enabled: boolean;
   /** The activation distance (pixels) for `pending → dragging`. */
-  readonly activationDistance?: number;
+  readonly activationDistance?: number | "adaptive";
   /** Show piece on initial press, while preserving click vs drag semantics. */
   readonly pickupOnPointerDown?: boolean;
   /** Callbacks — see hook docs above. */
@@ -119,8 +119,10 @@ export function useDrag(options: UseDragOptions): void {
     const container = containerRef.current;
     if (container === null || game === null) return;
 
-    const controller = createDragController(
-      activationDistance === undefined ? {} : { activationDistance },
+    // Sample pointer type once per gesture, not in the pointer-move hot loop.
+    // This heuristic is not an adaptive learned performance algorithm.
+    let controller = createDragController(
+      typeof activationDistance === "number" ? { activationDistance } : {},
     );
 
     // Imperative drag internals. Mutating these does NOT re-render.
@@ -181,6 +183,11 @@ export function useDrag(options: UseDragOptions): void {
       const canDrag = canDragPieceRef.current;
       if (canDrag !== undefined && !canDrag({ square: sq, cell: cell as BoardCell })) {
         return;
+      }
+      if (activationDistance === "adaptive") {
+        controller = createDragController({
+          activationDistance: e.pointerType === "touch" ? 6 : 2,
+        });
       }
       const consumed = controller.pointerDown(sq, e.pointerId, e.clientX, e.clientY);
       if (consumed) {
