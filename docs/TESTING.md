@@ -157,3 +157,41 @@ bun -F gigaboard test --watch
 ```
 
 Visual baselines update: `bun run turbo test:visual -- --update-snapshots`. Always include the updated snapshots in your PR and explain why they changed.
+
+## GitHub-hosted automation
+
+All of the following run on GitHub-hosted Ubuntu runners, not on a developer
+laptop. Each job checks out the repository and installs the pinned Bun version
+(1.3.10) with the committed lockfile. No Docker Compose, database or external
+secrets are needed for these tests.
+
+| Workflow | Push to main | Pull request | Manual | Schedule |
+|---|---|---|---|---|
+| CI | Yes | Yes | Yes | — |
+| Visual Regression (docs Playwright) | Yes | Yes | Yes | — |
+| GigaBoard FeelLab (Chromium + WebKit) | Yes | Yes | Yes | — |
+| Performance Regression (unit and browser benchmarks) | Yes | Yes | Yes | Nightly |
+| Size Limit | Yes | Yes | Yes | — |
+| Release | Yes | — | Yes | — |
+
+- **CI**: checks lint, typecheck, builds, Bun/Node unit tests, size budgets and
+  publishable package metadata (npm pack, publint, arethetypeswrong).
+- **Visual Regression**: builds the Next.js docs app, launches its production
+  server through Playwright `webServer`, runs the docs smoke/interaction tests
+  in desktop Chromium, mobile Chromium, Firefox and WebKit, and uploads the
+  HTML report and test-results (including traces on retry). Existing smoke
+  tests are not a comprehensive pixel-baseline suite.
+- **FeelLab**: builds the Vite benchmark app and checks nonvisual interaction
+  correctness in Chromium and WebKit, uploading JSON/text reports and traces.
+- **Performance Regression**: runs core/render benchmarks as well as the
+  Chromium head-to-head Playwright benchmark suite against the production
+  Vite preview server. Timing measurements from shared GitHub runners are
+  **diagnostic**, not calibrated cross-machine performance gates. JSON reports
+  are kept as workflow artifacts.
+- **Size Limit**: enforces current package size budgets. The release workflow
+  retains its separate publish guards and does not publish merely because a
+  testing workflow runs.
+
+See the repository **Actions** tab for every run and download reports from
+the relevant run's **Artifacts** section. The jobs execute independently,
+so a failed job does not prevent unrelated test suites from being reported.

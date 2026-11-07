@@ -26,7 +26,7 @@ import {
 import { neo } from "gigaboard/pieces/neo";
 import { green } from "gigaboard/themes/green";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { installFeelLab, type FeelLabAPI } from "../feel/harness.js";
+import { type FeelLabAPI, installFeelLab } from "../feel/harness.js";
 import {
   type BenchMetrics,
   type GbBench,
@@ -159,14 +159,11 @@ export function App() {
         <Chessboard
           game={model}
           fallbackFen={STARTING_FEN}
-          theme={green}
+          theme={testGhost !== null ? { ...green, "--gb-drag-ghost-opacity": testGhost } : green}
           pieces={neo}
           sound={testSound}
-          onMove={feelEnabled ? reportMove : undefined}
+          {...(feelEnabled ? { onMove: reportMove } : {})}
           animation={{ durationMs: testDuration }}
-          {...(testGhost !== null
-            ? { theme: { ...green, "--gb-drag-ghost-opacity": testGhost } }
-            : {})}
         />
       </div>
     </main>

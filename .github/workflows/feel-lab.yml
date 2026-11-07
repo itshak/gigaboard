@@ -2,18 +2,9 @@ name: GigaBoard FeelLab (nonvisual correctness)
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "apps/benchmarks/**"
-      - "packages/react/**"
-      - ".github/workflows/feel-lab.yml"
-      - "openspec/changes/automated-board-feel-lab/**"
+    branches: [main, master]
   pull_request:
-    branches: [main]
-    paths:
-      - "apps/benchmarks/**"
-      - "packages/react/**"
-      - ".github/workflows/feel-lab.yml"
+    branches: [main, master]
   workflow_dispatch:
 
 concurrency:
@@ -34,8 +25,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Build workspace dependencies
         run: bun run turbo build
-      - name: Install Playwright Chromium and WebKit
-        run: bunx playwright install --with-deps chromium webkit
+      - name: Install locked Playwright Chromium and WebKit
+        working-directory: apps/benchmarks
+        run: bun x playwright install --with-deps chromium webkit
       - name: Run automatic nonvisual FeelLab checks
         run: bun --cwd apps/benchmarks run feel:ci
       - name: Preserve accessible text reports on success or failure
