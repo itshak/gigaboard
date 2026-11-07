@@ -94,7 +94,7 @@ class FeelReporter implements Reporter {
       if (item.metrics) lines.push("Metrics (measurement domains stated per test):", "\`\`\`json",
         JSON.stringify(item.metrics, null, 2), "\`\`\`");
     }
-    lines.push("", "## Reproduction", "\`bun --cwd apps/benchmarks run feel:ci\`", "");
+    lines.push("", "## Reproduction", "\`cd apps/benchmarks && bun run feel:ci\`", "");
     writeFileSync(resolve(dir, "report.md"), lines.join("\n"));
   }
 }

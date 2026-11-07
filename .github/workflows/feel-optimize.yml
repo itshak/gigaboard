@@ -33,7 +33,14 @@ jobs:
         working-directory: apps/benchmarks
         run: bun x playwright install --with-deps chromium
       - name: Real-board A/B sweep and accessible ranking
-        run: bun --cwd apps/benchmarks run feel:optimize
+        working-directory: apps/benchmarks
+        run: bun run feel:optimize
+      - name: Assert actual comparison results exist
+        run: |
+          test -s apps/benchmarks/feel-results/results.json
+          test -s apps/benchmarks/feel-results/optimization-results.json
+          test -s apps/benchmarks/feel-results/optimization-report.md
+          grep -q '"recommendedForFurtherHumanTesting"' apps/benchmarks/feel-results/optimization-results.json
       - name: Upload evidence including text, JSON and traces
         if: always()
         uses: actions/upload-artifact@v4

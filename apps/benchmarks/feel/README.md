@@ -16,7 +16,7 @@ From the repository root:
 ```sh
 bun install
 npx playwright install chromium webkit
-bun --cwd apps/benchmarks run feel:ci
+(cd apps/benchmarks && bun run feel:ci)
 ```
 
 The suite uses a production Vite build, real `page.mouse` pointer input,
@@ -75,7 +75,7 @@ production-built chessboard, independently checks move FEN/callback counts,
 verifies a following move is accepted, and detects visual pickup caused by 1px
 click jitter. Experimental controls are opt-in props, so defaults stay unchanged.
 
-Run `FEELLAB_OPTIMIZE=1 bun --cwd apps/benchmarks run feel:optimize`.
+Run `FEELLAB_OPTIMIZE=1 (cd apps/benchmarks && bun run feel:optimize)`.
 Download `feel-results/optimization-report.md` and
 `feel-results/optimization-results.json` from GitHub Actions artifacts.
 The report ranks eligible pickup profiles by the measured minimum hand movement

@@ -29,7 +29,13 @@ jobs:
         working-directory: apps/benchmarks
         run: bun x playwright install --with-deps chromium webkit
       - name: Run automatic nonvisual FeelLab checks
-        run: bun --cwd apps/benchmarks run feel:ci
+        working-directory: apps/benchmarks
+        run: bun run feel:ci
+      - name: Assert real Playwright results exist
+        run: |
+          test -s apps/benchmarks/feel-results/results.json
+          test -s apps/benchmarks/feel-results/report.md
+          grep -q '"PASS"' apps/benchmarks/feel-results/results.json
       - name: Preserve accessible text reports on success or failure
         if: always()
         uses: actions/upload-artifact@v4
