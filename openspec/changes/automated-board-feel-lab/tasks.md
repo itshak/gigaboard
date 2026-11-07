@@ -121,3 +121,26 @@ screen; it does not measure native application feel or a user's own jitter.
   before removing app-originated move cues. Cross-repo deployment requires an
   npm package release and a BlindBase lockfile update; neither is implied by
   simply merging GigaBoard source.
+
+## Sound API implementation and verified browser/consumer checks (November 8, 2026)
+
+- GigaBoard now provides `sound.onCue` to route board-confirmed semantic
+  sounds into a host-provided backend (zero HTMLAudio instances when injected).
+  The opt-in `sound.prewarm` and HTML preload controls remain available for
+  standalone GigaBoard consumers, but BlindBase's existing predecoded Web Audio
+  backend and speech/audio focus should not be replaced by a second player.
+- `sound.trigger = "position"` defers move cues until externally controlled
+  `positionFen` confirmation, preventing speculative legal-but-wrong puzzle
+  moves from sounding. `sound.cuePolicy = "san-priority"` preserves capture
+  before check/promotion and handles draw versus checkmate cue semantics.
+- Tests verify prewarm, volume delegation, callback ownership, rejected moves,
+  accepted controlled position changes, and capture-checkmate/promotion/stalemate
+  priority. Both CI and Playwright FeelLab passed before the final policy
+  addition; all new CI runs must pass before release.
+- BlindBase has an explicit old-npm fallback and two-job cross-repository CI:
+  [old + source package integration passed](https://github.com/itshak/blindbase/actions/runs/42425507664).
+  A new GigaBoard npm version must be published and its dependency lockfile
+  upgraded before claiming the board-owned sound trigger is used in production.
+- This is only the sound-integration subset of FeelLab; remaining native
+  display/frame measurements, accessibility, and broad puzzle stress tasks
+  remain open. **Do not archive the OpenSpec change.**
