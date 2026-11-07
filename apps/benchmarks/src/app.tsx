@@ -62,9 +62,8 @@ export function App() {
       ? parsedThreshold
       : 4;
   const testPickupOnDown = feelEnabled && search.get("pickup") === "down";
-  const thresholdSetting = feelEnabled && configuredThreshold === "adaptive"
-    ? "adaptive"
-    : testThreshold;
+  const thresholdSetting =
+    feelEnabled && configuredThreshold === "adaptive" ? "adaptive" : testThreshold;
   const reportMove = useCallback(() => {
     feelRef.current?.onMove();
   }, []);
