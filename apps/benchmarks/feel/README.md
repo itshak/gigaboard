@@ -66,3 +66,26 @@ accessibility/i18n coverage, and verified Mac-specific execution.
 
 Never add screenshots/videos from private BlindBase data to this public repo.
 Do not copy GPL chessground code into the MIT GigaBoard implementation.
+
+## GitHub-hosted board configuration A/B screening
+
+`FeelLab Configuration Optimization` runs on every push to main, nightly, and
+on manual workflow dispatch. It uses real Playwright mouse input against the
+production-built chessboard, independently checks move FEN/callback counts,
+verifies a following move is accepted, and detects visual pickup caused by 1px
+click jitter. Experimental controls are opt-in props, so defaults stay unchanged.
+
+Run `FEELLAB_OPTIMIZE=1 bun --cwd apps/benchmarks run feel:optimize`.
+Download `feel-results/optimization-report.md` and
+`feel-results/optimization-results.json` from GitHub Actions artifacts.
+The report ranks eligible pickup profiles by the measured minimum hand movement
+to visible DOM pickup, not by physical display latency or subjective feel.
+Each profile is repeated three times, order is rotated, and noisy DOM handling
+time is reported but not used to certify a perceptual improvement.
+
+Profiles cover threshold 0/1/2/3/4/6 CSS px, mouse/pen 2px vs touch 6px
+heuristic, immediate pointerdown pickup, origin opacity 0/0.35, animation
+0/30/60/100ms and sound off/cold/prewarmed. The non-pickup dimensions
+remain correctness/diagnostic experiments; no reliable real-screen winner
+can be declared without native capture and user acceptance. More tests are
+needed for different touch pointer hardware and motion disorders.

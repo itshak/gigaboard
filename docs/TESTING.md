@@ -195,3 +195,15 @@ secrets are needed for these tests.
 See the repository **Actions** tab for every run and download reports from
 the relevant run's **Artifacts** section. The jobs execute independently,
 so a failed job does not prevent unrelated test suites from being reported.
+
+## FeelLab A/B optimization (screen-reader friendly)
+
+The independent `FeelLab Configuration Optimization` workflow runs on
+main pushes, nightly and on manual dispatch. This is a *candidate screening*
+job, not a calibrated claim of human-perceived speed. It tests real board-level
+drag-threshold/pickup variants in Chromium, safeguards legal moves and
+1px click-jitter, and emits `optimization-report.md` and
+`optimization-results.json` plus raw FeelLab results. Its ranking uses
+activation **distance** and excludes unsafe/incorrect candidates; DOM timing
+values are diagnostic because ephemeral runner load varies. Source defaults
+and native macOS feel remain unchanged pending validation.

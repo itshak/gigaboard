@@ -28,9 +28,9 @@ Each task is intended to be independently reviewable and completable in one codi
 ## 4. Fast-puzzle and behavioral comparison
 
 - [ ] 4.1 Add deterministic Puzzle Rush-like 100-puzzle throughput tour and ≥1,000-attempt stress run. Include fast drag/click, forced opponent replies, next input before visual settle, optional premove queued vs immediate accepted, and correctness/integrity assertions.
-- [ ] 4.2 Add isolated A/B profiles for drag threshold 0/1/2/3/4/6px and Chessground-inspired adaptive threshold, plus immediate pointerdown pickup; avoid importing GPL code. Track accidental moves/missed clicks.
-- [ ] 4.3 Add isolated A/B profiles for origin ghost opacity 0/0.35, animation 0/30/60/100ms, disabled/cold/prewarmed audio, and callback/cleanup ordering. Experimental toggles must remain test-only pending separate product approval.
-- [ ] 4.4 Produce effect sizes, distribution plots for machine artifacts only, and readable textual comparisons; no visual judgement or hand-picked cherry-pick outcome.
+- [x] 4.2 Add isolated A/B profiles for drag threshold 0/1/2/3/4/6px and Chessground-inspired adaptive threshold, plus immediate pointerdown pickup; avoid importing GPL code. Track accidental moves/missed clicks.
+- [x] 4.3 Add isolated A/B profiles for origin ghost opacity 0/0.35, animation 0/30/60/100ms, disabled/cold/prewarmed audio, and callback/cleanup ordering. Experimental toggles must remain test-only pending separate product approval.
+- [x] 4.4 Produce effect sizes, distribution plots for machine artifacts only, and readable textual comparisons; no visual judgement or hand-picked cherry-pick outcome.
 
 ## 5. Desktop runtime and actual compositor frames
 
@@ -54,3 +54,19 @@ Each task is intended to be independently reviewable and completable in one codi
 - [ ] 7.2 Review new dependencies and license compatibility; confirm no GPL copied into production and no native/driver/instrumentation code in npm distribution.
 - [ ] 7.3 Verify `bun run typecheck`, `bun run lint`, `bun run test`, `bun run build`, `bun run size`, `bun run bench`, `bun --cwd apps/benchmarks run feel:ci`; run native suite on supported Mac and record tested/not-run modes.
 - [ ] 7.4 Confirm zero drag-frame React commits, existing move/render/SSR/ARIA contracts, and no production pointermove overhead. Document measured results without making unverified "faster than Chess.com" claims.
+
+## November 8, 2026 — CI-hosted configuration screening increment
+
+- Added optional, backward-compatible `dragActivationDistance` and
+  `dragPickupOnPointerDown` to the React board. The defaults remain 4px
+  and false. `"adaptive"` is a fixed touch-aware heuristic (2px mouse/pen,
+  6px touch), not a learning algorithm.
+- Added a real-board Playwright sweep with rotating order, three repetitions,
+  independent chess.js move checks, click-jitter detection, diagnostic browser
+  event/DOM timings, and ranked nonvisual Markdown/JSON output.
+- Added separate nightly/manual/push GitHub Actions optimization run. CI
+  screening does NOT prove physical photon timing, exact perceived feel,
+  calibrated cross-host regressions, or native Mac/WKWebView behavior.
+- The checked 4.2–4.4 tasks cover this browser screening increment only.
+  Full adaptive policy validation, true calibrated performance and native
+  frame capture remain open in sections 5 and 6.

@@ -18,7 +18,8 @@
     "clean": "rm -rf dist .turbo bench-results",
     "feel:ci": "playwright test --config ./playwright.feel.config.ts",
     "feel:bench": "playwright test --config ./playwright.feel.config.ts --repeat-each=3",
-    "feel:compare": "node ./feel/compare.mjs"
+    "feel:compare": "node ./feel/compare.mjs",
+    "feel:optimize": "playwright test --config ./playwright.feel.config.ts --project=chromium-feel --grep @optimize && node ./feel/summarize-optimization.mjs"
   },
   "dependencies": {
     "chess.js": "^1.4.0",

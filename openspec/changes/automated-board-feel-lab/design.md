@@ -130,3 +130,15 @@ All new dependencies must be reviewed for permissive licenses. Existing `chessgr
 - **Tauri/driver tooling limitations:** Native support is conditional, with capability detection and actionable `NOT RUN`, not fabricated results.
 - **Private-app leakage:** Only opt-in local BlindBase adapter, no fixtures from real user databases, test artifacts ignored and never committed by default.
 - **Accessibility regression:** Continuous keyboard/LiveRegion/motion tests; human final acceptance remains optional experience feedback, not a test dependency.
+
+## Browser screening added November 8, 2026
+
+The first A/B pass is deliberately limited to test-only opt-in board props
+and the existing browser fixture. Compare 4px default to 0/1/2/3/6px,
+a 2px-mouse/6px-touch heuristic, immediate pointerdown visual pickup,
+opacity, animations and sound. Use repeated real-input gestures, check legal
+board results and a 1px click-jitter safety probe; exclude incorrect or
+false-dragging profiles. Rank remaining candidates by observed activation
+distance, not by shared-runner timing. Retain browser event-to-DOM metrics
+as diagnostic numbers only. Changing shipped defaults requires a further
+review and subjective acceptance; native/macOS measurement remains open.
