@@ -95,7 +95,7 @@ const lines = [
   "- No configuration or CI result changes production defaults automatically.",
   "- Further blind-user subjective testing and a calibrated native macOS path are required to claim a real feel improvement.",
   "",
-  "Reproduce: bun --cwd apps/benchmarks run feel:optimize with FEELLAB_OPTIMIZE=1",
+  "Reproduce: (cd apps/benchmarks && FEELLAB_OPTIMIZE=1 bun run feel:optimize)",
   "",
 ];
 writeFileSync(resolve(root, "optimization-report.md"), lines.join("\n"));

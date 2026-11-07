@@ -282,7 +282,19 @@ export function createBoardModel(
     const set = new Set<SquareIndex>();
     for (let i = 0; i < tos.length; i++) {
       const t = tos[i];
-      if (t !== undefined) set.add(t as SquareIndex);
+      if (t === undefined) continue;
+      set.add(t as SquareIndex);
+      // Gigachess encodes castling as king-captures-own-rook.
+      // The selection snapshot must also include conventional king
+      // destinations or click-to-move e1g1/e1c1/e8g8/e8c8 fails even
+      // though drag and model.tryMove already support those inputs.
+      if (pieceOnSquare === BOARD_CELL_WK && selected === 4) {
+        if (t === 7) set.add(6 as SquareIndex);
+        else if (t === 0) set.add(2 as SquareIndex);
+      } else if (pieceOnSquare === BOARD_CELL_BK && selected === 60) {
+        if (t === 63) set.add(62 as SquareIndex);
+        else if (t === 56) set.add(58 as SquareIndex);
+      }
     }
     return set;
   };

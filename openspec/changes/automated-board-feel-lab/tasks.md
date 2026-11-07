@@ -29,8 +29,8 @@ Each task is intended to be independently reviewable and completable in one codi
 
 - [ ] 4.1 Add deterministic Puzzle Rush-like 100-puzzle throughput tour and ≥1,000-attempt stress run. Include fast drag/click, forced opponent replies, next input before visual settle, optional premove queued vs immediate accepted, and correctness/integrity assertions.
 - [x] 4.2 Add isolated A/B profiles for drag threshold 0/1/2/3/4/6px and Chessground-inspired adaptive threshold, plus immediate pointerdown pickup; avoid importing GPL code. Track accidental moves/missed clicks.
-- [x] 4.3 Add isolated A/B profiles for origin ghost opacity 0/0.35, animation 0/30/60/100ms, disabled/cold/prewarmed audio, and callback/cleanup ordering. Experimental toggles must remain test-only pending separate product approval.
-- [x] 4.4 Produce effect sizes, distribution plots for machine artifacts only, and readable textual comparisons; no visual judgement or hand-picked cherry-pick outcome.
+- [ ] 4.3 Add isolated A/B profiles for origin ghost opacity 0/0.35, animation 0/30/60/100ms, disabled/cold/prewarmed audio, and callback/cleanup ordering. Experimental toggles must remain test-only pending separate product approval.
+- [ ] 4.4 Produce effect sizes, distribution plots for machine artifacts only, and readable textual comparisons; no visual judgement or hand-picked cherry-pick outcome.
 
 ## 5. Desktop runtime and actual compositor frames
 
@@ -70,3 +70,24 @@ Each task is intended to be independently reviewable and completable in one codi
 - The checked 4.2–4.4 tasks cover this browser screening increment only.
   Full adaptive policy validation, true calibrated performance and native
   frame capture remain open in sections 5 and 6.
+
+## Initial actual CI evidence — November 8, 2026
+
+- GitHub-hosted run: https://github.com/itshak/gigaboard/actions/runs/42421368523
+- 42 real Playwright mouse trials, 14 isolated profiles, three repetitions each,
+  with accessible `optimization-report.md` and JSON artifact. The workflow
+  passed all exercised move-integrity assertions.
+- Under the declared 1px click-jitter safeguard, the 2px mouse activation
+  profile passed and reduced pickup **movement** from the 4px default to 2px.
+  A touch-aware adaptive profile matched 2px on mouse but its touch branch
+  was not measured. Immediate pointerdown, 0px and 1px profiles created a
+  visible ghost during a 1px click jitter and were excluded.
+- An actual execution of the broader Chromium+WebKit correctness suite exposed
+  a previously hidden click-to-move castling failure: selection snapshots
+  included canonical king-captures-rook targets but omitted conventional
+  king landing squares. Fixed with a regression unit test. Rerun required
+  before claiming this specific correction verified.
+- The optimization run is *not* native macOS, a controlled-host latency gate,
+  a proof of improvement in human-perceived responsiveness, nor a screen
+  presentation timing measurement. 4.3 and 4.4 remain open for complete
+  callback/cleanup A/B and robust distributions/effect sizes.

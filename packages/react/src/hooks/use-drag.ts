@@ -184,7 +184,7 @@ export function useDrag(options: UseDragOptions): void {
       if (canDrag !== undefined && !canDrag({ square: sq, cell: cell as BoardCell })) {
         return;
       }
-      if (activationDistance === "adaptive") {
+      if (activationDistance === "adaptive" && controller.state.kind === "idle") {
         controller = createDragController({
           activationDistance: e.pointerType === "touch" ? 6 : 2,
         });

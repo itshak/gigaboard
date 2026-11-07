@@ -89,3 +89,14 @@ heuristic, immediate pointerdown pickup, origin opacity 0/0.35, animation
 remain correctness/diagnostic experiments; no reliable real-screen winner
 can be declared without native capture and user acceptance. More tests are
 needed for different touch pointer hardware and motion disorders.
+
+## First GitHub A/B results (November 8, 2026)
+
+[Successful run with artifact](https://github.com/itshak/gigaboard/actions/runs/42421368523):
+14 profiles x 3 repetitions = 42 real Chromium Playwright trials. All
+tested moves completed; immediate pickup, 0px and 1px thresholds visibly
+activated drag on 1px mouse jitter. Fixed 2px and the 2px-mouse/6px-touch
+heuristic passed the same jitter oracle, reducing pickup *movement* from
+the 4px default to 2px. The browser sweep recommends the fixed **2px**
+profile for optional user acceptance, not automatic production adoption.
+No measured physical-display timing improvement may be claimed.

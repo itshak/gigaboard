@@ -207,3 +207,13 @@ drag-threshold/pickup variants in Chromium, safeguards legal moves and
 activation **distance** and excludes unsafe/incorrect candidates; DOM timing
 values are diagnostic because ephemeral runner load varies. Source defaults
 and native macOS feel remain unchanged pending validation.
+
+## First verified configuration screening result
+
+[November 8, 2026 GitHub A/B run](https://github.com/itshak/gigaboard/actions/runs/42421368523)
+completed 42 browser trials successfully. With a declared 1px click-jitter
+tolerance, the candidate for subjective testing is **2px drag activation**
+instead of the current 4px, measured by the pointer distance before the
+drag ghost activates. Immediate, 0px and 1px pickups visibly activate a drag
+on 1px click jitter. This is not a 50% latency result and does not justify
+changing production defaults without user validation.
