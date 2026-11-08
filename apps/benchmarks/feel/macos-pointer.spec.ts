@@ -151,7 +151,7 @@ test("@pointerperf idle pointer hover on-board versus off-board, cache A/B", asy
 
 test("@pointerperf held-piece pixel gain and drag event timing, cache A/B", async ({ page }, info) => {
   test.setTimeout(180_000);
-  const results = [];
+  const results: Array<{ geometry: "cache" | "live"; boardBoundingRectReads: number; [key: string]: unknown }> = [];
   for (const [run, geometry] of order.entries()) {
     await ready(page, `?feel=1&geometry=${geometry}&threshold=2&animation=120`);
     const start = await center(page, "e2");
