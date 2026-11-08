@@ -32,6 +32,8 @@ Each task is intended to be independently reviewable and completable in one codi
 - [ ] 4.3 Add isolated A/B profiles for origin ghost opacity 0/0.35, animation 0/30/60/100ms, disabled/cold/prewarmed audio, and callback/cleanup ordering. Experimental toggles must remain test-only pending separate product approval.
 - [ ] 4.4 Produce effect sizes, distribution plots for machine artifacts only, and readable textual comparisons; no visual judgement or hand-picked cherry-pick outcome.
 
+- [x] 4.5 Add macOS-hosted WebKit pointer A/B screening: inside/outside hover event timing, repeated cache/live drag gain, geometry-read verification and accessible JSON/text results. Browser input is synthetic and native macOS mouse acceleration remains NOT MEASURED.
+
 ## 5. Desktop runtime and actual compositor frames
 
 - [ ] 5.1 Create small test-only macOS Tauri/WKWebView fixture using the exact GigaBoard package build; add scoped WebDriverIO + Tauri automation and verify supported versions/tool permissions at implementation time.

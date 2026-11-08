@@ -114,3 +114,40 @@ From `apps/benchmarks` run `bun x playwright test --config ./playwright.feel.con
 The tests run in the GitHub FeelLab correctness workflow on every push and
 PR, as part of `bun run feel:ci`. Native macOS responsiveness and the
 subjective BlindBase feel assessment still require a separate stage.
+
+
+## macOS-hosted WebKit pointer-movement A/B (November 8, 2026)
+
+The `@pointerperf` suite compares geometry cache **On and Off** in
+alternating `cache/live/live/cache` order on the **same macOS-15 GitHub runner**.
+It runs in `.github/workflows/feel-lab.yml`, in addition to the
+existing `@dragperf` correctness matrix.
+
+It measures, with no visual operator:
+
+- **Idle hover**: browser pointermove coordinate travel and event counts over
+  the board versus outside the board (control), pointer dispatch p50/p95,
+  animation-frame interval p50/p95 and board rectangle-read counts.
+- **Held-piece dragging**: input CSS-pixel distance versus floating-piece
+  transform distance (gain must remain about **1.0**), worst-case geometric
+  pointer-to-piece error below **1.5 CSS px**, pointer handler processing
+  and how many board layout rectangles are read in each mode.
+- Alternating repeats to limit host drift; all raw per-variant measurements
+  appear in `feel-results/results.json` and the screen-reader-friendly
+  `feel-results/report.md`. Timings are **diagnostics**, not hard pass/fail
+  performance thresholds because shared macOS runners fluctuate.
+
+Reproduce from `apps/benchmarks` after installing dependencies and WebKit:
+
+```sh
+bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep @pointerperf
+```
+
+**Limitations:** Playwright's mouse API sends browser automation input, not
+physical mouse or trackpad motion. It cannot measure hardware pointer
+sensitivity, macOS acceleration, actual cursor travel on the desktop,
+native Tauri/WKWebView timing, subjective speed, or photons on screen.
+A passing 1:1 pointer-to-piece test cannot disprove a perceived "heavy
+cursor" effect in installed BlindBase. Those require separate native
+instrumentation (OpenSpec section 5) and user acceptance. Cache geometry is
+only used while dragging; idle hover has no cache coordinate lookup.

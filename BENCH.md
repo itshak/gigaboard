@@ -1,3 +1,21 @@
+## macOS WebKit pointer / cache A/B probes — November 8, 2026
+
+The `@pointerperf` Playwright suite runs on GitHub-hosted **macOS-15
+WebKit**, alternating `cache/live/live/cache` on a production-built board.
+It captures inside-board idle hover vs outside-board control movement,
+event-processing duration, frame scheduling, and live/cached geometry
+reads. For held-piece dragging it checks 1:1 CSS-pixel gain and <1.5px
+pointer-to-piece geometric error. See
+[the FeelLab operator guide](apps/benchmarks/feel/README.md#macos-hosted-webkit-pointer-movement-ab-november-8-2026).
+
+**No macOS pointer acceleration claim:** Playwright mouse coordinates
+are injected into a browser. The job neither moves a physical HID
+device nor observes native cursor speed. Timing measurements are
+diagnostic, not a shared-host winner or native BlindBase WKWebView proof.
+This test does not change GigaBoard 1.7.1 or recommend enabling cache.
+
+---
+
 ## 1.7.1 drag-pipeline verification — November 8, 2026
 
 GigaBoard 1.7.1 ships opt-in geometry caching and reduced drag ghost slot mutations; default cache remains off. CI lint/typecheck/tests, size, Chromium and macOS-hosted Playwright WebKit correctness, npm publish and registry verification passed. Exact run links and limitations: [OpenSpec archive notes](openspec/changes/archive/2026-11-08-mac-feel-responsive-pipeline/archive-notes.md). No native macOS WKWebView or iOS input-to-photon claim is made. The wider automated FeelLab project is still active.

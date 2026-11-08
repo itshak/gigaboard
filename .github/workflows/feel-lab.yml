@@ -48,7 +48,7 @@ jobs:
           retention-days: 14
 
   macos-webkit-drag:
-    name: macOS-hosted WebKit drag correctness (NOT native WKWebView)
+    name: macOS WebKit drag and pointer A/B (NOT native WKWebView)
     runs-on: macos-15
     timeout-minutes: 35
     steps:
@@ -63,9 +63,9 @@ jobs:
       - name: Install Playwright WebKit on macOS
         working-directory: apps/benchmarks
         run: bun x playwright install webkit
-      - name: Run real browser-driven A/B on macOS-hosted WebKit
+      - name: Run cache A/B pointer travel, hover and drag probes on macOS WebKit
         working-directory: apps/benchmarks
-        run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep @dragperf
+        run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep '@dragperf|@pointerperf'
       - name: Require machine-readable and accessible results
         run: |
           test -s apps/benchmarks/feel-results/results.json
@@ -75,7 +75,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gigaboard-macos-webkit-drag
+          name: gigaboard-macos-webkit-drag-pointer
           path: |
             apps/benchmarks/feel-results/
             apps/benchmarks/test-results/
