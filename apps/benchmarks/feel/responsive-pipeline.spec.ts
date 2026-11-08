@@ -54,7 +54,14 @@ test("@dragperf cached geometry re-centres a live floating piece after page scro
   expect(await layer.getAttribute("data-active")).toBe("true");
   // Scroll capture must invalidate cached geometry. Preserve pointer capture
   // and avoid relying on a synthetic PointerEvent as the input driver.
-  await page.evaluate(() => { window.scrollTo(0, 45); });
+  // scrollY may change before the asynchronous scroll event is dispatched.
+  // Geometry caching invalidates on that event, so await event delivery
+  // rather than racing the actual invalidation listener. This exercises
+  // the promised post-scroll state without misclassifying an event-order race.
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    window.addEventListener("scroll", () => resolve(), { once: true });
+    window.scrollTo(0, 45);
+  }));
   await page.waitForFunction(() => window.scrollY >= 40);
   const shifted = await center(page, "e2");
   await page.mouse.move(shifted.x + 14, shifted.y);
