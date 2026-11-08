@@ -1,3 +1,9 @@
+## 1.7.1 drag-pipeline verification — November 8, 2026
+
+GigaBoard 1.7.1 ships opt-in geometry caching and reduced drag ghost slot mutations; default cache remains off. CI lint/typecheck/tests, size, Chromium and macOS-hosted Playwright WebKit correctness, npm publish and registry verification passed. Exact run links and limitations: [OpenSpec archive notes](openspec/changes/archive/2026-11-08-mac-feel-responsive-pipeline/archive-notes.md). No native macOS WKWebView or iOS input-to-photon claim is made. The wider automated FeelLab project is still active.
+
+---
+
 ## GigaBoard FeelLab: automatic perceived-responsiveness checks
 
 **Status (November 2026): initial browser implementation, native tests still pending and not certified.**
