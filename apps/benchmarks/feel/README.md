@@ -133,7 +133,7 @@ It measures, with no visual operator:
   pointer-to-piece error below **1.5 CSS px**, pointer handler processing
   and how many board layout rectangles are read in each mode.
 - Alternating repeats to limit host drift; all raw per-variant measurements
-  appear in `feel-results/results.json` and the screen-reader-friendly
+  appear in `feel-results/results.json`, the GitHub Actions job summary, and the screen-reader-friendly
   `feel-results/report.md`. Timings are **diagnostics**, not hard pass/fail
   performance thresholds because shared macOS runners fluctuate.
 
@@ -151,3 +151,5 @@ A passing 1:1 pointer-to-piece test cannot disprove a perceived "heavy
 cursor" effect in installed BlindBase. Those require separate native
 instrumentation (OpenSpec section 5) and user acceptance. Cache geometry is
 only used while dragging; idle hover has no cache coordinate lookup.
+
+After a local @pointerperf run, `cd apps/benchmarks && node feel/summarize-pointer.mjs` prints the same human-readable comparison shown in GitHub Actions.

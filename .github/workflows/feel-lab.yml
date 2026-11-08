@@ -66,6 +66,9 @@ jobs:
       - name: Run cache A/B pointer travel, hover and drag probes on macOS WebKit
         working-directory: apps/benchmarks
         run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep '@dragperf|@pointerperf'
+      - name: Print accessible macOS pointer A/B comparison
+        working-directory: apps/benchmarks
+        run: node ./feel/summarize-pointer.mjs
       - name: Require machine-readable and accessible results
         run: |
           test -s apps/benchmarks/feel-results/results.json
