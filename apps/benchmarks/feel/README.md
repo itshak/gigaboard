@@ -2,12 +2,13 @@
 
 ## Current implementation status
 
-FeelLab is an incremental OpenSpec implementation under
-`openspec/changes/automated-board-feel-lab/`. The browser correctness and
-test-only timing probe are implemented; native macOS ScreenCaptureKit,
-calibrated cross-process clock comparison, and the external BlindBase adapter
-remain **NOT RUN / NOT IMPLEMENTED** until their tasks are completed. Do not
-interpret browser screenshot comparisons as true input-to-photon latency.
+FeelLab's **browser-only phase is accepted and archived** in
+`openspec/changes/archive/2026-11-08-automated-board-feel-lab/`.
+The real browser correctness and test-only timing probes remain in CI.
+The original broader proposal also imagined native macOS ScreenCaptureKit,
+cross-process clock calibration and an external BlindBase adapter; those
+tasks are **deferred and not implemented**, not silently considered passed.
+Do not interpret browser screenshot comparisons as input-to-photon latency.
 
 ## Run browser assertions
 
@@ -57,9 +58,9 @@ frame-accurate motion latency. The data explicitly labels such results as
 are **browser processing proxies**, not physical display timestamps.
 The scenario wall times include driver overhead.
 
-## Follow-on OpenSpec implementation
+## Optional future research — deferred
 
-See `tasks.md` for remaining work: full 100 distinct tactical puzzles,
+See the [archived tasks](../../../openspec/changes/archive/2026-11-08-automated-board-feel-lab/tasks.md) for ideas not implemented: full 100 distinct tactical puzzles,
 configurable A/B pickup thresholds, controlled-host performance regressions,
 ScreenCaptureKit native frame oracle, BlindBase adapter, full automated
 accessibility/i18n coverage, and verified Mac-specific execution.
@@ -112,8 +113,9 @@ threshold. Touch testing here does **not** substitute for a physical device.
 
 From `apps/benchmarks` run `bun x playwright test --config ./playwright.feel.config.ts --grep @twopx`.
 The tests run in the GitHub FeelLab correctness workflow on every push and
-PR, as part of `bun run feel:ci`. Native macOS responsiveness and the
-subjective BlindBase feel assessment still require a separate stage.
+PR, as part of `bun run feel:ci`. The owner has since accepted the BlindBase native perceived-feel configuration
+(2px mouse, cache Off, Normal 120ms) and prefers it over cache On; this is
+subjective acceptance, not a hardware frame-latency measurement.
 
 
 ## macOS-hosted WebKit pointer-movement A/B (November 8, 2026)

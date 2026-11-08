@@ -1,3 +1,22 @@
+## Closed GigaBoard / BlindBase board-feel phase — 2026-11-08
+
+The speed-perception phase is accepted and archived; the FeelLab **browser**
+tests and nightly performance checks stay enabled. BlindBase's owner chose
+responsive 2px mouse pickup, geometry cache Off, and Normal 120ms movement.
+Fast 80ms is a quicker competitive/puzzle option, but Normal feels more
+satisfying for everyday chess. **GigaBoard's library default is still 4px
+and cache Off**. See
+[acceptance archive](openspec/changes/archive/2026-11-08-automated-board-feel-lab/archive-notes.md)
+and [current status](docs/STATUS.md).
+
+The macOS-hosted WebKit pointer A/B (not native WKWebView) verified
+1:1 CSS cursor-to-piece travel, equal browser event timing proxy (1ms p95)
+and reduced geometry reads (5 cached versus 52 live). It does not measure
+system pointer acceleration, physical photons or embedded Tauri latency.
+Native ScreenCaptureKit/BlindBase adapter plans are deferred, **not implemented**.
+
+---
+
 ## macOS WebKit pointer / cache A/B probes — November 8, 2026
 
 The `@pointerperf` Playwright suite runs on GitHub-hosted **macOS-15

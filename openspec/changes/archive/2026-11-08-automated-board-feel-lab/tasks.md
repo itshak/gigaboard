@@ -2,7 +2,17 @@
 
 Each task is intended to be independently reviewable and completable in one coding session. Deliver measurement infrastructure before changing shipped board behavior.
 
-> **Implementation status, November 5, 2026: IN PROGRESS.** Browser-side Playwright assertions, test-only instrumentation, pixel-diff oracle, a basic mutation test, rapid move scenarios, accessible reports, and a browser GitHub Actions workflow have been committed to `main`. The runnable suite has **not been verified in this environment**. Native macOS frame capture, an external BlindBase adapter, cross-clock calibration, distinct tactical puzzles, calibrated performance gating, and full accessibility/i18n coverage are outstanding. **Do not archive this change or claim all requirements satisfied.**
+> **Archived 2026-11-08 — accepted browser/CI and board-feel tuning phase, NOT full original plan completion.**
+> The actual macOS-hosted WebKit pointer A/B passed (run 42456756200) along with CI, visual,
+> optimization and bench workflows on GigaBoard main. The owner accepted BlindBase's
+> 2px mouse pickup, uncached geometry, Normal 120ms animation as preferred feel,
+> with Fast 80ms and Off optional. All unchecked tasks below remain **DEFERRED**
+> research, not delivered or verified. In particular native Tauri/WKWebView
+> ScreenCaptureKit capture, input-to-photon instrumentation, the optional BlindBase
+> adapter, dedicated calibrated hardware gates and full 100 distinct puzzles are
+> NOT IMPLEMENTED. This open research agenda is not a release blocker for the
+> accepted 1.7.1 feature phase; reopen as a separate proposal if a concrete
+> regression justifies the effort. See `archive-notes.md`.
 
 ## 1. Inventory and baseline contract
 
