@@ -265,6 +265,15 @@ export interface ChessboardProps {
   readonly dragPickupOnPointerDown?: boolean;
 
   /**
+   * Experimental: cache the board's pointer coordinate geometry during a drag
+   * rather than forcing a bounding-box read on every pointer-move.
+   * Invalidates on resize/scroll and at each new gesture. Defaults to false
+   * until native WKWebView user acceptance; the old path stays available for
+   * controlled A/B testing or boards that reposition without resize events.
+   */
+  readonly dragGeometryCache?: boolean;
+
+  /**
    * Fine-grained predicate consulted at the drag-activation boundary —
    * returning `false` aborts the drag before the ghost appears. Use this
    * for per-piece gating that can't be modelled by `allowDrag` or the

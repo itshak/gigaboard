@@ -72,6 +72,8 @@ export interface UseDragOptions {
   readonly activationDistance?: number | "adaptive";
   /** Show piece on initial press, while preserving click vs drag semantics. */
   readonly pickupOnPointerDown?: boolean;
+  /** Opt-in geometry cache for pointer-follow transforms; baseline is fresh reads. */
+  readonly geometryCache?: boolean;
   /** Callbacks — see hook docs above. */
   readonly onDragStart: (from: SquareIndex, cell: BoardCell) => void;
   readonly onDragEnd: () => void;
@@ -100,6 +102,7 @@ export function useDrag(options: UseDragOptions): void {
     enabled,
     activationDistance,
     pickupOnPointerDown = false,
+    geometryCache = false,
     onDragStart,
     onDragEnd,
     onDrop,
@@ -130,10 +133,31 @@ export function useDrag(options: UseDragOptions): void {
     let active = false;
     let activePointerId: number | null = null;
 
+    // The parent rectangle is unchanged during an ordinary drag. Re-reading
+    // it on every pointer sample can force layout in WebKit, particularly
+    // after CSS opacity/transform writes. Keep the old path as A/B control.
+    // A resize or scroll invalidates the cached coordinates; pointer-up
+    // hit-testing always reads live geometry independently.
+    let cachedRect: { left: number; top: number; width: number } | null = null;
+    const invalidateGeometry = (): void => { cachedRect = null; };
+    const observer = geometryCache && typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(invalidateGeometry)
+      : null;
+    observer?.observe(container);
+    if (geometryCache) {
+      window.addEventListener("scroll", invalidateGeometry, true);
+      window.addEventListener("resize", invalidateGeometry);
+    }
+
     const writeTransform = (clientX: number, clientY: number): void => {
       const layer = dragLayerRef.current;
       if (layer === null) return;
-      const rect = container.getBoundingClientRect();
+      const rect = geometryCache && cachedRect !== null
+        ? cachedRect
+        : container.getBoundingClientRect();
+      if (geometryCache && cachedRect === null) {
+        cachedRect = { left: rect.left, top: rect.top, width: rect.width };
+      }
       const sqSize = rect.width / 8;
       // Centre the piece on the pointer.
       const x = clientX - rect.left - sqSize / 2;
@@ -154,6 +178,7 @@ export function useDrag(options: UseDragOptions): void {
       dragLayerRef.current?.hide();
       active = false;
       activePointerId = null;
+      cachedRect = null;
       onDragEnd();
     };
 
@@ -192,6 +217,7 @@ export function useDrag(options: UseDragOptions): void {
       const consumed = controller.pointerDown(sq, e.pointerId, e.clientX, e.clientY);
       if (consumed) {
         activePointerId = e.pointerId;
+        cachedRect = null;
         if (pickupOnPointerDown) {
           // Avoid pointer capture before drag activation: click-to-move
           // must keep its normal square click event target.
@@ -246,6 +272,7 @@ export function useDrag(options: UseDragOptions): void {
 
       if (active) cleanup();
       activePointerId = null;
+      cachedRect = null;
     };
 
     const onPointerCancel = (e: PointerEvent): void => {
@@ -253,6 +280,7 @@ export function useDrag(options: UseDragOptions): void {
       controller.cancel();
       if (active) cleanup();
       activePointerId = null;
+      cachedRect = null;
     };
 
     // Passive listeners where possible; pointer-move gets `passive: true`
@@ -267,6 +295,11 @@ export function useDrag(options: UseDragOptions): void {
       container.removeEventListener("pointermove", onPointerMove);
       container.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("pointercancel", onPointerCancel);
+      observer?.disconnect();
+      if (geometryCache) {
+        window.removeEventListener("scroll", invalidateGeometry, true);
+        window.removeEventListener("resize", invalidateGeometry);
+      }
       if (active) cleanup();
     };
   }, [
@@ -277,6 +310,7 @@ export function useDrag(options: UseDragOptions): void {
     enabled,
     activationDistance,
     pickupOnPointerDown,
+    geometryCache,
     onDragStart,
     onDragEnd,
     onDrop,

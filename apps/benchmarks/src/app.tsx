@@ -62,6 +62,7 @@ export function App() {
       ? parsedThreshold
       : 4;
   const testPickupOnDown = feelEnabled && search.get("pickup") === "down";
+  const testGeometryCache = feelEnabled && search.get("geometry") === "cache";
   const thresholdSetting =
     feelEnabled && configuredThreshold === "adaptive" ? "adaptive" : testThreshold;
   const reportMove = useCallback(() => {
@@ -176,6 +177,7 @@ export function App() {
                 onMove: reportMove,
                 dragActivationDistance: thresholdSetting,
                 dragPickupOnPointerDown: testPickupOnDown,
+                dragGeometryCache: testGeometryCache,
               }
             : {})}
           animation={{ durationMs: testDuration }}

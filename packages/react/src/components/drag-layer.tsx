@@ -102,6 +102,9 @@ export const DragLayer = forwardRef<DragLayerHandle, DragLayerProps>(function Dr
   // Refs to the 12 pre-materialised piece slots, keyed by cell code (1..12).
   // Index 0 is unused (empty cell has no drag ghost).
   const slotRefs = useRef<Array<HTMLDivElement | null>>(new Array(13).fill(null));
+  // At most two opacity writes per pickup: the old slot off, the new on.
+  // All others remain hidden by their initial CSS opacity.
+  const activeSlotRef = useRef<number | null>(null);
 
   // Pre-materialise the 13 (well, 12 — cell 0 is null) piece elements
   // once at mount. Rebuild only when the renderer identity changes.
@@ -136,12 +139,17 @@ export const DragLayer = forwardRef<DragLayerHandle, DragLayerProps>(function Dr
         if (wrapper === null) return;
         wrapper.style.opacity = "1";
         wrapper.dataset["active"] = "true";
-        // Show just the chosen piece slot; others stay at opacity 0.
-        for (let c = 1; c <= 12; c++) {
-          const el = slotRefs.current[c];
-          if (el !== null && el !== undefined) {
-            el.style.opacity = c === cell ? "1" : "0";
+        // Avoid twelve style mutations on every pickup. Keep the
+        // previously selected slot ready while the wrapper is hidden.
+        if (activeSlotRef.current !== cell) {
+          const previous = activeSlotRef.current;
+          if (previous !== null) {
+            const oldSlot = slotRefs.current[previous];
+            if (oldSlot !== null && oldSlot !== undefined) oldSlot.style.opacity = "0";
           }
+          const slot = slotRefs.current[cell];
+          if (slot !== null && slot !== undefined) slot.style.opacity = "1";
+          activeSlotRef.current = cell;
         }
       },
       hide(): void {
