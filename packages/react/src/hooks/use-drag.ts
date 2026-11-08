@@ -139,10 +139,13 @@ export function useDrag(options: UseDragOptions): void {
     // A resize or scroll invalidates the cached coordinates; pointer-up
     // hit-testing always reads live geometry independently.
     let cachedRect: { left: number; top: number; width: number } | null = null;
-    const invalidateGeometry = (): void => { cachedRect = null; };
-    const observer = geometryCache && typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(invalidateGeometry)
-      : null;
+    const invalidateGeometry = (): void => {
+      cachedRect = null;
+    };
+    const observer =
+      geometryCache && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(invalidateGeometry)
+        : null;
     observer?.observe(container);
     if (geometryCache) {
       window.addEventListener("scroll", invalidateGeometry, true);
@@ -152,9 +155,8 @@ export function useDrag(options: UseDragOptions): void {
     const writeTransform = (clientX: number, clientY: number): void => {
       const layer = dragLayerRef.current;
       if (layer === null) return;
-      const rect = geometryCache && cachedRect !== null
-        ? cachedRect
-        : container.getBoundingClientRect();
+      const rect =
+        geometryCache && cachedRect !== null ? cachedRect : container.getBoundingClientRect();
       if (geometryCache && cachedRect === null) {
         cachedRect = { left: rect.left, top: rect.top, width: rect.width };
       }

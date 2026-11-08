@@ -19,7 +19,7 @@
  * the work. `handle.hide()` on drag-end.
  */
 
-import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import type { BoardCell } from "../core/index.js";
 import { CSS_VARS } from "../default-theme.js";
 import type { PieceRenderer } from "../types.js";
@@ -105,6 +105,19 @@ export const DragLayer = forwardRef<DragLayerHandle, DragLayerProps>(function Dr
   // At most two opacity writes per pickup: the old slot off, the new on.
   // All others remain hidden by their initial CSS opacity.
   const activeSlotRef = useRef<number | null>(null);
+
+  // React may replace pre-rendered slots when consumers switch piece sets.
+  // Re-activate the same piece if a drag is in progress; otherwise reset the
+  // remembered slot so the next drag can reveal the new DOM node.
+  useLayoutEffect(() => {
+    const selected = activeSlotRef.current;
+    if (selected !== null && wrapperRef.current?.dataset["active"] === "true") {
+      const slot = slotRefs.current[selected];
+      if (slot !== null && slot !== undefined) slot.style.opacity = "1";
+    } else {
+      activeSlotRef.current = null;
+    }
+  }, [pieces]);
 
   // Pre-materialise the 13 (well, 12 — cell 0 is null) piece elements
   // once at mount. Rebuild only when the renderer identity changes.

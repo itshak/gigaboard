@@ -188,10 +188,20 @@ describe("drag + drop", () => {
     renderBoard(model, { dragGeometryCache: true, dragActivationDistance: 2 });
     const root = container();
     let left = 0;
-    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(() => ({
-      left, x: left, top: 0, y: 0, right: left + 400, bottom: 400,
-      width: 400, height: 400, toJSON: () => ({}),
-    }) as DOMRect);
+    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(
+      () =>
+        ({
+          left,
+          x: left,
+          top: 0,
+          y: 0,
+          right: left + 400,
+          bottom: 400,
+          width: 400,
+          height: 400,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    );
     const e2 = centreOf("e2");
     const e4 = centreOf("e4");
     const layer = document.querySelector<HTMLElement>('[data-layer="drag"]');
@@ -219,10 +229,20 @@ describe("drag + drop", () => {
     renderBoard(model, { dragGeometryCache: false, dragActivationDistance: 2 });
     const root = container();
     let left = 0;
-    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(() => ({
-      left, x: left, top: 0, y: 0, right: left + 400, bottom: 400,
-      width: 400, height: 400, toJSON: () => ({}),
-    }) as DOMRect);
+    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(
+      () =>
+        ({
+          left,
+          x: left,
+          top: 0,
+          y: 0,
+          right: left + 400,
+          bottom: 400,
+          width: 400,
+          height: 400,
+          toJSON: () => ({}),
+        }) as DOMRect,
+    );
     const e2 = centreOf("e2");
     const layer = document.querySelector<HTMLElement>('[data-layer="drag"]');
     fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
@@ -241,23 +261,27 @@ describe("drag + drop", () => {
     const e4 = centreOf("e4");
     const e7 = centreOf("e7");
     const e5 = centreOf("e5");
-    const visibleSlots = () => Array.from(
-      document.querySelectorAll<HTMLElement>("[data-drag-cell]"),
-    ).filter((el) => el.style.opacity === "1");
+    const visibleSlots = () =>
+      Array.from(document.querySelectorAll<HTMLElement>("[data-drag-cell]")).filter(
+        (el) => el.style.opacity === "1",
+      );
     fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
     fireEvent(root, pointerEvent("pointermove", { x: e4.x, y: e4.y }));
     expect(visibleSlots()).toHaveLength(1);
     const firstCell = visibleSlots()[0]?.dataset["dragCell"];
     fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
     expect(model.getSnapshot().historyPly).toBe(1);
-    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe("false");
+    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe(
+      "false",
+    );
     fireEvent(root, pointerEvent("pointerdown", { x: e7.x, y: e7.y }));
     fireEvent(root, pointerEvent("pointermove", { x: e5.x, y: e5.y }));
     expect(visibleSlots()).toHaveLength(1);
     expect(visibleSlots()[0]?.dataset["dragCell"]).not.toBe(firstCell);
     fireEvent(root, pointerEvent("pointercancel", { x: e5.x, y: e5.y }));
-    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe("false");
+    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe(
+      "false",
+    );
     expect(model.getSnapshot().historyPly).toBe(1);
   });
-
 });
