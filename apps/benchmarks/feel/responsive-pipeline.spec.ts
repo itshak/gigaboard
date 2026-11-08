@@ -65,7 +65,7 @@ test("@dragperf cached geometry re-centres a live floating piece after page scro
   });
   const expectedX = shifted.x + 14 - board.left - width / 16;
   const expectedY = shifted.y - board.top - width / 16;
-  const components = /^translate3d\\(([-\\d.]+)px,\\s*([-\\d.]+)px,\\s*(?:0|0px)\\)$/.exec(transform);
+  const components = /^translate3d\(([-\d.]+)px,\s*([-\d.]+)px,\s*(?:0|0px)\)$/.exec(transform);
   expect(components, "Floating piece must have a real CSS translate3d").not.toBeNull();
   const measuredX = Number(components?.[1]);
   const measuredY = Number(components?.[2]);
