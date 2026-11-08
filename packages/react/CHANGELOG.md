@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.1](https://github.com/itshak/gigaboard/compare/v1.7.0...v1.7.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **feellab:** satisfy Biome formatting and preserve ghost on renderer swap ([963a045](https://github.com/itshak/gigaboard/commit/963a045624f98816fefb838c88491eba75be752b))
+
+
+### Performance
+
+* **gigaboard:** opt-in pointer geometry cache and lean drag ghost slots ([096cbf4](https://github.com/itshak/gigaboard/commit/096cbf4114272ad5c1d91a30ac217df0da9e064d))
+
 ## [1.7.0](https://github.com/itshak/gigaboard/compare/v1.6.0...v1.7.0) (2026-11-07)
 
 
