@@ -144,3 +144,27 @@ screen; it does not measure native application feel or a user's own jitter.
 - This is only the sound-integration subset of FeelLab; remaining native
   display/frame measurements, accessibility, and broad puzzle stress tasks
   remain open. **Do not archive the OpenSpec change.**
+
+## macOS-first acceptance decision — November 8, 2026
+
+- The user's primary device and acceptance environment is the **native macOS
+  BlindBase app**. Prioritize WKWebView interaction behavior, drag feel, actual
+  pointer-to-piece response, click-to-move, puzzle throughput and sound recovery
+  on macOS. Browser CI remains a deterministic correctness screen, not proof
+  of macOS native responsiveness.
+- BlindBase now exposes a reversible **macOS-only mouse drag experiment**:
+  GigaBoard 1.7's browser-tested 2px activation candidate is enabled by default
+  on desktop Macs; Settings > Board & Pieces > Board Comforts lets the tester
+  turn it off to return to the unchanged GigaBoard 4px baseline. The real user
+  assessment and subsequent performance gates remain outstanding.
+- Do not change iOS/iPadOS touch activation thresholds based on macOS mouse
+  results. Keep touch and audio integration reasonably compatible but label
+  **native iOS UNTESTED** explicitly. iOS is deferred and does not block the
+  macOS acceptance/release gate.
+- macOS-focused remaining work: native app test fixture, repeated A/B with
+  robust statistics, frame/cursor feedback, 100-puzzle throughput and 1,000
+  action stress, nonvisual report and VoiceOver regression checks. Leave
+  the FeelLab OpenSpec active pending those verifications.
+- In private BlindBase do not auto-run expensive audio integration CI on
+  intermediate commits; its manual-only workflow defaults to one published
+  GigaBoard job and requires opt-in for the full cross-version matrix.
