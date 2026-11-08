@@ -46,3 +46,38 @@ jobs:
             apps/benchmarks/test-results/
           if-no-files-found: warn
           retention-days: 14
+
+  macos-webkit-drag:
+    name: macOS-hosted WebKit drag correctness (NOT native WKWebView)
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - name: Install locked workspace
+        run: bun install --frozen-lockfile
+      - name: Build production fixture
+        run: bun run turbo build
+      - name: Install Playwright WebKit on macOS
+        working-directory: apps/benchmarks
+        run: bun x playwright install webkit
+      - name: Run real browser-driven A/B on macOS-hosted WebKit
+        working-directory: apps/benchmarks
+        run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep @dragperf
+      - name: Require machine-readable and accessible results
+        run: |
+          test -s apps/benchmarks/feel-results/results.json
+          test -s apps/benchmarks/feel-results/report.md
+          grep -q '"PASS"' apps/benchmarks/feel-results/results.json
+      - name: Keep macOS browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gigaboard-macos-webkit-drag
+          path: |
+            apps/benchmarks/feel-results/
+            apps/benchmarks/test-results/
+          if-no-files-found: warn
+          retention-days: 14

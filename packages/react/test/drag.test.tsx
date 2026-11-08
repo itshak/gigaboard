@@ -184,4 +184,80 @@ describe("drag + drop", () => {
       );
     });
   });
+  it("opt-in cache follows mouse without remeasuring layout until scroll invalidates it", () => {
+    renderBoard(model, { dragGeometryCache: true, dragActivationDistance: 2 });
+    const root = container();
+    let left = 0;
+    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(() => ({
+      left, x: left, top: 0, y: 0, right: left + 400, bottom: 400,
+      width: 400, height: 400, toJSON: () => ({}),
+    }) as DOMRect);
+    const e2 = centreOf("e2");
+    const e4 = centreOf("e4");
+    const layer = document.querySelector<HTMLElement>('[data-layer="drag"]');
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: e2.x + 3, y: e2.y }));
+    const beforeReads = geometry.mock.calls.length;
+    expect(layer?.dataset["active"]).toBe("true");
+    const initialTransform = layer?.style.transform;
+    fireEvent(root, pointerEvent("pointermove", { x: e2.x + 8, y: e2.y }));
+    expect(layer?.style.transform).not.toBe(initialTransform);
+    // Other input subsystems may read geometry, but this verifies exact
+    // pointer-follow placement despite a shifted parent rectangle.
+    left = 20;
+    window.dispatchEvent(new Event("scroll"));
+    fireEvent(root, pointerEvent("pointermove", { x: e2.x + 9, y: e2.y }));
+    expect(layer?.style.transform).toBe(`translate3d(${e2.x + 9 - 20 - 25}px, ${e2.y - 25}px, 0)`);
+    expect(geometry.mock.calls.length).toBeGreaterThan(beforeReads);
+    fireEvent(root, pointerEvent("pointercancel", { x: e4.x, y: e4.y }));
+    expect(layer?.dataset["active"]).toBe("false");
+    expect(model.getSnapshot().historyPly).toBe(0);
+    geometry.mockRestore();
+  });
+
+  it("uncached baseline remeasures even when layout shifts without a scroll event", () => {
+    renderBoard(model, { dragGeometryCache: false, dragActivationDistance: 2 });
+    const root = container();
+    let left = 0;
+    const geometry = vi.spyOn(root, "getBoundingClientRect").mockImplementation(() => ({
+      left, x: left, top: 0, y: 0, right: left + 400, bottom: 400,
+      width: 400, height: 400, toJSON: () => ({}),
+    }) as DOMRect);
+    const e2 = centreOf("e2");
+    const layer = document.querySelector<HTMLElement>('[data-layer="drag"]');
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: e2.x + 3, y: e2.y }));
+    left = 15;
+    fireEvent(root, pointerEvent("pointermove", { x: e2.x + 8, y: e2.y }));
+    expect(layer?.style.transform).toBe(`translate3d(${e2.x + 8 - 15 - 25}px, ${e2.y - 25}px, 0)`);
+    fireEvent(root, pointerEvent("pointercancel", { x: e2.x, y: e2.y }));
+    geometry.mockRestore();
+  });
+
+  it("only exposes the selected ghost slot across repeated drags of opposite-colored pieces", () => {
+    renderBoard(model, { dragGeometryCache: true, dragActivationDistance: 2 });
+    const root = container();
+    const e2 = centreOf("e2");
+    const e4 = centreOf("e4");
+    const e7 = centreOf("e7");
+    const e5 = centreOf("e5");
+    const visibleSlots = () => Array.from(
+      document.querySelectorAll<HTMLElement>("[data-drag-cell]"),
+    ).filter((el) => el.style.opacity === "1");
+    fireEvent(root, pointerEvent("pointerdown", { x: e2.x, y: e2.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: e4.x, y: e4.y }));
+    expect(visibleSlots()).toHaveLength(1);
+    const firstCell = visibleSlots()[0]?.dataset["dragCell"];
+    fireEvent(root, pointerEvent("pointerup", { x: e4.x, y: e4.y }));
+    expect(model.getSnapshot().historyPly).toBe(1);
+    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe("false");
+    fireEvent(root, pointerEvent("pointerdown", { x: e7.x, y: e7.y }));
+    fireEvent(root, pointerEvent("pointermove", { x: e5.x, y: e5.y }));
+    expect(visibleSlots()).toHaveLength(1);
+    expect(visibleSlots()[0]?.dataset["dragCell"]).not.toBe(firstCell);
+    fireEvent(root, pointerEvent("pointercancel", { x: e5.x, y: e5.y }));
+    expect(document.querySelector<HTMLElement>('[data-layer="drag"]')?.dataset["active"]).toBe("false");
+    expect(model.getSnapshot().historyPly).toBe(1);
+  });
+
 });
