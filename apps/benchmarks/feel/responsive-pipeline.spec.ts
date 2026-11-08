@@ -63,10 +63,22 @@ test("@dragperf cached geometry re-centres a live floating piece after page scro
   const board = await page.locator("[data-gb-orientation]").evaluate((node) => {
     const rect = node.getBoundingClientRect(); return { left: rect.left, top: rect.top };
   });
-  const expected = `translate3d(${shifted.x + 14 - board.left - width / 16}px, ${shifted.y - board.top - width / 16}px, 0)`;
-  expect(transform).toBe(expected);
+  const expectedX = shifted.x + 14 - board.left - width / 16;
+  const expectedY = shifted.y - board.top - width / 16;
+  const components = /^translate3d\\(([-\\d.]+)px,\\s*([-\\d.]+)px,\\s*(?:0|0px)\\)$/.exec(transform);
+  expect(components, "Floating piece must have a real CSS translate3d").not.toBeNull();
+  const measuredX = Number(components?.[1]);
+  const measuredY = Number(components?.[2]);
+  // WKWebKit reports fractional scroll and layout positions (for example
+  // 299.53125px instead of 300px). Compare geometric coordinates with a
+  // precise 1 CSS px tolerance instead of string equality.
+  expect(Math.abs(measuredX - expectedX)).toBeLessThanOrEqual(1);
+  expect(Math.abs(measuredY - expectedY)).toBeLessThanOrEqual(1);
   await page.mouse.up();
   expect(await layer.getAttribute("data-active")).toBe("false");
-  await attachMetrics(info, { scrollY: 45, expected, transform,
-    limitation: "CSS transform geometry only; no captured presentation timing" });
+  await attachMetrics(info, {
+    scrollY: await page.evaluate(() => window.scrollY),
+    expectedX, expectedY, measuredX, measuredY, transform,
+    limitation: "CSS geometry and 1px tolerance only; no captured presentation timing",
+  });
 });
