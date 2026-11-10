@@ -47,7 +47,9 @@ export function inferControlledFeedbackDescriptors(
       pieceTypeOf(landed) !== 0;
     if (!promotion && pieceTypeOf(moving) !== pieceTypeOf(landed)) return null;
     if (!isEmptyCell(target)) {
-      return colorOf(target) !== colorOf(moving) ? [{ kind: "capture" }] : null;
+      if (colorOf(target) === colorOf(moving)) return null;
+      if (promotion) return [{ kind: "capture" }, { kind: "promotion" }];
+      return [{ kind: "capture" }];
     }
     return [{ kind: promotion ? "promotion" : "move" }];
   }

@@ -23,8 +23,9 @@ describe("controlled FEN sound classification without positionTransition", () =>
     ]);
   });
 
-  it("classifies a capture-promotion as a capture, preserving SAN-priority", () => {
-    expect(infer("1r2k3/P7/8/8/8/8/8/4K3", "1Q2k3/8/8/8/8/8/8/4K3")).toEqual([{ kind: "capture" }]);
+  it("reports capture and promotion so the caller controls precedence", () => {
+    const cues = infer("1r2k3/P7/8/8/8/8/8/4K3", "1Q2k3/8/8/8/8/8/8/4K3");
+    expect(cues).toEqual([{ kind: "capture" }, { kind: "promotion" }]);
   });
 
   it("classifies a quiet promotion separately", () => {

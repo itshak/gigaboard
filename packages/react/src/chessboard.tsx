@@ -246,22 +246,19 @@ function controlledFeedbackDescriptors(
     return [{ kind: "castle" }];
   }
 
-  // Capture has priority even for capture+promotion or capture+check under
-  // the host's SAN-priority policy. The classifier still owns the policy;
-  // the descriptor must accurately record a capture before promotion.
-  if (!isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece)) {
-    return [{ kind: "capture" }];
-  }
-
-  if (
+  // Keep both facts on a capture-promotion. The consumer's cuePolicy
+  // decides: SAN-priority chooses capture; default chooses promotion.
+  const isCapture = !isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece);
+  const isPromotion =
     parsed.promotion !== null ||
     (isPawn(movingPiece) &&
       (parsed.to >> 3 === 0 || parsed.to >> 3 === 7) &&
       !isEmptyCell(targetAfter) &&
-      pieceTypeOf(targetAfter) !== 0)
-  ) {
-    return [{ kind: "promotion" }];
-  }
+      pieceTypeOf(targetAfter) !== 0);
+
+  if (isCapture && isPromotion) return [{ kind: "capture" }, { kind: "promotion" }];
+  if (isCapture) return [{ kind: "capture" }];
+  if (isPromotion) return [{ kind: "promotion" }];
 
   if (isPawn(movingPiece) && fromFile !== toFile && isEmptyCell(targetBefore)) {
     const capturedSquare = ((parsed.from & ~7) | toFile) as SquareIndex;
