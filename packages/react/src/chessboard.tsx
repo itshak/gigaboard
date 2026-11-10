@@ -55,6 +55,7 @@ import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveHapticOptions, useMoveHaptics } from "./hooks/use-move-haptics.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
+import { inferControlledFeedbackDescriptors } from "./lib/controlled-feedback.js";
 import { getSquareAtPoint } from "./lib/geometry.js";
 import { classifyMoveFeedback } from "./lib/move-feedback.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
@@ -221,7 +222,9 @@ function controlledFeedbackDescriptors(
   previousBoard: Readonly<Uint8Array>,
   nextBoard: Readonly<Uint8Array>,
 ): FeedbackDescriptor[] | null {
-  if (transition === null || transition === undefined) return null;
+  if (transition === null || transition === undefined) {
+    return inferControlledFeedbackDescriptors(previousBoard, nextBoard);
+  }
 
   const parsed = parseTransitionMove(transition);
   if (parsed === null) return null;
@@ -243,19 +246,19 @@ function controlledFeedbackDescriptors(
     return [{ kind: "castle" }];
   }
 
-  if (
+  // Keep both facts on a capture-promotion. The consumer's cuePolicy
+  // decides: SAN-priority chooses capture; default chooses promotion.
+  const isCapture = !isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece);
+  const isPromotion =
     parsed.promotion !== null ||
     (isPawn(movingPiece) &&
       (parsed.to >> 3 === 0 || parsed.to >> 3 === 7) &&
       !isEmptyCell(targetAfter) &&
-      pieceTypeOf(targetAfter) !== 0)
-  ) {
-    return [{ kind: "promotion" }];
-  }
+      pieceTypeOf(targetAfter) !== 0);
 
-  if (!isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece)) {
-    return [{ kind: "capture" }];
-  }
+  if (isCapture && isPromotion) return [{ kind: "capture" }, { kind: "promotion" }];
+  if (isCapture) return [{ kind: "capture" }];
+  if (isPromotion) return [{ kind: "promotion" }];
 
   if (isPawn(movingPiece) && fromFile !== toFile && isEmptyCell(targetBefore)) {
     const capturedSquare = ((parsed.from & ~7) | toFile) as SquareIndex;
