@@ -57,6 +57,7 @@ import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
 import { getSquareAtPoint } from "./lib/geometry.js";
 import { classifyMoveFeedback } from "./lib/move-feedback.js";
+import { inferControlledFeedbackDescriptors } from "./lib/controlled-feedback.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type {
   AnimationOptions,
@@ -221,7 +222,9 @@ function controlledFeedbackDescriptors(
   previousBoard: Readonly<Uint8Array>,
   nextBoard: Readonly<Uint8Array>,
 ): FeedbackDescriptor[] | null {
-  if (transition === null || transition === undefined) return null;
+  if (transition === null || transition === undefined) {
+    return inferControlledFeedbackDescriptors(previousBoard, nextBoard);
+  }
 
   const parsed = parseTransitionMove(transition);
   if (parsed === null) return null;
@@ -243,6 +246,13 @@ function controlledFeedbackDescriptors(
     return [{ kind: "castle" }];
   }
 
+  // Capture has priority even for capture+promotion or capture+check under
+  // the host's SAN-priority policy. The classifier still owns the policy;
+  // the descriptor must accurately record a capture before promotion.
+  if (!isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece)) {
+    return [{ kind: "capture" }];
+  }
+
   if (
     parsed.promotion !== null ||
     (isPawn(movingPiece) &&
@@ -251,10 +261,6 @@ function controlledFeedbackDescriptors(
       pieceTypeOf(targetAfter) !== 0)
   ) {
     return [{ kind: "promotion" }];
-  }
-
-  if (!isEmptyCell(targetBefore) && colorOf(targetBefore) !== colorOf(movingPiece)) {
-    return [{ kind: "capture" }];
   }
 
   if (isPawn(movingPiece) && fromFile !== toFile && isEmptyCell(targetBefore)) {
