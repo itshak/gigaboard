@@ -32,8 +32,9 @@ export function inferControlledFeedbackDescriptors(
 
   // Single-piece move, including ordinary capture and capture-promotion.
   if (cleared.length === 1 && destinations.length === 1) {
-    const from = cleared[0]!;
-    const to = destinations[0]!;
+    const from = cleared[0];
+    const to = destinations[0];
+    if (from === undefined || to === undefined) return null;
     const moving = previous[from] as BoardCell;
     const landed = next[to] as BoardCell;
     const target = previous[to] as BoardCell;
@@ -54,7 +55,8 @@ export function inferControlledFeedbackDescriptors(
   // En passant: the moving pawn and captured pawn both disappear, while
   // the moving pawn reappears diagonally on a previously empty square.
   if (cleared.length === 2 && destinations.length === 1) {
-    const to = destinations[0]!;
+    const to = destinations[0];
+    if (to === undefined) return null;
     const landed = next[to] as BoardCell;
     if (!isEmptyCell(landed) && pieceTypeOf(landed) === 0 &&
         isEmptyCell(previous[to] as BoardCell)) {
