@@ -19,9 +19,7 @@ async function expectConfirmedSound(
     onCue: (cue) => cues.push(cue),
   };
   try {
-    const view = render(
-      <Chessboard game={game} positionFen={before} sound={sound} />,
-    );
+    const view = render(<Chessboard game={game} positionFen={before} sound={sound} />);
     expect(cues).toEqual([]); // Initial hydration must be silent.
     view.rerender(
       <Chessboard

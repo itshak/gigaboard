@@ -8,7 +8,7 @@
  * null for ambiguous/multi-ply changes and let the existing fallback handle
  * them. Neither speculative model commits nor initial hydration reach here.
  */
-import { colorOf, isEmptyCell, pieceTypeOf, type BoardCell } from "../core/index.js";
+import { type BoardCell, colorOf, isEmptyCell, pieceTypeOf } from "../core/index.js";
 
 export interface ControlledFeedbackDescriptor {
   readonly kind: "move" | "capture" | "en-passant" | "castle" | "promotion";
@@ -38,12 +38,12 @@ export function inferControlledFeedbackDescriptors(
     const moving = previous[from] as BoardCell;
     const landed = next[to] as BoardCell;
     const target = previous[to] as BoardCell;
-    if (isEmptyCell(moving) || isEmptyCell(landed) ||
-        colorOf(moving) !== colorOf(landed)) return null;
+    if (isEmptyCell(moving) || isEmptyCell(landed) || colorOf(moving) !== colorOf(landed))
+      return null;
 
     const promotion =
       pieceTypeOf(moving) === 0 &&
-      (to >> 3) === (colorOf(moving) === 0 ? 7 : 0) &&
+      to >> 3 === (colorOf(moving) === 0 ? 7 : 0) &&
       pieceTypeOf(landed) !== 0;
     if (!promotion && pieceTypeOf(moving) !== pieceTypeOf(landed)) return null;
     if (!isEmptyCell(target)) {
@@ -58,21 +58,26 @@ export function inferControlledFeedbackDescriptors(
     const to = destinations[0];
     if (to === undefined) return null;
     const landed = next[to] as BoardCell;
-    if (!isEmptyCell(landed) && pieceTypeOf(landed) === 0 &&
-        isEmptyCell(previous[to] as BoardCell)) {
+    if (
+      !isEmptyCell(landed) &&
+      pieceTypeOf(landed) === 0 &&
+      isEmptyCell(previous[to] as BoardCell)
+    ) {
       for (const from of cleared) {
         const moving = previous[from] as BoardCell;
-        if (isEmptyCell(moving) || pieceTypeOf(moving) !== 0 ||
-            colorOf(moving) !== colorOf(landed)) continue;
+        if (isEmptyCell(moving) || pieceTypeOf(moving) !== 0 || colorOf(moving) !== colorOf(landed))
+          continue;
         const capturedSquare = (from & ~7) | (to & 7);
         const captured = previous[capturedSquare] as BoardCell;
         const step = colorOf(moving) === 0 ? 1 : -1;
-        if ((to >> 3) - (from >> 3) === step &&
-            Math.abs((to & 7) - (from & 7)) === 1 &&
-            cleared.includes(capturedSquare) &&
-            !isEmptyCell(captured) &&
-            pieceTypeOf(captured) === 0 &&
-            colorOf(captured) !== colorOf(moving)) {
+        if (
+          (to >> 3) - (from >> 3) === step &&
+          Math.abs((to & 7) - (from & 7)) === 1 &&
+          cleared.includes(capturedSquare) &&
+          !isEmptyCell(captured) &&
+          pieceTypeOf(captured) === 0 &&
+          colorOf(captured) !== colorOf(moving)
+        ) {
           return [{ kind: "en-passant" }];
         }
       }
@@ -82,20 +87,26 @@ export function inferControlledFeedbackDescriptors(
   // Classical castling is a two-piece move; do not label its four square
   // changes as a multi-move sequence when the host omits the transition.
   if (cleared.length === 2 && destinations.length === 2) {
-    const kingFrom = cleared.find(i => pieceTypeOf(previous[i] as BoardCell) === 5);
-    const rookFrom = cleared.find(i => pieceTypeOf(previous[i] as BoardCell) === 3);
-    const kingTo = destinations.find(i => pieceTypeOf(next[i] as BoardCell) === 5);
-    const rookTo = destinations.find(i => pieceTypeOf(next[i] as BoardCell) === 3);
-    if (kingFrom !== undefined && rookFrom !== undefined &&
-        kingTo !== undefined && rookTo !== undefined) {
+    const kingFrom = cleared.find((i) => pieceTypeOf(previous[i] as BoardCell) === 5);
+    const rookFrom = cleared.find((i) => pieceTypeOf(previous[i] as BoardCell) === 3);
+    const kingTo = destinations.find((i) => pieceTypeOf(next[i] as BoardCell) === 5);
+    const rookTo = destinations.find((i) => pieceTypeOf(next[i] as BoardCell) === 3);
+    if (
+      kingFrom !== undefined &&
+      rookFrom !== undefined &&
+      kingTo !== undefined &&
+      rookTo !== undefined
+    ) {
       const king = previous[kingFrom] as BoardCell;
       const rook = previous[rookFrom] as BoardCell;
-      if (colorOf(king) === colorOf(rook) &&
-          colorOf(king) === colorOf(next[kingTo] as BoardCell) &&
-          colorOf(king) === colorOf(next[rookTo] as BoardCell) &&
-          (kingFrom >> 3) === (kingTo >> 3) &&
-          Math.abs((kingTo & 7) - (kingFrom & 7)) === 2 &&
-          (rookFrom >> 3) === (rookTo >> 3)) {
+      if (
+        colorOf(king) === colorOf(rook) &&
+        colorOf(king) === colorOf(next[kingTo] as BoardCell) &&
+        colorOf(king) === colorOf(next[rookTo] as BoardCell) &&
+        kingFrom >> 3 === kingTo >> 3 &&
+        Math.abs((kingTo & 7) - (kingFrom & 7)) === 2 &&
+        rookFrom >> 3 === rookTo >> 3
+      ) {
         return [{ kind: "castle" }];
       }
     }

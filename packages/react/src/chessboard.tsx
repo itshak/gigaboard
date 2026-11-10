@@ -55,9 +55,9 @@ import { useLastMoveController } from "./hooks/use-last-move-controller.js";
 import { type MoveHapticOptions, useMoveHaptics } from "./hooks/use-move-haptics.js";
 import { type MoveSoundOptions, useMoveSound } from "./hooks/use-move-sound.js";
 import { useSelectionController } from "./hooks/use-selection-controller.js";
+import { inferControlledFeedbackDescriptors } from "./lib/controlled-feedback.js";
 import { getSquareAtPoint } from "./lib/geometry.js";
 import { classifyMoveFeedback } from "./lib/move-feedback.js";
-import { inferControlledFeedbackDescriptors } from "./lib/controlled-feedback.js";
 import { defaultPieces } from "./pieces/default-pieces.js";
 import type {
   AnimationOptions,
