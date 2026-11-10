@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/itshak/gigaboard/compare/v1.7.1...v1.7.2) (2026-11-10)
+
+
+### Bug Fixes
+
+* **audio:** preserve capture cues on controlled position updates ([c04337e](https://github.com/itshak/gigaboard/commit/c04337eec370bbc34a290734a9ffa1b761e5680e))
+
 ## [1.7.1](https://github.com/itshak/gigaboard/compare/v1.7.0...v1.7.1) (2026-11-08)
 
 
