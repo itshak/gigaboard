@@ -79,7 +79,6 @@ describe("host-owned controlled-position sound feedback", () => {
   });
 });
 
-
 // Regression: these paths are exercised by BlindBase. Its GigaBoard is
 // controlled and ALWAYS passes managedArrows (often []); isolated FEN-only
 // rerender tests missed the locally committed pointer move.
@@ -144,14 +143,20 @@ describe("controlled local-commit acknowledgment with managed arrows", () => {
     it(`emits one capture cue after local mouse-style confirmation with arrows: ${arrows}`, async () => {
       await expectLocalConfirmedSound(
         "4k3/8/8/4p3/3P4/8/8/4K3 w - - 0 1",
-        "d4", "e5", "capture", arrows,
+        "d4",
+        "e5",
+        "capture",
+        arrows,
       );
     });
 
     it(`preserves quiet move cue and dedup with arrows: ${arrows}`, async () => {
       await expectLocalConfirmedSound(
         "4k3/8/8/8/3P4/8/8/4K3 w - - 0 1",
-        "d4", "d5", "moveSelf", arrows,
+        "d4",
+        "d5",
+        "moveSelf",
+        arrows,
       );
     });
   }
@@ -159,14 +164,21 @@ describe("controlled local-commit acknowledgment with managed arrows", () => {
   it("preserves an en passant capture from the local model commit", async () => {
     await expectLocalConfirmedSound(
       "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1",
-      "e5", "d6", "capture", "empty",
+      "e5",
+      "d6",
+      "capture",
+      "empty",
     );
   });
 
   it("preserves capture over promotion for local a7xb8=Q", async () => {
     await expectLocalConfirmedSound(
       "1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1",
-      "a7", "b8", "capture", "empty", 4,
+      "a7",
+      "b8",
+      "capture",
+      "empty",
+      4,
     );
   });
 
@@ -181,10 +193,14 @@ describe("controlled local-commit acknowledgment with managed arrows", () => {
     };
     const original = game.engine.fen();
     try {
-      const board = render(<Chessboard game={game} positionFen={original} managedArrows={[]} sound={sound} />);
+      const board = render(
+        <Chessboard game={game} positionFen={original} managedArrows={[]} sound={sound} />,
+      );
       expect(game.tryMove(sq("d4"), sq("e5"))).not.toBeNull();
       game.load(original); // Host rejects and rolls back (BlindBase contract).
-      board.rerender(<Chessboard game={game} positionFen={original} managedArrows={[]} sound={sound} />);
+      board.rerender(
+        <Chessboard game={game} positionFen={original} managedArrows={[]} sound={sound} />,
+      );
       expect(cues).toEqual([]);
       board.unmount();
     } finally {
@@ -198,12 +214,18 @@ describe("controlled local-commit acknowledgment with managed arrows", () => {
     const game = await makeBoardModel(before);
     const cues: MoveSoundKey[] = [];
     const sound: MoveSoundOptions = {
-      trigger: "position", cuePolicy: "san-priority", onCue: (cue) => cues.push(cue),
+      trigger: "position",
+      cuePolicy: "san-priority",
+      onCue: (cue) => cues.push(cue),
     };
     const arrows = [{ from: sq("a1"), to: sq("a4"), color: "#ff0000" }];
     try {
-      const board = render(<Chessboard game={game} positionFen={before} managedArrows={arrows} sound={sound} />);
-      board.rerender(<Chessboard game={game} positionFen={after} managedArrows={arrows} sound={sound} />);
+      const board = render(
+        <Chessboard game={game} positionFen={before} managedArrows={arrows} sound={sound} />,
+      );
+      board.rerender(
+        <Chessboard game={game} positionFen={after} managedArrows={arrows} sound={sound} />,
+      );
       expect(cues).toEqual(["capture"]);
       board.unmount();
     } finally {

@@ -48,7 +48,7 @@ async function assertCues(page: Page, expected: string[]) {
 
 for (const mode of ["drag", "click"] as const) {
   for (const arrows of ["none", "empty", "populated"] as const) {
-    test("@" + "sound-e2e " + mode + " capture with managedArrows=" + arrows + " emits once", async ({ page }) => {
+    test("@sound-e2e " + mode + " capture with managedArrows=" + arrows + " emits once", async ({ page }) => {
       await setup(page);
       await page.evaluate((value) => window.__gbAudioE2E__?.setArrows(value), arrows);
       if (mode === "drag") await drag(page, "d4", "e5");
@@ -63,10 +63,16 @@ for (const mode of ["drag", "click"] as const) {
 
 test("@sound-e2e real keyboard navigation generates same capture key", async ({ page }) => {
   await setup(page);
-  await page.locator('[data-square="d4"]').focus();
+  // Keyboard navigation starts on the roving-tabindex e2 square, not on an
+  // arbitrary square focused with DOM .focus(). Walk to d4 using actual keys.
+  await page.locator('[data-square="e2"]').focus();
+  await page.keyboard.press("ArrowUp"); // e3
+  await page.keyboard.press("ArrowUp"); // e4
+  await page.keyboard.press("ArrowLeft"); // d4
+  await expect(page.locator('[data-square="d4"]')).toBeFocused();
   await page.keyboard.press("Enter");
-  await page.keyboard.press("ArrowUp");
-  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowUp"); // d5
+  await page.keyboard.press("ArrowRight"); // e5
   await expect(page.locator('[data-square="e5"]')).toBeFocused();
   await page.keyboard.press("Enter");
   await assertCues(page, ["capture"]);

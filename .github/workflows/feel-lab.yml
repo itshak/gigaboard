@@ -48,7 +48,7 @@ jobs:
           retention-days: 14
 
   macos-webkit-drag:
-    name: macOS WebKit drag and pointer A/B (NOT native WKWebView)
+    name: macOS WebKit drag, pointer and sound semantics (NOT native WKWebView)
     runs-on: macos-15
     timeout-minutes: 35
     steps:
@@ -65,7 +65,7 @@ jobs:
         run: bun x playwright install webkit
       - name: Run cache A/B pointer travel, hover and drag probes on macOS WebKit
         working-directory: apps/benchmarks
-        run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep '@dragperf|@pointerperf'
+        run: bun x playwright test --config ./playwright.feel.config.ts --project=webkit-feel --grep '@dragperf|@pointerperf|@sound-e2e'
       - name: Print accessible macOS pointer A/B comparison
         working-directory: apps/benchmarks
         run: node ./feel/summarize-pointer.mjs
