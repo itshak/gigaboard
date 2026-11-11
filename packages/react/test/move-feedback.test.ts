@@ -60,3 +60,19 @@ describe("move-sound cue ordering policies", () => {
     expect(cue).toBe("moveSelf");
   });
 });
+
+describe("local animation capture-promotion descriptor", () => {
+  it("keeps captured promotion first only under san-priority", () => {
+    const descriptors = [{ kind: "promotion", captured: 10 }];
+    expect(classifyMoveFeedback(descriptors, snapshot, undefined, "san-priority")).toBe("capture");
+    expect(classifyMoveFeedback(descriptors, snapshot, undefined, "default")).toBe("promote");
+    expect(
+      classifyMoveFeedback(
+        [{ kind: "promotion", captured: null }],
+        snapshot,
+        undefined,
+        "san-priority",
+      ),
+    ).toBe("promote");
+  });
+});

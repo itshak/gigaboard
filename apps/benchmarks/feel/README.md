@@ -155,3 +155,26 @@ instrumentation (OpenSpec section 5) and user acceptance. Cache geometry is
 only used while dragging; idle hover has no cache coordinate lookup.
 
 After a local @pointerperf run, `cd apps/benchmarks && node feel/summarize-pointer.mjs` prints the same human-readable comparison shown in GitHub Actions.
+
+## Controlled board sound regression E2E (November 11, 2026)
+
+`apps/benchmarks/audio.html` is a standalone production-build React host. It mounts
+GigaBoard in `sound.trigger="position"` / `cuePolicy="san-priority"` mode with
+`managedArrows` (absent, empty, and populated) and an injected host `onCue`
+recorder. `feel/confirmed-sound.spec.ts` uses **real Playwright mouse drag,
+click-to-move and roving-keyboard navigation**, plus accepted FEN updates,
+host rejection, mute gating, captures/checks, en passant, promotion captures,
+arrow-only rerenders and rapid successive moves. It runs as part of the
+existing Chromium and WebKit FeelLab suite and is also explicitly included in
+macOS-hosted WebKit coverage. No human screenshot review is required.
+
+For a targeted check from `apps/benchmarks`:
+
+```sh
+bun x playwright test --config ./playwright.feel.config.ts --grep @sound-e2e
+```
+
+These are **end-to-end browser event and host-API tests**, not emulated audio
+samples: they prove the correct cue is delivered to host-owned playback once,
+not that speakers are audible in native Tauri/WKWebView. BlindBase must test
+its own theme mapping, shared Web Audio output and native Mac user acceptance.
