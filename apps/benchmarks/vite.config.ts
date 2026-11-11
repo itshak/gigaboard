@@ -35,6 +35,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         ours: resolve(import.meta.dirname, "index.html"),
+        audio: resolve(import.meta.dirname, "audio.html"),
         rcb: resolve(import.meta.dirname, "rcb.html"),
         cg: resolve(import.meta.dirname, "cg.html"),
       },
