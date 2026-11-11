@@ -6,15 +6,20 @@
  * Test-only in apps/benchmarks; never shipped in the published library.
  * The onCue probe records semantic keys, not physical loudspeaker output.
  */
-import { Chessboard, type MoveSoundKey, type MoveSoundOptions, type PositionTransition } from "gigaboard";
+import { Chess } from "chess.js";
 import {
-  createBoardModel,
-  createGigachessAdapter,
+  Chessboard,
+  type MoveSoundKey,
+  type MoveSoundOptions,
+  type PositionTransition,
+} from "gigaboard";
+import {
   type Arrow,
   type BoardModel,
+  createBoardModel,
+  createGigachessAdapter,
   type SquareIndex,
 } from "gigaboard/core";
-import { Chess } from "chess.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -67,12 +72,17 @@ function AudioFixture() {
     return () => next.dispose();
   }, []);
 
-  const sound = useMemo<MoveSoundOptions>(() => ({
-    enabled,
-    trigger: "position",
-    cuePolicy,
-    onCue: (key) => { cuesRef.current.push(key); },
-  }), [enabled, cuePolicy]);
+  const sound = useMemo<MoveSoundOptions>(
+    () => ({
+      enabled,
+      trigger: "position",
+      cuePolicy,
+      onCue: (key) => {
+        cuesRef.current.push(key);
+      },
+    }),
+    [enabled, cuePolicy],
+  );
 
   const managedArrows = useMemo<readonly Arrow[] | undefined>(() => {
     if (arrowMode === "none") return undefined;
@@ -101,7 +111,9 @@ function AudioFixture() {
       controlledFen: () => controlledFenRef.current,
       cues: () => cuesRef.current.slice(),
       moveCount: () => acceptedMovesRef.current,
-      clearCues: () => { cuesRef.current = []; },
+      clearCues: () => {
+        cuesRef.current = [];
+      },
       async reset(fen = START) {
         rejectNextRef.current = false;
         model.load(fen);
@@ -112,7 +124,8 @@ function AudioFixture() {
         // Let the host FEN render settle before clearing any artificial
         // reset cue; assertions concern subsequent real user interactions.
         await new Promise<void>((resolve) =>
-          requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
         cuesRef.current = [];
       },
       externalMove(uci, includeTransition = false) {
@@ -122,26 +135,33 @@ function AudioFixture() {
           to: uci.slice(2, 4),
           ...(uci.length === 5 ? { promotion: uci[4] } : {}),
         });
-        if (played === null) throw new Error("Illegal test move: " + uci);
+        if (played === null) throw new Error(`Illegal test move: ${uci}`);
         const after = move.fen();
         controlledFenRef.current = after;
         setPositionTransition(includeTransition ? { uci, direction: "forward" } : null);
         setControlledFen(after);
         acceptedMovesRef.current++;
       },
-      rejectNextMove: () => { rejectNextRef.current = true; },
+      rejectNextMove: () => {
+        rejectNextRef.current = true;
+      },
       setArrows: setArrowMode,
       setEnabled,
       setCuePolicy,
     };
     window.__gbAudioE2E__ = api;
-    return () => { if (window.__gbAudioE2E__ === api) delete window.__gbAudioE2E__; };
+    return () => {
+      if (window.__gbAudioE2E__ === api) delete window.__gbAudioE2E__;
+    };
   }, [model]);
 
   return (
     <main style={{ fontFamily: "system-ui, sans-serif", padding: 20 }}>
       <h1>Controlled board audio — browser E2E fixture</h1>
-      <p>Actual pointer/keyboard inputs. Captured onCue keys are semantic evidence, not speaker audibility.</p>
+      <p>
+        Actual pointer/keyboard inputs. Captured onCue keys are semantic evidence, not speaker
+        audibility.
+      </p>
       <div id="audio-board" style={{ width: 400, height: 400 }}>
         <Chessboard
           game={model}
