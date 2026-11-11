@@ -497,11 +497,30 @@ export function Chessboard(props: ChessboardProps) {
     if (game === null || positionFen === undefined || positionFen === "") return;
     const previousFeedbackFen = lastControlledFeedbackFenRef.current;
     const previousSnapshot = game.getSnapshot();
-    if (game.engine.fen() === positionFen && managedArrows === undefined) {
+    if (game.engine.fen() === positionFen) {
+      // A pointer or keyboard move may already have committed to the local
+      // model before the host publishes its accepted FEN. Managed arrows are
+      // unrelated to that confirmation: BlindBase always supplies an array,
+      // even when it is empty. Preserve the move descriptor BEFORE syncing
+      // arrows, because syncPosition() replaces lastAnimations with a visual
+      // board diff and loses capture/promotion semantics.
+      const confirmedAnimations = game.lastAnimations;
       lastControlledFeedbackFenRef.current = positionFen;
-      // The host confirmed a local input by publishing the accepted FEN.
-      // In controlled mode the model subscription was intentionally silent,
-      // so play now, even when no further engine sync is required.
+      if (managedArrows !== undefined) {
+        syncPositionFen(
+          game,
+          positionFen,
+          positionTransition,
+          managedArrows,
+          preserveUserArrowsOnPositionSync,
+          containerRef.current,
+          animation,
+          orientation,
+        );
+      }
+      // Controlled sound is emitted once after host confirmation, never at
+      // speculative tryMove time. Repeated arrow/visual renders have the
+      // same positionFen and therefore cannot replay the cue.
       if (
         soundOptions.trigger === "position" &&
         previousFeedbackFen !== null &&
@@ -509,7 +528,7 @@ export function Chessboard(props: ChessboardProps) {
       ) {
         triggerMoveSound(
           classifyMoveFeedback(
-            game.lastAnimations,
+            confirmedAnimations,
             previousSnapshot,
             soundOptions.perspective,
             soundOptions.cuePolicy,
