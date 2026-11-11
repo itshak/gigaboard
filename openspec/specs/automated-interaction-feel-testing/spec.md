@@ -56,3 +56,17 @@ deferred; they are not normative implemented requirements in this spec.
   executable against GigaBoard main
 - **AND** native-only unimplemented tasks remain explicitly documented
   in the archived research plan.
+
+### Requirement: Production-browser controlled move-sound regression gate
+
+The FeelLab SHALL include browser-executed sound semantics tests in Chromium and WebKit, with a real React host that confirms or rejects local pointer and keyboard moves, controls position FEN and managed arrows, and records semantic `onCue` delivery. These browser tests SHALL NOT claim physical native macOS audio output.
+
+#### Scenario: Real-input capture with managed arrows
+- **WHEN** the browser runs `@sound-e2e` using mouse drag, click-to-move, and keyboard navigation while managed arrows are absent, empty, or populated
+- **THEN** every accepted capture emits one `capture` semantic event to the host
+- **AND** rejected moves, initial position hydration and arrow-only rerenders do not produce accepted-move cues.
+
+#### Scenario: Browser evidence and accessibility
+- **WHEN** the GitHub FeelLab workflow runs against the production Vite build
+- **THEN** automated pass/fail results include sound, keyboard and capture-cue checks on Chromium and Playwright WebKit
+- **AND** macOS-hosted WebKit results remain explicitly distinguished from native Tauri WKWebView loudspeaker validation.

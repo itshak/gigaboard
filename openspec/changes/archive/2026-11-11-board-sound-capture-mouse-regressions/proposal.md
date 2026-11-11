@@ -1,6 +1,6 @@
 # Change: Correct confirmed-position mouse and capture sounds
 
-**Status:** PROPOSED, not implemented. **Date:** 2026-11-11.
+**Status:** IMPLEMENTED AND ARCHIVED after browser verification (2026-11-11); native BlindBase audio acceptance remains separate. **Date:** 2026-11-11.
 **Consumer:** BlindBase companion OpenSpec `board-sound-capture-mouse-regressions`, `itshak/blindbase`.
 
 ## User evidence
