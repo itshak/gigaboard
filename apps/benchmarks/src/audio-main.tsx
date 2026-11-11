@@ -166,9 +166,9 @@ function AudioFixture() {
         <Chessboard
           game={model}
           fallbackFen={START}
-          positionFen={model === null ? undefined : controlledFen}
+          {...(model === null ? {} : { positionFen: controlledFen })}
           positionTransition={positionTransition}
-          managedArrows={managedArrows}
+          {...(managedArrows === undefined ? {} : { managedArrows })}
           onMove={onMove}
           sound={sound}
           animation={{ durationMs: 0 }}
