@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/itshak/gigaboard/compare/v1.7.2...v1.7.3) (2026-11-11)
+
+
+### Bug Fixes
+
+* **audio:** restore capture and mouse sounds in controlled boards ([5168300](https://github.com/itshak/gigaboard/commit/516830008036d092198818cdeccd67bf3157a0c3))
+
 ## [1.7.2](https://github.com/itshak/gigaboard/compare/v1.7.1...v1.7.2) (2026-11-10)
 
 
