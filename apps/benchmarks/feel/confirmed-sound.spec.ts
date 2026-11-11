@@ -11,8 +11,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 const CAPTURE = "4k3/8/8/4p3/3P4/8/8/4K3 w - - 0 1";
 const EN_PASSANT = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1";
-const PROMO_CAPTURE = "1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1";
-const CHECK_CAPTURE = "4k3/4r3/8/8/8/8/4R3/4K3 w - - 0 1";
 const QUIET = "4k3/8/8/8/3P4/8/8/4K3 w - - 0 1";
 
 async function setup(page: Page, fen = CAPTURE) {
