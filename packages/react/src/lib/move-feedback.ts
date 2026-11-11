@@ -45,8 +45,13 @@ export function classifyMoveFeedback(
   let sawCastle = false;
   let sawCapture = false;
   for (const d of animations) {
-    if (d.kind === "promotion") sawPromotion = true;
-    else if (d.kind === "castle") sawCastle = true;
+    if (d.kind === "promotion") {
+      sawPromotion = true;
+      // A locally committed promotion is represented by a single animation
+      // descriptor with the captured target attached, not a second capture
+      // descriptor. Under san-priority capture-promotion must sound as capture.
+      if ("captured" in d && d.captured != null) sawCapture = true;
+    } else if (d.kind === "castle") sawCastle = true;
     else if (d.kind === "capture" || d.kind === "en-passant") sawCapture = true;
   }
 
